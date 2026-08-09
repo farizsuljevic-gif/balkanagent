@@ -44,49 +44,36 @@ input{width:100%;background:#06101d;color:#fff;border:1px solid #26466b;border-r
       <div class="field">
         <label>Email</label>
         <input id="email" type="email" autocomplete="email" required placeholder="email@company.com">
-      </div>
+      </div><div class="field"><label>Šifra</label><input id="password" type="password" autocomplete="current-password" required></div>
       <button class="btn" type="submit">Login</button>
       <div id="msg"></div>
     </form>
   </div>
-  <div class="help">Admin i aktivirane mušterije koriste isti Login.</div>
+  <div class="help">Nemate nalog? <a href="register.html" style="color:#9eb2ff">Napravite profil</a></div>
 </div>
 
+
+
 <script>
-const ADMIN_EMAIL='ceo@balkanagent.com';
-const customersKey='ba_customers_v3';
-
-document.getElementById('loginForm').onsubmit=(e)=>{
+document.getElementById('loginForm').onsubmit=async(e)=>{
   e.preventDefault();
-  const email=document.getElementById('email').value.trim().toLowerCase();
   const msg=document.getElementById('msg');
-  msg.className='';
-
-  if(email===ADMIN_EMAIL){
-    localStorage.setItem('ba_admin_preview','1');
-    localStorage.removeItem('ba_logged_customer');
-    location.href='admin.html';
-    return;
+  msg.className=''; msg.textContent='Prijava...';
+  try{
+    const r=await fetch('/api/auth/login',{
+      method:'POST',
+      headers:{'content-type':'application/json'},
+      body:JSON.stringify({
+        email:document.getElementById('email').value.trim(),
+        password:document.getElementById('password').value
+      })
+    });
+    const j=await r.json();
+    if(!r.ok) throw new Error(j.error||'Login failed');
+    location.href=j.role==='admin'?'admin.html':'customer.html';
+  }catch(err){
+    msg.className='error'; msg.textContent=err.message;
   }
-
-  const customers=JSON.parse(localStorage.getItem(customersKey)||'[]');
-  const customer=customers.find(c=>String(c.email||'').toLowerCase()===email);
-
-  if(!customer){
-    msg.className='error';
-    msg.textContent='Nalog nije pronađen.';
-    return;
-  }
-
-  if(!customer.active){
-    msg.className='error';
-    msg.textContent='Nalog još nije aktiviran od strane admina.';
-    return;
-  }
-
-  localStorage.setItem('ba_logged_customer',JSON.stringify(customer));
-  localStorage.removeItem('ba_admin_preview');
-  location.href='customer.html';
 };
 </script>
 </body>

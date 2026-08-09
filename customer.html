@@ -145,4 +145,35 @@ render();
   document.addEventListener('DOMContentLoaded',loadCustomerBilling);
 })();
 </script>
+
+<script>
+(async function(){
+  async function api(path,options={}){
+    const r=await fetch(path,{...options,headers:{'content-type':'application/json',...(options.headers||{})}});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(j.error||'Request failed');
+    return j;
+  }
+  try{
+    const me=await api('/api/auth/me');
+    if(me.role!=='customer'){location.href='login.html';return;}
+    const u=me.user;
+    const set=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v??''};
+    set('profileName',u.name);set('profileCompany',u.company);set('profileEmail',u.email);
+    set('profilePhone',u.phone);set('profilePaymentMethod',u.payment_method||'Bank transfer / IBAN');
+    set('profileIban',u.iban);set('profileBank',u.bank_name);set('profilePaymentStatus',u.payment_status||'UNPAID');
+    const btn=document.getElementById('saveProfileBilling');
+    if(btn)btn.onclick=async()=>{
+      const j=await api('/api/profile',{method:'PATCH',body:JSON.stringify({
+        name:document.getElementById('profileName').value.trim(),
+        company:document.getElementById('profileCompany').value.trim(),
+        phone:document.getElementById('profilePhone').value.trim(),
+        iban:document.getElementById('profileIban').value.trim(),
+        bank_name:document.getElementById('profileBank').value.trim()
+      })});
+      const m=document.getElementById('billingMsg');if(m){m.textContent='✓ Sačuvano';setTimeout(()=>m.textContent='',1500);}
+    };
+  }catch(e){location.href='login.html'}
+})();
+</script>
 </body></html>
