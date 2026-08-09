@@ -65,4 +65,20 @@ function applyLang(l){currentLang=l;localStorage.setItem('ba_admin_lang',l);let 
 L.onchange=e=>applyLang(e.target.value);applyLang(currentLang);
 document.getElementById('defaultLang').value=currentLang;document.getElementById('saveSettings').onclick=()=>{localStorage.setItem('ba_admin_lang',document.getElementById('defaultLang').value);document.getElementById('saveMsg').textContent='✓ Saved';setTimeout(()=>document.getElementById('saveMsg').textContent='',1500)};
 render();
-</script></body></html>
+</script>
+<script>
+(function(){
+  const search=document.getElementById('search');
+  const lang=document.getElementById('lang');
+  function extra(){
+    if(!search||!lang||typeof TR==='undefined') return;
+    const t=TR[lang.value]||TR.Crnogorski;
+    search.placeholder=t.search||'Search';
+    const active=document.querySelector('nav button[data-tab].active');
+    if(active) document.getElementById('title').textContent=active.textContent;
+  }
+  if(lang) lang.addEventListener('change',()=>setTimeout(extra,0));
+  extra();
+})();
+</script>
+</body></html>

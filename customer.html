@@ -46,4 +46,21 @@ render();
    }catch(e){}
  }
 })();
-</script></body></html>
+</script>
+<script>
+(function(){
+  try{
+    // Keep the existing customer design/functions, but ensure all public channels exist.
+    const allChannels=['Website','WhatsApp','Instagram','Facebook','Viber','Telegram','Email','SMS'];
+    if(typeof state!=='undefined'){
+      state.channels=state.channels||{};
+      allChannels.forEach(name=>{if(!(name in state.channels)) state.channels[name]=false;});
+      const publicCfg=JSON.parse(localStorage.getItem('ba_integrations')||'{}');
+      allChannels.forEach(name=>{if(publicCfg[name]&&publicCfg[name].configured) state.channels[name]=true;});
+      localStorage.setItem('ba_customer_state_v2',JSON.stringify(state));
+      if(typeof render==='function') render();
+    }
+  }catch(e){console.warn('Customer channel sync skipped',e);}
+})();
+</script>
+</body></html>
