@@ -85,68 +85,50 @@ html,body{overflow-x:hidden}
 }
 </style>
 
-<style id="montenegro-layout-fix">
-.copy{min-width:0;overflow:visible}
+
+<style id="requested-fix-only">
+/* Desktop: svih 5 kartica moraju ostati unutar lijeve hero kolone. */
+.heroGrid{grid-template-columns:minmax(0,452px) minmax(0,1fr) 225px}
+.copy{min-width:0}
 .serviceCards{
-  grid-template-columns:repeat(5,minmax(0,1fr));
-  gap:8px;
-  width:100%;
-  max-width:452px;
+ display:grid!important;
+ grid-template-columns:repeat(5,minmax(0,1fr))!important;
+ gap:7px!important;
+ width:100%!important;
+ max-width:452px!important;
 }
 .serviceCard{
-  min-width:0;
-  width:auto;
-  overflow:hidden;
-  padding-left:4px;
-  padding-right:4px;
+ width:100%!important;min-width:0!important;max-width:none!important;
+ margin:0!important;transform:none!important;left:auto!important;right:auto!important;
+ padding:12px 3px!important;
 }
-.serviceCard b,.serviceCard small{
-  white-space:normal;
-  overflow-wrap:anywhere;
-}
+.serviceCard:nth-child(5){grid-column:5!important}
+.serviceCard b{font-size:11px!important}
+.serviceCard small{font-size:10px!important}
 .stats{
-  width:100%;
-  max-width:452px;
-  grid-template-columns:repeat(4,minmax(0,1fr));
+ width:100%!important;max-width:452px!important;
+ grid-template-columns:repeat(4,minmax(0,1fr))!important;
 }
-.stat{
-  min-width:0;
-  padding:13px 10px;
-  gap:8px;
+.stat{min-width:0!important;padding:13px 8px!important;gap:7px!important}
+.stat b{font-size:17px!important}.stat small{white-space:normal!important}
+.statIcon{width:28px!important;min-width:28px!important}
+.madeMontenegroTop{
+ display:flex;align-items:center;justify-content:center;gap:9px;
+ width:max-content;margin:10px auto -4px;
+ padding:7px 17px;border-radius:999px;
+ border:1px solid rgba(55,164,255,.28);
+ background:linear-gradient(90deg,rgba(16,64,116,.15),rgba(116,49,255,.13));
+ font-family:"Palatino Linotype",Palatino,Georgia,serif;
+ font-size:13px;font-style:italic;font-weight:600;letter-spacing:.8px;
+ color:#f3f6ff;text-shadow:0 0 16px rgba(93,120,255,.48)
 }
-.stat b{font-size:18px}
-.stat small{
-  white-space:normal;
-  overflow-wrap:anywhere;
-  line-height:1.25;
-}
-.statIcon{
-  width:30px;
-  min-width:30px;
-}
-.statIcon svg{width:27px;height:27px}
-.madeInMontenegro{
-  text-align:center;
-  color:#7f90a8;
-  font-size:11px;
-  letter-spacing:.7px;
-  padding:0 0 28px;
-}
-.madeInMontenegro b{color:#d8dde7;font-weight:700}
-@media (min-width:1181px) and (max-width:1450px){
-  .serviceCards{max-width:430px;gap:6px}
-  .stats{max-width:430px}
-  .serviceCard{font-size:11px}
-  .stat{padding:12px 8px}
-  .stat b{font-size:17px}
-}
+.madeMontenegroTop .flag{font-style:normal;font-size:16px}
 @media(max-width:820px){
-  .serviceCards{max-width:100%;grid-template-columns:repeat(2,1fr)}
-  .serviceCard:last-child{grid-column:1/-1}
-  .stats{max-width:100%;grid-template-columns:repeat(2,1fr)}
+ .serviceCards{max-width:100%!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .serviceCard:nth-child(5){grid-column:1/-1!important}
+ .stats{max-width:100%!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}
 }
-</style>
-</head><body>
+</style></head><body><div class="madeMontenegroTop"><span class="flag">🇲🇪</span><span>Made in Montenegro</span></div>
 <header class="header"><div class="wrap headerIn">
 <a href="#home" class="brand"><div class="brandMark">BA</div><div class="brandText"><b>BALKAN <span>AGENT</span></b><small>AI AUTOMATION PLATFORM</small></div></a>
 <nav>
@@ -194,7 +176,7 @@ html,body{overflow-x:hidden}
 <section class="trust"><div><div class="trustLead" data-t="trusted"></div><div class="faces"><div class="face">M</div><div class="face">A</div><div class="face">D</div><div class="face">E</div><div class="face">B</div><span class="more">+500</span></div></div><div class="countries">
 <span class="country"><span class="flag">🇲🇪</span>Crna Gora</span><span class="country"><span class="flag">🇷🇸</span>Srbija</span><span class="country"><span class="flag">🇭🇷</span>Hrvatska</span><span class="country"><span class="flag">🇧🇦</span>BiH</span><span class="country"><span class="flag">🇸🇮</span>Slovenija</span><span class="country"><span class="flag">🇲🇰</span>Sjeverna Makedonija</span><span class="country"><span class="flag">🇦🇱</span>Albanija</span><span class="country"><span class="flag">🇬🇷</span>Grčka</span><span class="country"><span class="flag">🇧🇬</span>Bugarska</span><span class="country"><span class="flag">🇷🇴</span>Rumunija</span><span class="country"><span class="flag">🇽🇰</span>Kosovo</span>
 </div></section>
-<div class="tagline"><span data-t="tagline1"></span> <span data-t="tagline2"></span></div><div class="madeInMontenegro"><b>Made in Montenegro 🇲🇪</b></div>
+<div class="tagline"><span data-t="tagline1"></span> <span data-t="tagline2"></span></div>
 
 <section class="section" id="presentation"><video class="video" controls preload="metadata" poster="balkan-agent-premium-video-poster.jpg"><source src="balkan-agent-premium-presentation-en.mp4" type="video/mp4"></video></section>
 
