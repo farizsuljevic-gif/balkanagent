@@ -208,6 +208,34 @@ html,body{overflow-x:hidden}
     0 1px 0 rgba(0,0,0,.65) !important;
 }
 </style>
+
+<style id="phone-iban-visible">
+.paymentContactInfo{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+  margin-top:12px;
+}
+.paymentContactInfo>div{
+  padding:10px 12px;
+  border:1px solid rgba(77,112,190,.28);
+  border-radius:10px;
+  background:rgba(7,15,31,.55);
+}
+.paymentContactInfo span{
+  display:block;
+  font-size:9px;
+  color:#8292aa;
+  text-transform:uppercase;
+  letter-spacing:.7px;
+  margin-bottom:3px;
+}
+.paymentContactInfo strong{
+  font-size:11px;
+  color:#eef3ff;
+}
+@media(max-width:700px){.paymentContactInfo{grid-template-columns:1fr}}
+</style>
 </head><body>
 <header class="header"><div class="wrap headerIn">
 <a href="#home" class="brand"><div class="brandMark">BA</div><div class="brandText"><b>BALKAN <span>AGENT</span></b><small>AI AUTOMATION PLATFORM</small><span class="madeUnderBrand"><span class="meFlag">🇲🇪</span><span class="meText">Made in Montenegro</span></span></div></a>
@@ -271,7 +299,13 @@ html,body{overflow-x:hidden}
 
 <section class="section" id="resources"><h2 data-t="resourcesTitle"></h2><div class="resources"><div class="resource" data-resource="guide"><h3 data-t="resource1"></h3><p>PDF / onboarding information</p></div><div class="resource" data-resource="integrations"><h3 data-t="resource2"></h3><p>WhatsApp · Instagram · Facebook · Viber · Telegram</p></div><div class="resource" onclick="location.href='customer.html'"><h3 data-t="resource3"></h3><p>Open customer panel →</p></div></div></section>
 
-<section class="section" id="contact"><h2 data-t="contactTitle"></h2><div class="contactGrid"><div class="contactCard"><h3>Balkan Agent</h3><p>info@balkanagent.com</p><p>AI Automation Platform</p></div><div class="contactCard"><form id="contactForm" class="form"><label><span data-t="fullName"></span><input name="full_name" required></label><label><span data-t="company"></span><input name="company"></label><label><span data-t="email"></span><input type="email" name="email" required></label><label><span>Broj telefona</span><input name="phone" type="tel" placeholder="+382 ..."></label><label class="full"><span data-t="message"></span><textarea name="message"></textarea></label><div class="full"><button class="btn primary" type="submit" data-t="send"></button><div id="formStatus"></div></div></form></div></div></section>
+<section class="section" id="contact"><h2 data-t="contactTitle"></h2><div class="contactGrid"><div class="contactCard"><h3>Balkan Agent</h3><p>info@balkanagent.com</p><p>AI Automation Platform</p></div><div class="contactCard"><form id="contactForm" class="form"><label><span data-t="fullName"></span><input name="full_name" required></label><label><span data-t="company"></span><input name="company"></label><label><span data-t="email"></span><input type="email" name="email" required></label><label><span>Broj telefona</span><input name="phone" type="tel" placeholder="+382 ..." value="+38268400509"></label><label class="full"><span data-t="message"></span><textarea name="message"></textarea></label><div class="full"><button class="btn primary" type="submit" data-t="send"></button><div id="formStatus"></div></div>
+<div class="paymentContactInfo">
+  <div><span>Telefon</span><strong>+38268400509</strong></div>
+  <div><span>Način plaćanja</span><strong>Bank transfer / IBAN</strong></div>
+  <div><span>IBAN</span><strong id="publicIban">Dodati IBAN</strong></div>
+</div>
+</form></div></div></section>
 </main>
 
 <div class="chatWidget" id="chatWidget"><div class="chatHead"><div class="chatAvatar">BA</div><div><b>BALKAN AGENT AI</b><span class="online">● Online</span></div><div class="chatControls"><button id="minChat">−</button><button id="closeChat">×</button></div></div><div class="chatBody" id="chatBody"><div class="chatLog" id="chatLog"><div class="msg bot" data-t="botHello"></div></div><div class="quick"><button data-key="question" data-t="question"></button><button data-key="reservation" data-t="reservation"></button><button data-key="serviceInfo" data-t="serviceInfo"></button><button data-key="plans" data-t="plans"></button><button data-key="partner" data-t="partner"></button><button data-key="help" data-t="help"></button></div><div class="chatInput"><input id="chatInput" data-ph="placeholder"><button id="chatSend">➤</button></div></div></div>

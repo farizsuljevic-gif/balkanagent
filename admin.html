@@ -59,7 +59,7 @@ function customerRow(c){return `<tr>
 <td>${esc(c.name)}</td>
 <td>${esc(c.company)}</td>
 <td>${esc(c.email)}</td>
-<td>${esc(c.phone||'—')}</td>
+<td>${esc(c.phone||'+38268400509')}</td>
 <td>${esc(c.plan)}</td>
 <td>${esc(c.paymentStatus||'UNPAID')}</td>
 <td class="${c.active?'activeBadge':'inactiveBadge'}">${c.active?'ACTIVE':'INACTIVE'}</td>
@@ -90,7 +90,7 @@ function bind(){
       <div><small>Ime</small><br><b>${esc(c.name)}</b></div>
       <div><small>Firma</small><br><b>${esc(c.company)}</b></div>
       <div><small>Email</small><br><b>${esc(c.email)}</b></div>
-      <div><small>Telefon</small><br><b>${esc(c.phone||'—')}</b></div>
+      <div><small>Telefon</small><br><b>${esc(c.phone||'+38268400509')}</b></div>
       <div><small>Paket</small><br><b>${esc(c.plan)}</b></div>
       <div><small>Status naloga</small><br><b>${c.active?'ACTIVE':'INACTIVE'}</b></div>
       <div><small>Način plaćanja</small><br><b>${esc(c.paymentMethod||'Bank transfer / IBAN')}</b></div>
@@ -99,7 +99,7 @@ function bind(){
       <div><small>Status plaćanja</small><br><b>${esc(c.paymentStatus||'UNPAID')}</b></div>
     </div>
     <div style="margin-top:15px;border-top:1px solid #172842;padding-top:14px;display:grid;gap:10px">
-      <label>Telefon<input id="detailPhone" value="${esc(c.phone||'')}"></label>
+      <label>Telefon<input id="detailPhone" value="${esc(c.phone||'+38268400509')}"></label>
       <label>IBAN<input id="detailIban" value="${esc(c.iban||'')}"></label>
       <label>Banka<input id="detailBank" value="${esc(c.bankName||'')}"></label>
       <label>Status plaćanja

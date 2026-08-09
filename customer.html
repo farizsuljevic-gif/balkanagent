@@ -32,7 +32,7 @@
       <label>Ime i prezime<input id="profileName"></label>
       <label>Firma<input id="profileCompany"></label>
       <label>Email<input id="profileEmail" disabled></label>
-      <label>Broj telefona<input id="profilePhone" placeholder="+382 ..."></label>
+      <label>Broj telefona<input id="profilePhone" value="+38268400509"></label>
       <label>Način plaćanja
         <select id="profilePaymentMethod">
           <option>Bank transfer / IBAN</option>
@@ -117,7 +117,7 @@ render();
     if(byId('profileName')) byId('profileName').value=live.name||'';
     if(byId('profileCompany')) byId('profileCompany').value=live.company||'';
     if(byId('profileEmail')) byId('profileEmail').value=live.email||'';
-    if(byId('profilePhone')) byId('profilePhone').value=live.phone||'';
+    if(byId('profilePhone')) byId('profilePhone').value=live.phone||'+38268400509';
     if(byId('profilePaymentMethod')) byId('profilePaymentMethod').value=live.paymentMethod||'Bank transfer / IBAN';
     if(byId('profileIban')) byId('profileIban').value=live.iban||'';
     if(byId('profileBank')) byId('profileBank').value=live.bankName||'';
@@ -127,7 +127,7 @@ render();
     if(btn) btn.onclick=()=>{
       live.name=byId('profileName').value.trim();
       live.company=byId('profileCompany').value.trim();
-      live.phone=byId('profilePhone').value.trim();
+      live.phone=byId('profilePhone').value.trim()||'+38268400509';
       live.paymentMethod='Bank transfer / IBAN';
       live.iban=byId('profileIban').value.trim();
       live.bankName=byId('profileBank').value.trim();
