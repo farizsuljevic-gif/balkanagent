@@ -1,13 +1,11 @@
-BALKAN AGENT — PREMIUM HOMEPAGE
+BALKAN AGENT — ALL-IN-ONE STATIC PUBLISH PACKAGE
 
-Public homepage only. Admin/customer portals are intentionally not included yet.
+Includes public homepage + login portal chooser + Admin dashboard preview + Customer dashboard preview.
 
-Updated:
-- premium dark blue / gold visual system
-- agreed 3D Balkan map
-- new 64-second English presentation
-- 8 distinct premium presentation scenes
-- services, channels, workflow and pricing
-- contact form to info@balkanagent.com
+SAFE FOR CURRENT CLOUDFLARE PAGES:
+- no _worker.js
+- no package.json
+- no backend build files
 
-Upload all files from this ZIP into the root of the GitHub repository.
+The public contact form remains on info@balkanagent.com.
+Admin/customer pages are visual previews until D1/authentication is connected.
