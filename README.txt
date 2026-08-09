@@ -1,15 +1,14 @@
-BALKAN AGENT — HOMEPAGE V1
+BALKAN AGENT — PREMIUM HOMEPAGE
 
-This ZIP contains only the public homepage phase:
-- index.html
-- balkan-agent-map-3d.png
-- balkan-agent-presentation-en.mp4
-- balkan-agent-video-poster.jpg
+Public homepage only. No admin/customer portal yet.
 
-It intentionally does NOT include admin or customer login yet.
+Included:
+- premium dark blue/gold UI
+- agreed 3D Balkan map
+- channel icons
+- working language switcher
+- MP4 presentation
+- pricing 49 / 79 / 199 / Enterprise
+- contact form to info@balkanagent.com
 
-Upload/replace these files in the root of the existing GitHub repository.
-Cloudflare Pages will redeploy automatically.
-
-Form destination: info@balkanagent.com
-The first FormSubmit submission may require one-time email activation.
+Upload/replace these files in the root of the GitHub repository.
