@@ -120,19 +120,7 @@ html,body{overflow-x:hidden}
  .stats{max-width:100%!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}
 }
 </style>
-<style id="made-under-logo-fix">
-.madeUnderLogo{
-  margin-top:3px;
-  font-family:Georgia,"Times New Roman",serif;
-  font-size:10px;
-  font-style:italic;
-  font-weight:600;
-  letter-spacing:.55px;
-  color:#c7d3e7;
-  line-height:1.1;
-  white-space:nowrap;
-}
-</style>
+
 
 <style id="integration-final-fix">
 .copy{min-width:0!important;overflow:hidden!important}
@@ -171,9 +159,78 @@ html,body{overflow-x:hidden}
   }
 }
 </style>
+
+<style id="made-under-brand-final">
+.brand{align-items:center!important}
+.brandText{
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  min-width:205px!important;
+}
+.brandText b{line-height:1.05!important;white-space:nowrap!important}
+.brandText small{line-height:1.2!important}
+.madeUnderBrand{
+  display:block;
+  margin-top:3px;
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:9px;
+  line-height:1.15;
+  font-style:italic;
+  font-weight:600;
+  letter-spacing:.5px;
+  color:#c8d4e7;
+  white-space:nowrap;
+  text-shadow:0 0 10px rgba(93,120,255,.28);
+}
+/* Exact five-card row: no duplicate/overflow. */
+.serviceCards{
+  display:grid!important;
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  width:100%!important;
+  max-width:452px!important;
+  gap:7px!important;
+  overflow:hidden!important;
+}
+.serviceCards>.serviceCard{
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  margin:0!important;
+  position:relative!important;
+  inset:auto!important;
+  transform:none!important;
+}
+.serviceCards>.serviceCard:nth-child(5){
+  grid-column:5!important;
+  grid-row:1!important;
+}
+/* Keep stats inside left column. */
+.stats{
+  width:100%!important;
+  max-width:452px!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+}
+.stat{min-width:0!important}
+@media(max-width:820px){
+  .serviceCards{
+    max-width:100%!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    overflow:visible!important;
+  }
+  .serviceCards>.serviceCard:nth-child(5){
+    grid-column:1/-1!important;
+    grid-row:auto!important;
+  }
+  .stats{
+    max-width:100%!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
+</style>
 </head><body>
 <header class="header"><div class="wrap headerIn">
-<a href="#home" class="brand"><div class="brandMark">BA</div><div class="madeUnderLogo">🇲🇪 Made in Montenegro</div><div class="brandText"><b>BALKAN <span>AGENT</span></b><small>AI AUTOMATION PLATFORM</small></div></a>
+<a href="#home" class="brand"><div class="brandMark">BA</div><div class="brandText"><b>BALKAN <span>AGENT</span></b><small>AI AUTOMATION PLATFORM</small><span class="madeUnderBrand">🇲🇪 Made in Montenegro</span></div></a>
 <nav>
 <a class="active" href="#home" data-t="home"></a><a href="#services" data-t="services"></a><a href="#pricing" data-t="pricing"></a><a href="#how" data-t="how"></a><a href="#resources" class="resourcesLink"><span data-t="resources"></span>⌄</a><a href="#contact" data-t="contact"></a>
 </nav>
@@ -201,7 +258,7 @@ html,body{overflow-x:hidden}
 <div class="stat"><div class="statIcon"><svg viewBox="0 0 24 24"><path d="M12 2 20 5v6c0 5-3.3 9-8 11-4.7-2-8-6-8-11V5l8-3Z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="m8 12 2.5 2.5L16 9" fill="none" stroke="currentColor" stroke-width="1.7"/></svg></div><div><b>100%</b><small data-t="security"></small></div></div>
 </div>
 </div>
-<div class="mapStage"><img src="approved-map-transparent.png" alt="Balkan Agent 3D Balkan map"></div>
+<div class="mapStage"><img src="approved-map-clean-final.png" alt="Balkan Agent 3D Balkan map"></div>
 <aside class="livePanel">
 <div class="liveTitle"><span data-t="live"></span></div>
 <div class="liveMetric"><div class="metricIcon">💬</div><div><b>12.486</b><small data-t="conversations"></small></div></div>
@@ -301,6 +358,20 @@ document.addEventListener('DOMContentLoaded', function () {
     if (isIntegration) {
       if (foundIntegration) card.remove();
       else foundIntegration = true;
+    }
+  });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  const list=[...document.querySelectorAll('.serviceCards>.serviceCard')];
+  let seen=false;
+  list.forEach(card=>{
+    const isIntegration=card.dataset.service==='Integrations'||!!card.querySelector('[data-t="integrations"]');
+    if(isIntegration){
+      if(seen) card.remove();
+      seen=true;
     }
   });
 });
