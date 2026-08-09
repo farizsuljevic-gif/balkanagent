@@ -160,30 +160,64 @@ html,body{overflow-x:hidden}
 }
 </style>
 
-<style id="made-under-brand-final">
-.brand{align-items:center!important}
+
+
+
+
+<style id="visual-cleanup-final">
+.mapStage{
+  position:relative;
+  overflow:visible!important;
+  background:transparent!important;
+}
+.mapStage:before{
+  content:"";
+  position:absolute;
+  inset:12% 7% 10%;
+  z-index:-1;
+  background:
+    radial-gradient(ellipse at 55% 48%,rgba(38,70,255,.16),transparent 50%),
+    radial-gradient(ellipse at 52% 72%,rgba(161,36,255,.10),transparent 44%);
+  filter:blur(30px);
+  pointer-events:none;
+}
+.mapStage img{
+  width:100%!important;
+  max-width:805px!important;
+  max-height:650px!important;
+  height:auto!important;
+  object-fit:contain!important;
+  display:block!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  filter:drop-shadow(0 26px 48px rgba(24,43,156,.32))!important;
+  -webkit-mask-image:none!important;
+  mask-image:none!important;
+}
+
+/* Elegant signature under logo, without changing header layout */
 .brandText{
-  display:flex!important;
-  flex-direction:column!important;
-  justify-content:center!important;
   min-width:205px!important;
 }
-.brandText b{line-height:1.05!important;white-space:nowrap!important}
-.brandText small{line-height:1.2!important}
 .madeUnderBrand{
-  display:block;
-  margin-top:3px;
-  font-family:Georgia,"Times New Roman",serif;
-  font-size:9px;
-  line-height:1.15;
-  font-style:italic;
-  font-weight:600;
-  letter-spacing:.5px;
-  color:#c8d4e7;
-  white-space:nowrap;
-  text-shadow:0 0 10px rgba(93,120,255,.28);
+  display:block!important;
+  width:max-content!important;
+  margin-top:4px!important;
+  padding-top:3px!important;
+  border-top:1px solid rgba(102,124,255,.20)!important;
+  font-family:Georgia,"Times New Roman",serif!important;
+  font-size:9px!important;
+  line-height:1.15!important;
+  font-style:italic!important;
+  font-weight:600!important;
+  letter-spacing:.65px!important;
+  color:#d5ddec!important;
+  white-space:nowrap!important;
+  text-shadow:0 0 10px rgba(78,109,255,.28)!important;
 }
-/* Exact five-card row: no duplicate/overflow. */
+
+/* Keep feature cards and stats aligned, no overflow */
 .serviceCards{
   display:grid!important;
   grid-template-columns:repeat(5,minmax(0,1fr))!important;
@@ -197,15 +231,12 @@ html,body{overflow-x:hidden}
   min-width:0!important;
   max-width:100%!important;
   margin:0!important;
-  position:relative!important;
-  inset:auto!important;
   transform:none!important;
 }
 .serviceCards>.serviceCard:nth-child(5){
   grid-column:5!important;
   grid-row:1!important;
 }
-/* Keep stats inside left column. */
 .stats{
   width:100%!important;
   max-width:452px!important;
@@ -227,62 +258,6 @@ html,body{overflow-x:hidden}
     grid-template-columns:repeat(2,minmax(0,1fr))!important;
   }
 }
-</style>
-
-<style id="visual-polish-final">
-/* Make the cleaned map blend naturally into the hero instead of showing hard rectangular edges. */
-.mapStage{
-  isolation:isolate;
-  overflow:visible!important;
-}
-.mapStage:before{
-  content:"";
-  position:absolute;
-  inset:7% 4% 4%;
-  z-index:-1;
-  background:
-    radial-gradient(ellipse at 52% 48%,rgba(46,53,255,.17),transparent 48%),
-    radial-gradient(ellipse at 55% 70%,rgba(180,32,255,.11),transparent 42%);
-  filter:blur(24px);
-  pointer-events:none;
-}
-.mapStage img{
-  width:100%!important;
-  max-width:805px!important;
-  max-height:650px!important;
-  object-fit:contain!important;
-  display:block!important;
-  filter:drop-shadow(0 24px 46px rgba(20,44,170,.32))!important;
-  -webkit-mask-image:
-    linear-gradient(to right,transparent 0,#000 8%,#000 94%,transparent 100%),
-    linear-gradient(to bottom,transparent 0,#000 7%,#000 94%,transparent 100%);
-  -webkit-mask-composite:source-in;
-  mask-image:
-    linear-gradient(to right,transparent 0,#000 8%,#000 94%,transparent 100%),
-    linear-gradient(to bottom,transparent 0,#000 7%,#000 94%,transparent 100%);
-  mask-composite:intersect;
-}
-
-/* Elegant origin signature directly below the existing logo subtitle. */
-.madeUnderBrand{
-  display:inline-flex!important;
-  align-items:center!important;
-  gap:5px!important;
-  width:max-content!important;
-  margin-top:5px!important;
-  padding-top:4px!important;
-  border-top:1px solid rgba(103,126,255,.22)!important;
-  font-family:Georgia,"Times New Roman",serif!important;
-  font-size:9px!important;
-  line-height:1!important;
-  font-style:italic!important;
-  font-weight:600!important;
-  letter-spacing:.65px!important;
-  color:#d9dfed!important;
-  white-space:nowrap!important;
-  text-shadow:0 0 11px rgba(103,126,255,.35)!important;
-}
-.madeUnderBrand::first-letter{font-style:normal}
 </style>
 </head><body>
 <header class="header"><div class="wrap headerIn">
@@ -314,7 +289,7 @@ html,body{overflow-x:hidden}
 <div class="stat"><div class="statIcon"><svg viewBox="0 0 24 24"><path d="M12 2 20 5v6c0 5-3.3 9-8 11-4.7-2-8-6-8-11V5l8-3Z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="m8 12 2.5 2.5L16 9" fill="none" stroke="currentColor" stroke-width="1.7"/></svg></div><div><b>100%</b><small data-t="security"></small></div></div>
 </div>
 </div>
-<div class="mapStage"><img src="approved-map-clean-final.png" alt="Balkan Agent 3D Balkan map"></div>
+<div class="mapStage"><img src="approved-map-visual-clean.png" alt="Balkan Agent 3D Balkan map"></div>
 <aside class="livePanel">
 <div class="liveTitle"><span data-t="live"></span></div>
 <div class="liveMetric"><div class="metricIcon">💬</div><div><b>12.486</b><small data-t="conversations"></small></div></div>
