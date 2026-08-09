@@ -28,9 +28,9 @@
 <div class="panel"><h2>Posljednja aktivnost</h2><div id="activity" class="empty">Nema aktivnosti.</div></div>
 </section>
 
-<section id="applications" class="section"><div class="panel"><h2>Prijave</h2><div style="overflow:auto"><table><thead><tr><th>Ime</th><th>Firma</th><th>Email</th><th>Paket</th><th>Status</th><th>Akcije</th></tr></thead><tbody id="applicationRows"></tbody></table></div></div></section>
+<section id="applications" class="section"><div class="panel"><h2>Prijave</h2><div style="overflow:auto"><table><thead><tr><th>Ime</th><th>Firma</th><th>Email</th><th>Telefon</th><th>Paket</th><th>Plaćanje</th><th>Status</th><th>Akcije</th></tr></thead><tbody id="applicationRows"></tbody></table></div></div></section>
 
-<section id="customers" class="section"><div class="panel"><h2>Sve mušterije</h2><div style="overflow:auto"><table><thead><tr><th>Ime</th><th>Firma</th><th>Email</th><th>Paket</th><th>Status</th><th>Akcije</th></tr></thead><tbody id="customerRows"></tbody></table></div></div></section>
+<section id="customers" class="section"><div class="panel"><h2>Sve mušterije</h2><div style="overflow:auto"><table><thead><tr><th>Ime</th><th>Firma</th><th>Email</th><th>Telefon</th><th>Paket</th><th>Plaćanje</th><th>Status</th><th>Akcije</th></tr></thead><tbody id="customerRows"></tbody></table></div></div></section>
 <section id="active" class="section"><div class="panel"><h2>Aktivne mušterije</h2><div style="overflow:auto"><table><tbody id="activeRows"></tbody></table></div></div></section>
 <section id="inactive" class="section"><div class="panel"><h2>Neaktivne mušterije</h2><div style="overflow:auto"><table><tbody id="inactiveRows"></tbody></table></div></div></section>
 <section id="sales" class="section"><div class="metrics"><div class="metric"><small>NEW</small><b id="sNew">0</b></div><div class="metric"><small>CONTACTED</small><b id="sContacted">0</b></div><div class="metric"><small>DEMO</small><b id="sDemo">0</b></div><div class="metric"><small>CUSTOMER</small><b id="sCustomer">0</b></div></div></section>
@@ -49,13 +49,22 @@ function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&l
 function ensureFromLeads(){
   leads.forEach(l=>{
     if((l.status==='customer'||l.status==='approved')&&!customers.some(c=>c.email.toLowerCase()===String(l.email).toLowerCase())){
-      customers.push({id:Date.now()+Math.random(),name:l.name,company:l.company,email:l.email,plan:l.plan||'Starter',active:true,createdAt:new Date().toISOString()})
+      customers.push({id:Date.now()+Math.random(),name:l.name,company:l.company,email:l.email,plan:l.plan||'Starter',active:true,phone:l.phone||'',paymentMethod:'Bank transfer / IBAN',iban:'',bankName:'',paymentStatus:'UNPAID',createdAt:new Date().toISOString()})
     }
   });
 }
 ensureFromLeads();
 function actions(c){return `<button class="btn" data-detail="${c.id}">Detalji</button> <button class="btn ${c.active?'danger':'success'}" data-toggle="${c.id}">${c.active?'Deaktiviraj':'Aktiviraj'}</button> <select class="status planSelect" data-planid="${c.id}"><option ${c.plan==='Starter'?'selected':''}>Starter</option><option ${c.plan==='Business'?'selected':''}>Business</option><option ${c.plan==='Pro'?'selected':''}>Pro</option><option ${c.plan==='Enterprise'?'selected':''}>Enterprise</option></select> <button class="btn danger" data-delete="${c.id}">Obriši</button>`}
-function customerRow(c){return `<tr><td>${esc(c.name)}</td><td>${esc(c.company)}</td><td>${esc(c.email)}</td><td>${esc(c.plan)}</td><td class="${c.active?'activeBadge':'inactiveBadge'}">${c.active?'ACTIVE':'INACTIVE'}</td><td>${actions(c)}</td></tr>`}
+function customerRow(c){return `<tr>
+<td>${esc(c.name)}</td>
+<td>${esc(c.company)}</td>
+<td>${esc(c.email)}</td>
+<td>${esc(c.phone||'—')}</td>
+<td>${esc(c.plan)}</td>
+<td>${esc(c.paymentStatus||'UNPAID')}</td>
+<td class="${c.active?'activeBadge':'inactiveBadge'}">${c.active?'ACTIVE':'INACTIVE'}</td>
+<td>${actions(c)}</td>
+</tr>`}
 function render(){
   let q=document.getElementById('search').value.toLowerCase();
   let cf=customers.filter(c=>JSON.stringify(c).toLowerCase().includes(q));
@@ -73,8 +82,49 @@ function bind(){
   document.querySelectorAll('[data-toggle]').forEach(b=>b.onclick=()=>{let c=customers.find(x=>String(x.id)===b.dataset.toggle);if(c)c.active=!c.active;save()});
   document.querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>{if(confirm('Obrisati mušteriju?')){customers=customers.filter(x=>String(x.id)!==b.dataset.delete);save()}});
   document.querySelectorAll('.planSelect').forEach(s=>s.onchange=()=>{let c=customers.find(x=>String(x.id)===s.dataset.planid);if(c)c.plan=s.value;save()});
-  document.querySelectorAll('[data-detail]').forEach(b=>b.onclick=()=>{let c=customers.find(x=>String(x.id)===b.dataset.detail);if(!c)return;document.getElementById('detailBody').innerHTML=`<div class="detail"><div><small>Ime</small><br><b>${esc(c.name)}</b></div><div><small>Firma</small><br><b>${esc(c.company)}</b></div><div><small>Email</small><br><b>${esc(c.email)}</b></div><div><small>Paket</small><br><b>${esc(c.plan)}</b></div><div><small>Status</small><br><b>${c.active?'ACTIVE':'INACTIVE'}</b></div><div><small>ID</small><br><b>${esc(c.id)}</b></div></div>`;document.getElementById('detailModal').classList.add('show')});
-  document.querySelectorAll('[data-approve]').forEach(b=>b.onclick=()=>{let l=leads.find(x=>String(x.id)===b.dataset.approve);if(!l)return;if(!customers.some(c=>c.email.toLowerCase()===String(l.email).toLowerCase()))customers.push({id:Date.now(),name:l.name,company:l.company,email:l.email,plan:l.plan||'Starter',active:true,createdAt:new Date().toISOString()});l.status='customer';save()});
+
+  document.querySelectorAll('[data-detail]').forEach(b=>b.onclick=()=>{
+    let c=customers.find(x=>String(x.id)===b.dataset.detail);
+    if(!c)return;
+    document.getElementById('detailBody').innerHTML=`<div class="detail">
+      <div><small>Ime</small><br><b>${esc(c.name)}</b></div>
+      <div><small>Firma</small><br><b>${esc(c.company)}</b></div>
+      <div><small>Email</small><br><b>${esc(c.email)}</b></div>
+      <div><small>Telefon</small><br><b>${esc(c.phone||'—')}</b></div>
+      <div><small>Paket</small><br><b>${esc(c.plan)}</b></div>
+      <div><small>Status naloga</small><br><b>${c.active?'ACTIVE':'INACTIVE'}</b></div>
+      <div><small>Način plaćanja</small><br><b>${esc(c.paymentMethod||'Bank transfer / IBAN')}</b></div>
+      <div><small>IBAN</small><br><b>${esc(c.iban||'—')}</b></div>
+      <div><small>Banka</small><br><b>${esc(c.bankName||'—')}</b></div>
+      <div><small>Status plaćanja</small><br><b>${esc(c.paymentStatus||'UNPAID')}</b></div>
+    </div>
+    <div style="margin-top:15px;border-top:1px solid #172842;padding-top:14px;display:grid;gap:10px">
+      <label>Telefon<input id="detailPhone" value="${esc(c.phone||'')}"></label>
+      <label>IBAN<input id="detailIban" value="${esc(c.iban||'')}"></label>
+      <label>Banka<input id="detailBank" value="${esc(c.bankName||'')}"></label>
+      <label>Status plaćanja
+        <select id="detailPaymentStatus" class="status">
+          <option ${c.paymentStatus==='UNPAID'?'selected':''}>UNPAID</option>
+          <option ${c.paymentStatus==='PENDING'?'selected':''}>PENDING</option>
+          <option ${c.paymentStatus==='PAID'?'selected':''}>PAID</option>
+          <option ${c.paymentStatus==='OVERDUE'?'selected':''}>OVERDUE</option>
+        </select>
+      </label>
+      <button class="btn primary" id="saveCustomerFinance">Sačuvaj podatke</button>
+    </div>`;
+    document.getElementById('detailModal').classList.add('show');
+    document.getElementById('saveCustomerFinance').onclick=()=>{
+      c.phone=document.getElementById('detailPhone').value.trim();
+      c.iban=document.getElementById('detailIban').value.trim();
+      c.bankName=document.getElementById('detailBank').value.trim();
+      c.paymentMethod='Bank transfer / IBAN';
+      c.paymentStatus=document.getElementById('detailPaymentStatus').value;
+      save();
+      document.getElementById('detailModal').classList.remove('show');
+    };
+  });
+
+  document.querySelectorAll('[data-approve]').forEach(b=>b.onclick=()=>{let l=leads.find(x=>String(x.id)===b.dataset.approve);if(!l)return;if(!customers.some(c=>c.email.toLowerCase()===String(l.email).toLowerCase()))customers.push({id:Date.now(),name:l.name,company:l.company,email:l.email,plan:l.plan||'Starter',active:true,phone:l.phone||'',paymentMethod:'Bank transfer / IBAN',iban:'',bankName:'',paymentStatus:'UNPAID',createdAt:new Date().toISOString()});l.status='customer';save()});
   document.querySelectorAll('[data-delapp]').forEach(b=>b.onclick=()=>{leads=leads.filter(x=>String(x.id)!==b.dataset.delapp);save()});
 }
 document.querySelectorAll('nav button[data-tab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById(b.dataset.tab).classList.add('active');document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById('title').textContent=b.textContent});
