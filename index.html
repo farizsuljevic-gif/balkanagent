@@ -164,104 +164,45 @@ html,body{overflow-x:hidden}
 
 
 
-<style id="visual-cleanup-final">
-.mapStage{
-  position:relative;
-  overflow:visible!important;
-  background:transparent!important;
-}
-.mapStage:before{
-  content:"";
-  position:absolute;
-  inset:12% 7% 10%;
-  z-index:-1;
-  background:
-    radial-gradient(ellipse at 55% 48%,rgba(38,70,255,.16),transparent 50%),
-    radial-gradient(ellipse at 52% 72%,rgba(161,36,255,.10),transparent 44%);
-  filter:blur(30px);
-  pointer-events:none;
-}
+
+
+<style id="requested-fixes-only">
+/* Exact requested fixes only */
+.mapStage{overflow:hidden!important;background:transparent!important}
 .mapStage img{
   width:100%!important;
-  max-width:805px!important;
-  max-height:650px!important;
   height:auto!important;
   object-fit:contain!important;
   display:block!important;
-  background:transparent!important;
   border:0!important;
   box-shadow:none!important;
-  filter:drop-shadow(0 26px 48px rgba(24,43,156,.32))!important;
+  filter:none!important;
   -webkit-mask-image:none!important;
   mask-image:none!important;
 }
-
-/* Elegant signature under logo, without changing header layout */
-.brandText{
-  min-width:205px!important;
-}
 .madeUnderBrand{
-  display:block!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:5px!important;
   width:max-content!important;
-  margin-top:4px!important;
-  padding-top:3px!important;
-  border-top:1px solid rgba(102,124,255,.20)!important;
+  margin:5px 0 0 0!important;
+  padding:0!important;
+  border:0!important;
   font-family:Georgia,"Times New Roman",serif!important;
   font-size:9px!important;
-  line-height:1.15!important;
+  line-height:1!important;
   font-style:italic!important;
   font-weight:600!important;
-  letter-spacing:.65px!important;
-  color:#d5ddec!important;
+  letter-spacing:.7px!important;
+  color:#e2e7f2!important;
   white-space:nowrap!important;
-  text-shadow:0 0 10px rgba(78,109,255,.28)!important;
+  text-shadow:0 0 8px rgba(78,109,255,.25)!important;
 }
-
-/* Keep feature cards and stats aligned, no overflow */
-.serviceCards{
-  display:grid!important;
-  grid-template-columns:repeat(5,minmax(0,1fr))!important;
-  width:100%!important;
-  max-width:452px!important;
-  gap:7px!important;
-  overflow:hidden!important;
-}
-.serviceCards>.serviceCard{
-  width:100%!important;
-  min-width:0!important;
-  max-width:100%!important;
-  margin:0!important;
-  transform:none!important;
-}
-.serviceCards>.serviceCard:nth-child(5){
-  grid-column:5!important;
-  grid-row:1!important;
-}
-.stats{
-  width:100%!important;
-  max-width:452px!important;
-  grid-template-columns:repeat(4,minmax(0,1fr))!important;
-}
-.stat{min-width:0!important}
-@media(max-width:820px){
-  .serviceCards{
-    max-width:100%!important;
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
-    overflow:visible!important;
-  }
-  .serviceCards>.serviceCard:nth-child(5){
-    grid-column:1/-1!important;
-    grid-row:auto!important;
-  }
-  .stats{
-    max-width:100%!important;
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
-  }
-}
+.madeUnderBrand b{font-style:normal!important;font-size:9px!important}
 </style>
 </head><body>
 <header class="header"><div class="wrap headerIn">
-<a href="#home" class="brand"><div class="brandMark">BA</div><div class="brandText"><b>BALKAN <span>AGENT</span></b><small>AI AUTOMATION PLATFORM</small><span class="madeUnderBrand">🇲🇪 Made in Montenegro</span></div></a>
+<a href="#home" class="brand"><div class="brandMark">BA</div><div class="brandText"><b>BALKAN <span>AGENT</span></b><small>AI AUTOMATION PLATFORM</small><span class="madeUnderBrand"><b>🇲🇪</b> Made in Montenegro</span></div></a>
 <nav>
 <a class="active" href="#home" data-t="home"></a><a href="#services" data-t="services"></a><a href="#pricing" data-t="pricing"></a><a href="#how" data-t="how"></a><a href="#resources" class="resourcesLink"><span data-t="resources"></span>⌄</a><a href="#contact" data-t="contact"></a>
 </nav>
@@ -289,7 +230,7 @@ html,body{overflow-x:hidden}
 <div class="stat"><div class="statIcon"><svg viewBox="0 0 24 24"><path d="M12 2 20 5v6c0 5-3.3 9-8 11-4.7-2-8-6-8-11V5l8-3Z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="m8 12 2.5 2.5L16 9" fill="none" stroke="currentColor" stroke-width="1.7"/></svg></div><div><b>100%</b><small data-t="security"></small></div></div>
 </div>
 </div>
-<div class="mapStage"><img src="approved-map-visual-clean.png" alt="Balkan Agent 3D Balkan map"></div>
+<div class="mapStage"><img src="approved-map-final-clean.jpg" alt="Balkan Agent 3D Balkan map"></div>
 <aside class="livePanel">
 <div class="liveTitle"><span data-t="live"></span></div>
 <div class="liveMetric"><div class="metricIcon">💬</div><div><b>12.486</b><small data-t="conversations"></small></div></div>
