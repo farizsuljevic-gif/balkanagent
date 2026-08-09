@@ -1,3 +1,94 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Balkan Agent Login</title>
-<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:radial-gradient(circle at 60% 10%,#17204b,#030814 62%);color:#f7f9fd;font:15px system-ui}.box{width:min(900px,calc(100% - 28px));background:#081222;border:1px solid #203453;border-radius:18px;padding:30px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px}.card{background:#0b172a;border:1px solid #1d3150;border-radius:14px;padding:22px}a{display:inline-block;margin-top:12px;padding:10px 14px;background:#6f42ee;border-radius:9px;color:#fff;text-decoration:none}select{background:#07101e;color:#fff;border:1px solid #263b5d;border-radius:8px;padding:9px}@media(max-width:650px){.grid{grid-template-columns:1fr}}</style></head><body><div class="box"><div style="display:flex;justify-content:space-between;gap:15px"><h2>BALKAN<span style="color:#6e90ff">AGENT</span></h2><select id="lang"><option value="Crnogorski">Crnogorski</option><option value="English">English</option><option value="Deutsch">Deutsch</option><option value="Русский">Русский</option><option value="Shqip">Shqip</option><option value="Slovenščina">Slovenščina</option><option value="Македонски">Македонски</option><option value="Български">Български</option><option value="Ελληνικά">Ελληνικά</option><option value="Română">Română</option><option value="Türkçe">Türkçe</option></select></div><h1>Portal</h1><div class="grid"><div class="card"><h2 id="adminT">Admin panel</h2><p>Applications, customers and sales pipeline.</p><a href="admin.html">Open Admin →</a></div><div class="card"><h2 id="custT">Customer panel</h2><p>AI employees, leads, channels and subscription.</p><a href="customer.html">Open Customer →</a></div></div></div>
-<script>const T={"Crnogorski": {"home": "Početna", "services": "Usluge", "how": "Kako funkcioniše", "pricing": "Cijene", "contact": "Kontakt", "login": "Prijava", "admin": "Admin panel", "customer": "Customer panel", "overview": "Pregled", "applications": "Prijave", "customers": "Mušterije", "sales": "Prodajni proces", "analytics": "Analitika", "settings": "Podešavanja", "agents": "AI zaposleni", "leads": "Leadovi", "channels": "Kanali", "subscription": "Pretplata", "back": "Nazad na sajt", "export": "Izvezi CSV", "search": "Pretraga", "save": "Sačuvaj", "manage": "Upravljaj paketom"}, "English": {"home": "Home", "services": "Services", "how": "How it works", "pricing": "Pricing", "contact": "Contact", "login": "Login", "admin": "Admin Panel", "customer": "Customer Panel", "overview": "Overview", "applications": "Applications", "customers": "Customers", "sales": "Sales Pipeline", "analytics": "Analytics", "settings": "Settings", "agents": "AI Employees", "leads": "Leads", "channels": "Channels", "subscription": "Subscription", "back": "Back to website", "export": "Export CSV", "search": "Search", "save": "Save", "manage": "Manage plan"}, "Deutsch": {"home": "Start", "services": "Leistungen", "how": "So funktioniert es", "pricing": "Preise", "contact": "Kontakt", "login": "Anmelden", "admin": "Admin-Bereich", "customer": "Kundenbereich", "overview": "Übersicht", "applications": "Anfragen", "customers": "Kunden", "sales": "Vertrieb", "analytics": "Analysen", "settings": "Einstellungen", "agents": "KI-Mitarbeiter", "leads": "Leads", "channels": "Kanäle", "subscription": "Abonnement", "back": "Zur Website", "export": "CSV exportieren", "search": "Suchen", "save": "Speichern", "manage": "Paket verwalten"}, "Русский": {"home": "Главная", "services": "Услуги", "how": "Как работает", "pricing": "Цены", "contact": "Контакты", "login": "Войти", "admin": "Админ", "customer": "Кабинет клиента", "overview": "Обзор", "applications": "Заявки", "customers": "Клиенты", "sales": "Продажи", "analytics": "Аналитика", "settings": "Настройки", "agents": "AI сотрудники", "leads": "Лиды", "channels": "Каналы", "subscription": "Подписка", "back": "На сайт", "export": "Экспорт CSV", "search": "Поиск", "save": "Сохранить", "manage": "Управлять пакетом"}, "Shqip": {"home": "Kryefaqja", "services": "Shërbimet", "how": "Si funksionon", "pricing": "Çmimet", "contact": "Kontakt", "login": "Hyrje", "admin": "Paneli Admin", "customer": "Paneli i Klientit", "overview": "Përmbledhje", "applications": "Aplikimet", "customers": "Klientët", "sales": "Procesi i shitjes", "analytics": "Analitika", "settings": "Cilësimet", "agents": "Punonjësit AI", "leads": "Leads", "channels": "Kanalet", "subscription": "Abonimi", "back": "Kthehu te faqja", "export": "Eksporto CSV", "search": "Kërko", "save": "Ruaj", "manage": "Menaxho planin"}, "Slovenščina": {"home": "Domov", "services": "Storitve", "how": "Kako deluje", "pricing": "Cene", "contact": "Kontakt", "login": "Prijava", "admin": "Admin panel", "customer": "Portal za stranke", "overview": "Pregled", "applications": "Prijave", "customers": "Stranke", "sales": "Prodajni proces", "analytics": "Analitika", "settings": "Nastavitve", "agents": "AI zaposleni", "leads": "Leadi", "channels": "Kanali", "subscription": "Naročnina", "back": "Nazaj na stran", "export": "Izvozi CSV", "search": "Iskanje", "save": "Shrani", "manage": "Upravljaj paket"}, "Македонски": {"home": "Почетна", "services": "Услуги", "how": "Како работи", "pricing": "Цени", "contact": "Контакт", "login": "Најава", "admin": "Админ панел", "customer": "Кориснички панел", "overview": "Преглед", "applications": "Пријави", "customers": "Клиенти", "sales": "Продажен процес", "analytics": "Аналитика", "settings": "Поставки", "agents": "AI вработени", "leads": "Лидови", "channels": "Канали", "subscription": "Претплата", "back": "Назад на сајт", "export": "Извоз CSV", "search": "Пребарај", "save": "Зачувај", "manage": "Управувај пакет"}, "Български": {"home": "Начало", "services": "Услуги", "how": "Как работи", "pricing": "Цени", "contact": "Контакт", "login": "Вход", "admin": "Админ панел", "customer": "Клиентски панел", "overview": "Преглед", "applications": "Заявки", "customers": "Клиенти", "sales": "Продажби", "analytics": "Анализи", "settings": "Настройки", "agents": "AI служители", "leads": "Лийдове", "channels": "Канали", "subscription": "Абонамент", "back": "Към сайта", "export": "Експорт CSV", "search": "Търсене", "save": "Запази", "manage": "Управление на план"}, "Ελληνικά": {"home": "Αρχική", "services": "Υπηρεσίες", "how": "Πώς λειτουργεί", "pricing": "Τιμές", "contact": "Επικοινωνία", "login": "Σύνδεση", "admin": "Πίνακας Admin", "customer": "Πίνακας Πελάτη", "overview": "Επισκόπηση", "applications": "Αιτήσεις", "customers": "Πελάτες", "sales": "Πωλήσεις", "analytics": "Αναλύσεις", "settings": "Ρυθμίσεις", "agents": "AI εργαζόμενοι", "leads": "Leads", "channels": "Κανάλια", "subscription": "Συνδρομή", "back": "Πίσω στον ιστότοπο", "export": "Εξαγωγή CSV", "search": "Αναζήτηση", "save": "Αποθήκευση", "manage": "Διαχείριση πακέτου"}, "Română": {"home": "Acasă", "services": "Servicii", "how": "Cum funcționează", "pricing": "Prețuri", "contact": "Contact", "login": "Autentificare", "admin": "Panou Admin", "customer": "Panou Client", "overview": "Prezentare", "applications": "Cereri", "customers": "Clienți", "sales": "Vânzări", "analytics": "Analiză", "settings": "Setări", "agents": "Angajați AI", "leads": "Lead-uri", "channels": "Canale", "subscription": "Abonament", "back": "Înapoi la site", "export": "Export CSV", "search": "Căutare", "save": "Salvează", "manage": "Gestionează planul"}, "Türkçe": {"home": "Ana Sayfa", "services": "Hizmetler", "how": "Nasıl çalışır", "pricing": "Fiyatlar", "contact": "İletişim", "login": "Giriş", "admin": "Admin Paneli", "customer": "Müşteri Paneli", "overview": "Genel Bakış", "applications": "Başvurular", "customers": "Müşteriler", "sales": "Satış Süreci", "analytics": "Analitik", "settings": "Ayarlar", "agents": "AI Çalışanları", "leads": "Leadler", "channels": "Kanallar", "subscription": "Abonelik", "back": "Siteye dön", "export": "CSV dışa aktar", "search": "Ara", "save": "Kaydet", "manage": "Paketi yönet"}};const l=document.getElementById('lang');l.value=localStorage.getItem('ba_lang')||'Crnogorski';function a(){let t=T[l.value]||T.Crnogorski;document.getElementById('adminT').textContent=t.admin;document.getElementById('custT').textContent=t.customer;localStorage.setItem('ba_lang',l.value)}l.onchange=a;a();</script></body></html>
+<!doctype html>
+<html lang="me">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Balkan Agent — Login</title>
+<style>
+:root{--bg:#020611;--panel:#07101d;--line:#183b60;--text:#f8f9fc;--muted:#9eacc0;--violet:#743cff;--blue:#0abfff;--green:#34e09a;--gold:#d8a94c}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 60% 0,#151c45,#020611 60%);color:var(--text);font:14px/1.5 system-ui;display:grid;place-items:center;padding:22px}
+a{text-decoration:none;color:inherit}button,input,select{font:inherit}.box{width:min(980px,100%);background:#06101d;border:1px solid #193b60;border-radius:18px;overflow:hidden;box-shadow:0 30px 90px #000}
+.head{display:flex;justify-content:space-between;align-items:center;padding:22px 26px;border-bottom:1px solid #17324f}.brand{display:flex;gap:11px;align-items:center}.ba{font-size:40px;font-weight:950;letter-spacing:-5px;background:linear-gradient(135deg,#00adff,#bd4cff,#ff8bdc);-webkit-background-clip:text;color:transparent}.bn{font-size:20px;font-weight:850}.bn span{color:#6684ff}.tag{font-size:9px;color:#9ca9ba;letter-spacing:1.2px}.tabs{display:flex;gap:8px;padding:18px 26px 0}.tab{border:1px solid #29496f;background:#091524;color:#aeb9ca;border-radius:10px;padding:10px 16px;cursor:pointer}.tab.active{background:linear-gradient(135deg,#6e37f0,#315cff);color:#fff;border-color:#6a5cff}.content{padding:22px 26px 28px}.pane{display:none}.pane.active{display:block}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.card{background:#091426;border:1px solid #1a3658;border-radius:14px;padding:20px}.card h2{margin-top:0}.field{margin:12px 0}label{display:block;color:#9dacbe;font-size:12px;margin-bottom:5px}input{width:100%;background:#06101d;color:#fff;border:1px solid #26466b;border-radius:9px;padding:11px}.btn{border:1px solid #2a486c;background:#091523;color:#fff;border-radius:9px;padding:11px 15px;cursor:pointer}.primary{background:linear-gradient(135deg,#7538ff,#315cff);border:0}.note{margin-top:15px;border:1px solid #453a1f;background:#171407;color:#d8c78e;border-radius:9px;padding:10px 12px;font-size:12px}.success{color:#34e09a}.error{color:#ff7b8b}.back{color:#9fb4d2}.small{color:#8f9fb3;font-size:12px}
+@media(max-width:720px){.grid{grid-template-columns:1fr}.head{align-items:flex-start;gap:12px;flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="box">
+<div class="head"><a href="index.html" class="brand"><div class="ba">BA</div><div><div class="bn">BALKAN <span>AGENT</span></div><div class="tag">AI AUTOMATION PLATFORM</div></div></a><a class="back" href="index.html">← Nazad na sajt</a></div>
+<div class="tabs"><button class="tab active" data-pane="customer">Customer Login</button><button class="tab" data-pane="admin">Admin Login</button></div>
+<div class="content">
+<section id="customer" class="pane active">
+<div class="grid">
+<div class="card">
+<h2>Customer Login</h2>
+<p class="small">Za postojeće mušterije.</p>
+<div class="field"><label>Email</label><input id="customerEmail" type="email" placeholder="you@company.com"></div>
+<button class="btn primary" id="customerLogin">Login</button>
+<div id="customerMsg" class="small" style="margin-top:10px"></div>
+</div>
+<div class="card">
+<h2>Create / Test Account</h2>
+<p class="small">Za testiranje možete napraviti lokalni nalog. Pravi email login ćemo povezati kroz backend.</p>
+<div class="field"><label>Ime i prezime</label><input id="newName"></div>
+<div class="field"><label>Email</label><input id="newEmail" type="email"></div>
+<div class="field"><label>Firma</label><input id="newCompany"></div>
+<button class="btn" id="createAccount">Create test account</button>
+<div id="createMsg" class="small" style="margin-top:10px"></div>
+</div>
+</div>
+</section>
+
+<section id="admin" class="pane">
+<div class="grid">
+<div class="card">
+<h2>Admin Login</h2>
+<p class="small">Admin panel je predviđen za CEO nalog.</p>
+<div class="field"><label>Admin email</label><input id="adminEmail" type="email" value="ceo@balkanagent.com"></div>
+<button class="btn primary" id="adminLogin">Open Admin Panel</button>
+<div id="adminMsg" class="small" style="margin-top:10px"></div>
+</div>
+<div class="card">
+<h2>Admin mogućnosti</h2>
+<p>• Pregled svih prijava<br>• Aktivacija mušterija<br>• Deaktivacija mušterija<br>• Promjena paketa<br>• Brisanje mušterija<br>• Pregled prodajnog procesa<br>• CSV export<br>• Podešavanja</p>
+</div>
+</div>
+<div class="note">Ovo je frontend login. Prava zaštita lozinkom i email potvrda dolaze u backend fazi; ne stavljamo admin lozinku u javni HTML.</div>
+</section>
+</div>
+</div>
+<script>
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.pane').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); document.getElementById(b.dataset.pane).classList.add('active');
+});
+const customersKey='ba_customers_v3';
+function customers(){return JSON.parse(localStorage.getItem(customersKey)||'[]')}
+function saveCustomers(x){localStorage.setItem(customersKey,JSON.stringify(x))}
+document.getElementById('createAccount').onclick=()=>{
+  let name=document.getElementById('newName').value.trim(),email=document.getElementById('newEmail').value.trim(),company=document.getElementById('newCompany').value.trim();
+  let m=document.getElementById('createMsg');
+  if(!name||!email){m.className='error';m.textContent='Unesite ime i email.';return}
+  let c=customers();
+  if(c.some(x=>x.email.toLowerCase()===email.toLowerCase())){m.className='error';m.textContent='Nalog sa ovim emailom već postoji.';return}
+  c.push({id:Date.now(),name,email,company,plan:'Starter',active:false,createdAt:new Date().toISOString()});
+  saveCustomers(c);
+  let leads=JSON.parse(localStorage.getItem('ba_admin_leads_v2')||'[]');
+  leads.push({id:Date.now()+1,name,company,email,phone:'',plan:'Starter',status:'new'});
+  localStorage.setItem('ba_admin_leads_v2',JSON.stringify(leads));
+  m.className='success';m.textContent='Test nalog napravljen. Admin ga mora aktivirati.';
+};
+document.getElementById('customerLogin').onclick=()=>{
+  let email=document.getElementById('customerEmail').value.trim(),m=document.getElementById('customerMsg');
+  let c=customers().find(x=>x.email.toLowerCase()===email.toLowerCase());
+  if(!c){m.className='error';m.textContent='Nalog nije pronađen.';return}
+  if(!c.active){m.className='error';m.textContent='Nalog još nije aktiviran od strane admina.';return}
+  localStorage.setItem('ba_logged_customer',JSON.stringify(c));
+  location.href='customer.html';
+};
+document.getElementById('adminLogin').onclick=()=>{
+  let email=document.getElementById('adminEmail').value.trim().toLowerCase(),m=document.getElementById('adminMsg');
+  if(email!=='ceo@balkanagent.com'){m.className='error';m.textContent='Ovaj frontend preview prihvata samo CEO admin email.';return}
+  localStorage.setItem('ba_admin_preview','1');location.href='admin.html';
+};
+</script>
+</body></html>
