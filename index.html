@@ -20,18 +20,18 @@
 @media(max-width:1150px){.links{display:none}.hero{grid-template-columns:1fr 1fr}.sideStats{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr)}.services{grid-template-columns:repeat(2,1fr)}.channels{grid-template-columns:repeat(4,1fr)}.pricing,.why{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:720px){.wrap{padding:0 14px}.desktopLang{display:none}.mobileLang{display:inline-block}.hero{grid-template-columns:1fr;padding-top:26px}h1{font-size:41px}.mapStage{min-height:310px}.sideStats{grid-template-columns:repeat(2,1fr)}.sectionHead{display:block}.sectionHead p{margin-top:8px}.services{grid-template-columns:1fr}.channels{grid-template-columns:repeat(2,1fr)}.videoSec{grid-template-columns:1fr}.pricing,.why{grid-template-columns:1fr}.contactCard{grid-template-columns:1fr}.form{grid-template-columns:1fr}.full{grid-column:auto}}
 </style>
+
 <style>
-.ba-map-v3{position:relative;width:100%;max-width:760px;margin:auto;filter:drop-shadow(0 28px 35px #07104d);transform:perspective(900px) rotateX(8deg);transform-origin:center}
-.ba-map-v3 svg{width:100%;overflow:visible}.ba-map-v3 .land{fill:url(#land);stroke:#5ba1ff;stroke-width:4;filter:url(#glow)}
-.ba-map-v3 .links path{fill:none;stroke:#42a4ff;stroke-width:2;opacity:.8;filter:url(#glow)}
-.ba-map-v3 .nodes circle{fill:#ffd36b;stroke:#fff1b8;stroke-width:2;filter:url(#glow)}
-.ba-map-v3 .labels text{fill:#fff;font:700 13px system-ui;text-anchor:middle;paint-order:stroke;stroke:#07102b;stroke-width:4px}
-</style></head>
+.heroMapProper{display:flex;align-items:center;justify-content:center;width:100%;min-width:0;padding:4px 8px}
+.heroMapProper img{display:block;width:100%;max-width:760px;height:auto;object-fit:contain;border-radius:18px;filter:drop-shadow(0 24px 42px rgba(42,74,255,.24))}
+@media(max-width:900px){.heroMapProper{margin:18px 0}.heroMapProper img{max-width:680px}}
+</style>
+</head>
 <body>
 <header class="nav"><div class="wrap navin">
 <a href="#home" class="brand"><div class="logoMark">BA</div><div><div class="brandName">BALKAN<span>AGENT</span></div><div class="brandTag">AI AUTOMATION PLATFORM</div></div></a>
 <nav class="links"><a href="#home" data-i18n="home"></a><a href="#services" data-i18n="services"></a><a href="#pricing" data-i18n="pricing"></a><a href="#presentation" data-i18n="how"></a><a href="#contact" data-i18n="contact"></a></nav>
-<div class="actions"><select id="lang" class="btn"><option value="Crnogorski">Crnogorski</option><option value="English">English</option><option value="Deutsch">Deutsch</option><option value="Русский">Русский</option><option value="Shqip">Shqip</option><option value="Slovenščina">Slovenščina</option><option value="Македонски">Македонски</option><option value="Български">Български</option><option value="Ελληνικά">Ελληνικά</option><option value="Română">Română</option><option value="Türkçe">Türkçe</option></select><button class="btn mobileLang" id="langBtn">🌐</button><a class="btn primary" href="#contact" data-i18n="cta1"></a><a href="login.html" class="btn">Login</a></div>
+<div class="actions"><select id="lang" class="btn"><option value="Crnogorski">Crnogorski</option><option value="English">English</option><option value="Deutsch">Deutsch</option><option value="Русский">Русский</option><option value="Shqip">Shqip</option><option value="Slovenščina">Slovenščina</option><option value="Македонски">Македонски</option><option value="Български">Български</option><option value="Ελληνικά">Ελληνικά</option><option value="Română">Română</option><option value="Türkçe">Türkçe</option></select><button class="btn mobileLang" id="langBtn">🌐</button><a href="login.html" class="btn">Login</a></div>
 </div></header>
 
 <main class="wrap" id="home">
@@ -40,27 +40,15 @@
 <div class="eyebrow">✦ <span data-i18n="badge"></span></div>
 <h1><span data-i18n="h1a"></span><br><span data-i18n="h1b"></span> <span class="accent" data-i18n="h1c"></span></h1>
 <p class="lead" data-i18n="lead"></p>
-<div class="cta"><a href="#contact" class="btn primary" data-i18n="cta1"></a><a href="#presentation" class="btn gold" data-i18n="cta2"></a></div>
+<div class="cta"><a href="#presentation" class="btn gold" data-i18n="cta2"></a></div>
 <div class="microProof"><span data-i18n="proof1"></span><span data-i18n="proof2"></span><span data-i18n="proof3"></span><span data-i18n="proof4"></span></div>
 </div>
-<div class="ba-map-v3" aria-label="3D Balkan network map">
-<svg viewBox="0 0 760 560" role="img">
-<defs>
- <linearGradient id="land" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#1249ff"/><stop offset=".55" stop-color="#4026c8"/><stop offset="1" stop-color="#8b20dc"/></linearGradient>
- <filter id="glow"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-</defs>
-<ellipse cx="390" cy="490" rx="285" ry="52" fill="none" stroke="#255cff" stroke-width="2" opacity=".35"/>
-<ellipse cx="390" cy="490" rx="225" ry="38" fill="none" stroke="#8d31ff" opacity=".45"/>
-<path class="land" d="M238 68 L335 49 405 82 472 74 531 119 519 173 568 210 550 260 590 305 545 349 527 418 466 474 411 456 375 399 330 378 297 325 246 297 267 245 217 209 239 164 205 125Z"/>
-<g class="links">
-<path d="M290 112 Q385 175 465 150 M290 112 Q360 240 398 296 M465 150 Q485 230 480 335 M330 220 Q410 190 515 245 M330 220 Q360 310 430 390 M398 296 Q465 285 515 245 M398 296 Q435 350 480 335"/>
-</g>
-<g class="nodes"><circle cx="290" cy="112" r="5"/><circle cx="465" cy="150" r="5"/><circle cx="330" cy="220" r="5"/><circle cx="398" cy="296" r="5"/><circle cx="515" cy="245" r="5"/><circle cx="480" cy="335" r="5"/><circle cx="430" cy="390" r="5"/></g>
-<g class="labels">
-<text x="255" y="100">SLOVENIA</text><text x="425" y="139">CROATIA</text><text x="285" y="208">BOSNIA &amp; HERZEGOVINA</text><text x="365" y="286">MONTENEGRO</text><text x="500" y="233">SERBIA</text><text x="455" y="326">KOSOVO</text><text x="397" y="380">NORTH MACEDONIA</text><text x="275" y="340">ALBANIA</text><text x="465" y="430">GREECE</text>
-</g>
-</svg></div>
+
 <aside class="sideStats"><div class="stat"><b>24/7</b><span>AI availability</span></div><div class="stat"><b>4</b><span>AI roles</span></div><div class="stat"><b>8+</b><span>Channels</span></div><div class="stat"><b>11+</b><span>Languages ready</span></div></aside>
+
+<div class="heroMapProper" aria-label="3D Balkan map">
+  <img src="balkan-agent-map-3d.png" alt="3D map of the Balkans with country borders">
+</div>
 </section>
 
 <section id="services">
