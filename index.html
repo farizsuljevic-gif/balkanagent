@@ -112,25 +112,68 @@ html,body{overflow-x:hidden}
 .stat{min-width:0!important;padding:13px 8px!important;gap:7px!important}
 .stat b{font-size:17px!important}.stat small{white-space:normal!important}
 .statIcon{width:28px!important;min-width:28px!important}
-.madeMontenegroTop{
- display:flex;align-items:center;justify-content:center;gap:9px;
- width:max-content;margin:10px auto -4px;
- padding:7px 17px;border-radius:999px;
- border:1px solid rgba(55,164,255,.28);
- background:linear-gradient(90deg,rgba(16,64,116,.15),rgba(116,49,255,.13));
- font-family:"Palatino Linotype",Palatino,Georgia,serif;
- font-size:13px;font-style:italic;font-weight:600;letter-spacing:.8px;
- color:#f3f6ff;text-shadow:0 0 16px rgba(93,120,255,.48)
-}
-.madeMontenegroTop .flag{font-style:normal;font-size:16px}
+
+
 @media(max-width:820px){
  .serviceCards{max-width:100%!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}
  .serviceCard:nth-child(5){grid-column:1/-1!important}
  .stats{max-width:100%!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}
 }
-</style></head><body><div class="madeMontenegroTop"><span class="flag">🇲🇪</span><span>Made in Montenegro</span></div>
+</style>
+<style id="made-under-logo-fix">
+.madeUnderLogo{
+  margin-top:3px;
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:10px;
+  font-style:italic;
+  font-weight:600;
+  letter-spacing:.55px;
+  color:#c7d3e7;
+  line-height:1.1;
+  white-space:nowrap;
+}
+</style>
+
+<style id="integration-final-fix">
+.copy{min-width:0!important;overflow:hidden!important}
+.serviceCards{
+  display:grid!important;
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  gap:7px!important;
+  width:100%!important;
+  max-width:452px!important;
+  overflow:hidden!important;
+}
+.serviceCards>.serviceCard{
+  box-sizing:border-box!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  margin:0!important;
+  position:relative!important;
+  inset:auto!important;
+  transform:none!important;
+}
+.serviceCards>.serviceCard:nth-child(5){
+  grid-column:5!important;
+  grid-row:1!important;
+}
+@media(max-width:820px){
+  .copy{overflow:visible!important}
+  .serviceCards{
+    max-width:100%!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    overflow:visible!important;
+  }
+  .serviceCards>.serviceCard:nth-child(5){
+    grid-column:1/-1!important;
+    grid-row:auto!important;
+  }
+}
+</style>
+</head><body>
 <header class="header"><div class="wrap headerIn">
-<a href="#home" class="brand"><div class="brandMark">BA</div><div class="brandText"><b>BALKAN <span>AGENT</span></b><small>AI AUTOMATION PLATFORM</small></div></a>
+<a href="#home" class="brand"><div class="brandMark">BA</div><div class="madeUnderLogo">🇲🇪 Made in Montenegro</div><div class="brandText"><b>BALKAN <span>AGENT</span></b><small>AI AUTOMATION PLATFORM</small></div></a>
 <nav>
 <a class="active" href="#home" data-t="home"></a><a href="#services" data-t="services"></a><a href="#pricing" data-t="pricing"></a><a href="#how" data-t="how"></a><a href="#resources" class="resourcesLink"><span data-t="resources"></span>⌄</a><a href="#contact" data-t="contact"></a>
 </nav>
@@ -246,4 +289,20 @@ let localLeads=JSON.parse(localStorage.getItem('ba_admin_leads_v2')||'[]');
 localLeads.push({id:Date.now(),name:fd.get('full_name')||'',company:fd.get('company')||'',email:fd.get('email')||'',phone:fd.get('phone')||'',plan:fd.get('selected_plan')||'Contact',status:'new'});
 localStorage.setItem('ba_admin_leads_v2',JSON.stringify(localLeads));
 st.textContent='✓ Sent';e.target.reset()}catch(err){st.textContent='Please email info@balkanagent.com'}};
-</script></body></html>
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const cards = [...document.querySelectorAll('.serviceCards > .serviceCard')];
+  let foundIntegration = false;
+  cards.forEach(card => {
+    const isIntegration =
+      card.dataset.service === 'Integrations' ||
+      card.querySelector('[data-t="integrations"]');
+    if (isIntegration) {
+      if (foundIntegration) card.remove();
+      else foundIntegration = true;
+    }
+  });
+});
+</script>
+</body></html>
