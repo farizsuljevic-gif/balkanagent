@@ -1,94 +1,93 @@
 <!doctype html>
 <html lang="me">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Balkan Agent — Login</title>
 <style>
-:root{--bg:#020611;--panel:#07101d;--line:#183b60;--text:#f8f9fc;--muted:#9eacc0;--violet:#743cff;--blue:#0abfff;--green:#34e09a;--gold:#d8a94c}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 60% 0,#151c45,#020611 60%);color:var(--text);font:14px/1.5 system-ui;display:grid;place-items:center;padding:22px}
-a{text-decoration:none;color:inherit}button,input,select{font:inherit}.box{width:min(980px,100%);background:#06101d;border:1px solid #193b60;border-radius:18px;overflow:hidden;box-shadow:0 30px 90px #000}
-.head{display:flex;justify-content:space-between;align-items:center;padding:22px 26px;border-bottom:1px solid #17324f}.brand{display:flex;gap:11px;align-items:center}.ba{font-size:40px;font-weight:950;letter-spacing:-5px;background:linear-gradient(135deg,#00adff,#bd4cff,#ff8bdc);-webkit-background-clip:text;color:transparent}.bn{font-size:20px;font-weight:850}.bn span{color:#6684ff}.tag{font-size:9px;color:#9ca9ba;letter-spacing:1.2px}.tabs{display:flex;gap:8px;padding:18px 26px 0}.tab{border:1px solid #29496f;background:#091524;color:#aeb9ca;border-radius:10px;padding:10px 16px;cursor:pointer}.tab.active{background:linear-gradient(135deg,#6e37f0,#315cff);color:#fff;border-color:#6a5cff}.content{padding:22px 26px 28px}.pane{display:none}.pane.active{display:block}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.card{background:#091426;border:1px solid #1a3658;border-radius:14px;padding:20px}.card h2{margin-top:0}.field{margin:12px 0}label{display:block;color:#9dacbe;font-size:12px;margin-bottom:5px}input{width:100%;background:#06101d;color:#fff;border:1px solid #26466b;border-radius:9px;padding:11px}.btn{border:1px solid #2a486c;background:#091523;color:#fff;border-radius:9px;padding:11px 15px;cursor:pointer}.primary{background:linear-gradient(135deg,#7538ff,#315cff);border:0}.note{margin-top:15px;border:1px solid #453a1f;background:#171407;color:#d8c78e;border-radius:9px;padding:10px 12px;font-size:12px}.success{color:#34e09a}.error{color:#ff7b8b}.back{color:#9fb4d2}.small{color:#8f9fb3;font-size:12px}
-@media(max-width:720px){.grid{grid-template-columns:1fr}.head{align-items:flex-start;gap:12px;flex-direction:column}}
+:root{--bg:#020611;--panel:#07101d;--line:#183b60;--text:#f8f9fc;--muted:#9eacc0;--violet:#743cff;--blue:#0abfff;--green:#34e09a}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(circle at 60% 0,#151c45,#020611 62%);color:var(--text);font:14px/1.5 system-ui;display:grid;place-items:center;padding:22px}
+a{text-decoration:none;color:inherit}
+button,input{font:inherit}
+.loginBox{width:min(520px,100%);background:#06101d;border:1px solid #193b60;border-radius:17px;box-shadow:0 30px 90px #000;overflow:hidden}
+.header{display:flex;align-items:center;justify-content:space-between;padding:21px 24px;border-bottom:1px solid #17324f}
+.brand{display:flex;align-items:center;gap:11px}
+.ba{font-size:40px;font-weight:950;letter-spacing:-5px;background:linear-gradient(135deg,#00adff,#bd4cff,#ff8bdc);-webkit-background-clip:text;color:transparent}
+.bn{font-size:19px;font-weight:850}.bn span{color:#6684ff}.tag{font-size:8px;color:#9ca9ba;letter-spacing:1.2px}
+.back{color:#9fb4d2;font-size:12px}
+.body{padding:28px 26px 30px}
+h1{font-size:30px;margin:0 0 8px}
+.subtitle{color:var(--muted);margin:0 0 23px}
+.field{margin-bottom:14px}
+label{display:block;color:#a6b3c4;font-size:12px;margin-bottom:6px}
+input{width:100%;background:#06101d;color:#fff;border:1px solid #26466b;border-radius:9px;padding:12px}
+.btn{width:100%;border:0;background:linear-gradient(135deg,#7538ff,#315cff);color:#fff;border-radius:10px;padding:13px 15px;cursor:pointer;font-weight:700}
+#msg{font-size:12px;margin-top:12px;min-height:18px}
+.error{color:#ff8190}.success{color:#34e09a}
+.help{border-top:1px solid #17324f;padding:15px 26px;color:#8798ad;font-size:11px}
 </style>
 </head>
 <body>
-<div class="box">
-<div class="head"><a href="index.html" class="brand"><div class="ba">BA</div><div><div class="bn">BALKAN <span>AGENT</span></div><div class="tag">AI AUTOMATION PLATFORM</div></div></a><a class="back" href="index.html">← Nazad na sajt</a></div>
-<div class="tabs"><button class="tab active" data-pane="customer">Customer Login</button><button class="tab" data-pane="admin">Admin Login</button></div>
-<div class="content">
-<section id="customer" class="pane active">
-<div class="grid">
-<div class="card">
-<h2>Customer Login</h2>
-<p class="small">Za postojeće mušterije.</p>
-<div class="field"><label>Email</label><input id="customerEmail" type="email" placeholder="you@company.com"></div>
-<button class="btn primary" id="customerLogin">Login</button>
-<div id="customerMsg" class="small" style="margin-top:10px"></div>
+<div class="loginBox">
+  <div class="header">
+    <a href="index.html" class="brand">
+      <div class="ba">BA</div>
+      <div><div class="bn">BALKAN <span>AGENT</span></div><div class="tag">AI AUTOMATION PLATFORM</div></div>
+    </a>
+    <a href="index.html" class="back">← Nazad</a>
+  </div>
+  <div class="body">
+    <h1>Login</h1>
+    <p class="subtitle">Prijavite se svojim emailom.</p>
+    <form id="loginForm">
+      <div class="field">
+        <label>Email</label>
+        <input id="email" type="email" autocomplete="email" required placeholder="email@company.com">
+      </div>
+      <button class="btn" type="submit">Login</button>
+      <div id="msg"></div>
+    </form>
+  </div>
+  <div class="help">Admin i aktivirane mušterije koriste isti Login.</div>
 </div>
-<div class="card">
-<h2>Create / Test Account</h2>
-<p class="small">Za testiranje možete napraviti lokalni nalog. Pravi email login ćemo povezati kroz backend.</p>
-<div class="field"><label>Ime i prezime</label><input id="newName"></div>
-<div class="field"><label>Email</label><input id="newEmail" type="email"></div>
-<div class="field"><label>Firma</label><input id="newCompany"></div>
-<button class="btn" id="createAccount">Create test account</button>
-<div id="createMsg" class="small" style="margin-top:10px"></div>
-</div>
-</div>
-</section>
 
-<section id="admin" class="pane">
-<div class="grid">
-<div class="card">
-<h2>Admin Login</h2>
-<p class="small">Admin panel je predviđen za CEO nalog.</p>
-<div class="field"><label>Admin email</label><input id="adminEmail" type="email" value="ceo@balkanagent.com"></div>
-<button class="btn primary" id="adminLogin">Open Admin Panel</button>
-<div id="adminMsg" class="small" style="margin-top:10px"></div>
-</div>
-<div class="card">
-<h2>Admin mogućnosti</h2>
-<p>• Pregled svih prijava<br>• Aktivacija mušterija<br>• Deaktivacija mušterija<br>• Promjena paketa<br>• Brisanje mušterija<br>• Pregled prodajnog procesa<br>• CSV export<br>• Podešavanja</p>
-</div>
-</div>
-<div class="note">Ovo je frontend login. Prava zaštita lozinkom i email potvrda dolaze u backend fazi; ne stavljamo admin lozinku u javni HTML.</div>
-</section>
-</div>
-</div>
 <script>
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
-  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-  document.querySelectorAll('.pane').forEach(x=>x.classList.remove('active'));
-  b.classList.add('active'); document.getElementById(b.dataset.pane).classList.add('active');
-});
+const ADMIN_EMAIL='ceo@balkanagent.com';
 const customersKey='ba_customers_v3';
-function customers(){return JSON.parse(localStorage.getItem(customersKey)||'[]')}
-function saveCustomers(x){localStorage.setItem(customersKey,JSON.stringify(x))}
-document.getElementById('createAccount').onclick=()=>{
-  let name=document.getElementById('newName').value.trim(),email=document.getElementById('newEmail').value.trim(),company=document.getElementById('newCompany').value.trim();
-  let m=document.getElementById('createMsg');
-  if(!name||!email){m.className='error';m.textContent='Unesite ime i email.';return}
-  let c=customers();
-  if(c.some(x=>x.email.toLowerCase()===email.toLowerCase())){m.className='error';m.textContent='Nalog sa ovim emailom već postoji.';return}
-  c.push({id:Date.now(),name,email,company,plan:'Starter',active:false,createdAt:new Date().toISOString()});
-  saveCustomers(c);
-  let leads=JSON.parse(localStorage.getItem('ba_admin_leads_v2')||'[]');
-  leads.push({id:Date.now()+1,name,company,email,phone:'',plan:'Starter',status:'new'});
-  localStorage.setItem('ba_admin_leads_v2',JSON.stringify(leads));
-  m.className='success';m.textContent='Test nalog napravljen. Admin ga mora aktivirati.';
-};
-document.getElementById('customerLogin').onclick=()=>{
-  let email=document.getElementById('customerEmail').value.trim(),m=document.getElementById('customerMsg');
-  let c=customers().find(x=>x.email.toLowerCase()===email.toLowerCase());
-  if(!c){m.className='error';m.textContent='Nalog nije pronađen.';return}
-  if(!c.active){m.className='error';m.textContent='Nalog još nije aktiviran od strane admina.';return}
-  localStorage.setItem('ba_logged_customer',JSON.stringify(c));
+
+document.getElementById('loginForm').onsubmit=(e)=>{
+  e.preventDefault();
+  const email=document.getElementById('email').value.trim().toLowerCase();
+  const msg=document.getElementById('msg');
+  msg.className='';
+
+  if(email===ADMIN_EMAIL){
+    localStorage.setItem('ba_admin_preview','1');
+    localStorage.removeItem('ba_logged_customer');
+    location.href='admin.html';
+    return;
+  }
+
+  const customers=JSON.parse(localStorage.getItem(customersKey)||'[]');
+  const customer=customers.find(c=>String(c.email||'').toLowerCase()===email);
+
+  if(!customer){
+    msg.className='error';
+    msg.textContent='Nalog nije pronađen.';
+    return;
+  }
+
+  if(!customer.active){
+    msg.className='error';
+    msg.textContent='Nalog još nije aktiviran od strane admina.';
+    return;
+  }
+
+  localStorage.setItem('ba_logged_customer',JSON.stringify(customer));
+  localStorage.removeItem('ba_admin_preview');
   location.href='customer.html';
 };
-document.getElementById('adminLogin').onclick=()=>{
-  let email=document.getElementById('adminEmail').value.trim().toLowerCase(),m=document.getElementById('adminMsg');
-  if(email!=='ceo@balkanagent.com'){m.className='error';m.textContent='Ovaj frontend preview prihvata samo CEO admin email.';return}
-  localStorage.setItem('ba_admin_preview','1');location.href='admin.html';
-};
 </script>
-</body></html>
+</body>
+</html>

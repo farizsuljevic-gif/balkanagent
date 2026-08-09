@@ -16,7 +16,7 @@
 </script>
 <div class="shell"><aside><div class="brand">BALKAN<span>AGENT</span><div class="tag">CUSTOMER PORTAL</div></div><select id="lang" class="btn" style="width:100%;margin-bottom:12px"><option value="Crnogorski">Crnogorski</option><option value="English">English</option><option value="Deutsch">Deutsch</option><option value="Русский">Русский</option><option value="Shqip">Shqip</option><option value="Slovenščina">Slovenščina</option><option value="Македонски">Македонски</option><option value="Български">Български</option><option value="Ελληνικά">Ελληνικά</option><option value="Română">Română</option><option value="Türkçe">Türkçe</option></select><nav>
 <button class="active" data-tab="dashboard" data-t="overview">Pregled</button><button data-tab="agents" data-t="agents">AI zaposleni</button><button data-tab="leads" data-t="leads">Leadovi</button><button data-tab="channels" data-t="channels">Kanali</button><button data-tab="subscription" data-t="subscription">Pretplata</button><button data-tab="settings" data-t="settings">Podešavanja</button><a href="index.html" data-t="back">Nazad na sajt</a>
-</nav></aside><main>
+<a href="#" id="logoutCustomer">Logout</a></nav></aside><main>
 <div class="notice">LOCAL PREVIEW MODE — podešavanja, kanali i plan rade u ovom browseru. Pravi cloud podaci dolaze nakon D1/login integracije.</div>
 <div class="top"><h1 id="title">Pregled</h1><div>Balkan Agent Customer</div></div>
 <section id="dashboard" class="section active"><div class="metrics"><div class="metric"><small>AI EMPLOYEES</small><b id="mAgents">0</b></div><div class="metric"><small>CONNECTED CHANNELS</small><b id="mChannels">0</b></div><div class="metric"><small>LEADS</small><b id="mLeads">0</b></div><div class="metric"><small>PLAN</small><b id="mPlan" style="font-size:20px">Starter</b></div></div></section>
@@ -74,4 +74,9 @@ render();
   }catch(e){console.warn('Customer channel sync skipped',e);}
 })();
 </script>
-</body></html>
+<script>
+(function(){
+ const b=document.getElementById('logoutCustomer');
+ if(b)b.onclick=(e)=>{e.preventDefault();localStorage.removeItem('ba_logged_customer');location.href='login.html';};
+})();
+</script></body></html>
