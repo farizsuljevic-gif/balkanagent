@@ -36,4 +36,14 @@ function applyLang(l){currentLang=l;localStorage.setItem('ba_customer_lang',l);l
 L.onchange=e=>{document.getElementById('settingLang').value=e.target.value;applyLang(e.target.value)};applyLang(currentLang);
 document.getElementById('saveSettings').onclick=()=>{let l=document.getElementById('settingLang').value;L.value=l;applyLang(l);document.getElementById('settingsMsg').textContent='✓ Saved';setTimeout(()=>document.getElementById('settingsMsg').textContent='',1200)};
 render();
+</script><script>
+(function(){
+ const p=localStorage.getItem('ba_selected_plan');
+ if(p){
+   try{
+     let s=JSON.parse(localStorage.getItem('ba_customer_state_v2')||'null');
+     if(s){s.plan=p;localStorage.setItem('ba_customer_state_v2',JSON.stringify(s));}
+   }catch(e){}
+ }
+})();
 </script></body></html>
