@@ -54,7 +54,7 @@ function ensureFromLeads(){
   });
 }
 ensureFromLeads();
-function actions(c){return `<button class="btn" data-detail="${c.id}">Detalji</button> <button class="btn ${c.active?'danger':'success'}" data-toggle="${c.id}">${c.active?'Deaktiviraj':'Aktiviraj'}</button> <select class="status planSelect" data-planid="${c.id}"><option ${c.plan==='Starter'?'selected':''}>Starter</option><option ${c.plan==='Business'?'selected':''}>Business</option><option ${c.plan==='Pro'?'selected':''}>Pro</option><option ${c.plan==='Enterprise'?'selected':''}>Enterprise</option></select> <button class="btn danger" data-delete="${c.id}">Obriši</button>`}
+function actions(c){return `<button class="btn" data-detail="${c.id}">Detalji</button> <button class="btn ${c.active?'danger':'success'}" data-toggle="${c.id}">${c.active?'Deaktiviraj':'Aktiviraj'}</button> <button class="btn" data-invoice="${c.id}">Račun</button> <button class="btn" data-resend="${c.id}">Pošalji račun</button> <select class="status planSelect" data-planid="${c.id}"><option ${c.plan==='Starter'?'selected':''}>Starter</option><option ${c.plan==='Business'?'selected':''}>Business</option><option ${c.plan==='Pro'?'selected':''}>Pro</option><option ${c.plan==='Enterprise'?'selected':''}>Enterprise</option></select> <button class="btn danger" data-delete="${c.id}">Obriši</button>`}
 function customerRow(c){return `<tr>
 <td>${esc(c.name)}</td>
 <td>${esc(c.company)}</td>
@@ -162,9 +162,27 @@ save();
       if(typeof oldBind==='function') try{oldBind()}catch(e){}
       document.querySelectorAll('[data-toggle]').forEach(b=>b.onclick=async()=>{
         const c=customers.find(x=>String(x.id)===b.dataset.toggle); if(!c)return;
-        const j=await api('/api/admin/customers/'+c.id,{method:'PATCH',body:JSON.stringify({active:!c.active})});
+        const activating=!c.active;
+        const j=await api('/api/admin/customers/'+c.id,{method:'PATCH',body:JSON.stringify({active:activating})});
         Object.assign(c,j.customer,{bankName:j.customer.bank_name,paymentStatus:j.customer.payment_status,paymentMethod:j.customer.payment_method});
+        if(activating && j.invoice){
+          if(j.invoice.email_sent) alert('Mušterija je aktivirana. Račun '+j.invoice.invoice.invoice_number+' je automatski poslat na '+c.email+'.');
+          else alert('Mušterija je aktivirana i račun je napravljen, ali email nije poslat: '+(j.invoice.email_error||'Provjeri email podešavanja.'));
+        }
         render();
+      });
+      document.querySelectorAll('[data-invoice]').forEach(b=>b.onclick=async()=>{
+        try{
+          const j=await api('/api/admin/customers/'+b.dataset.invoice+'/invoices');
+          if(!j.invoices||!j.invoices.length){alert('Za ovu mušteriju još nema računa. Račun se automatski pravi pri aktivaciji.');return;}
+          location.href='/api/admin/invoices/'+j.invoices[0].id+'/pdf';
+        }catch(e){alert(e.message)}
+      });
+      document.querySelectorAll('[data-resend]').forEach(b=>b.onclick=async()=>{
+        try{
+          const j=await api('/api/admin/customers/'+b.dataset.resend+'/invoices/resend',{method:'POST',body:'{}'});
+          alert(j.message+' · '+j.invoice_number);
+        }catch(e){alert(e.message)}
       });
       document.querySelectorAll('[data-delete]').forEach(b=>b.onclick=async()=>{
         if(!confirm('Obrisati mušteriju?'))return;

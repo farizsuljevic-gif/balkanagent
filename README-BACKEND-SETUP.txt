@@ -37,3 +37,37 @@ After deploy:
 - Admin activates customer => customer can login
 
 Do not put the Admin password directly in index.html/login.html or GitHub.
+
+AUTOMATIC INVOICES (ADDED)
+- When an admin changes a customer from INACTIVE to ACTIVE, the backend creates exactly one new activation invoice for that activation event and attempts to email it automatically as a PDF.
+- Standard monthly prices follow the public website: Starter EUR 49, Business EUR 79, Pro EUR 199.
+- Enterprise uses INVOICE_ENTERPRISE_PRICE_CENTS (for example 25900 = EUR 259) if configured.
+- Admin has "Račun" (download latest PDF) and "Pošalji račun" (resend latest invoice) buttons.
+- Customers see "Moji računi" in Plaćanje i profil and can download their own PDFs.
+- Invoice numbers use BA-YEAR-000001 style and are stored in D1.
+
+EMAIL SETUP (RESEND)
+1. Create/verify your sending domain in Resend.
+2. In Cloudflare Pages > Settings > Variables and Secrets, add secret:
+   RESEND_API_KEY
+3. Add variable or secret:
+   INVOICE_FROM_EMAIL=Balkan Agent <invoices@balkanagent.com>
+4. Recommended company/payment variables (fill these after company/bank setup):
+   INVOICE_COMPANY_NAME=Balkan Agent
+   INVOICE_COMPANY_ADDRESS=
+   INVOICE_TAX_ID=
+   INVOICE_IBAN=
+   INVOICE_BANK_NAME=
+   INVOICE_SWIFT=
+   INVOICE_CONTACT_EMAIL=info@balkanagent.com
+   INVOICE_PHONE=+382 68 400 509
+   INVOICE_DUE_DAYS=7
+   INVOICE_ENTERPRISE_PRICE_CENTS=0
+
+DATABASE
+- Run schema.sql again against the same D1 database. CREATE TABLE IF NOT EXISTS preserves existing users and adds the invoices table.
+- The backend also self-checks/creates the invoices table before invoice operations.
+
+IMPORTANT
+- If RESEND_API_KEY is missing or the sending domain is not verified, customer activation still succeeds and the invoice is stored, but admin receives a warning that email sending failed. Use "Pošalji račun" after fixing email settings.
+- No email API key is stored in this ZIP.
