@@ -1,38 +1,69 @@
-<!doctype html><html lang="me"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Balkan Agent — Create Account</title>
-<style>
-:root{--bg:#020611;--panel:#07101d;--line:#183b60;--text:#f8f9fc;--muted:#9eacc0}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 60% 0,#151c45,#020611 62%);color:var(--text);font:14px/1.5 system-ui;display:grid;place-items:center;padding:22px}
-a{color:#9eb2ff;text-decoration:none}input,button{font:inherit}.box{width:min(560px,100%);background:#06101d;border:1px solid #193b60;border-radius:17px;box-shadow:0 30px 90px #000;padding:28px}
-h1{margin:0 0 7px}.sub{color:var(--muted);margin-bottom:22px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.full{grid-column:1/-1}label{display:block;color:#a6b3c4;font-size:12px;margin-bottom:5px}input{width:100%;background:#06101d;color:#fff;border:1px solid #26466b;border-radius:9px;padding:12px}.btn{width:100%;border:0;background:linear-gradient(135deg,#7538ff,#315cff);color:#fff;border-radius:10px;padding:13px;font-weight:700;cursor:pointer}.msg{margin-top:12px;font-size:12px}.ok{color:#34e09a}.err{color:#ff8190}@media(max-width:600px){.grid{grid-template-columns:1fr}.full{grid-column:auto}}
-</style></head><body>
-<div class="box"><h1>Create account</h1><div class="sub">Napravite Balkan Agent profil. Admin mora aktivirati nalog prije prve prijave.</div>
-<form id="registerForm"><div class="grid">
-<div><label>Ime i prezime</label><input id="name" required></div>
-<div><label>Firma</label><input id="company"></div>
-<div><label>Email</label><input id="email" type="email" required></div>
-<div><label>Broj telefona</label><input id="phone" type="tel" value="+38268400509"></div>
-<div class="full"><label>Šifra</label><input id="password" type="password" minlength="8" required></div>
-<div class="full"><button class="btn" type="submit">Create account</button></div>
-</div></form>
-<div id="msg" class="msg"></div>
-<div style="margin-top:18px"><a href="login.html">← Login</a></div>
-</div>
 <script>
-document.getElementById('registerForm').onsubmit=async(e)=>{
- e.preventDefault();
- const m=document.getElementById('msg');m.className='msg';m.textContent='Creating...';
- try{
-   const r=await fetch('/api/auth/register',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({
-     name:document.getElementById('name').value.trim(),
-     company:document.getElementById('company').value.trim(),
-     email:document.getElementById('email').value.trim(),
-     phone:document.getElementById('phone').value.trim(),
-     password:document.getElementById('password').value
-   })});
-   const j=await r.json();if(!r.ok)throw new Error(j.error||'Registration failed');
-   m.className='msg ok';m.textContent='✓ Profil napravljen. Čeka aktivaciju Admina.';
-   e.target.reset();
- }catch(err){m.className='msg err';m.textContent=err.message}
-}
-</script></body></html>
+const form = document.getElementById('registerForm');
+const msg = document.getElementById('msg');
+
+form.addEventListener('submit', async function (e) {
+  e.preventDefault();
+
+  msg.className = 'msg';
+  msg.textContent = 'Kreiranje naloga...';
+
+  const data = {
+    name: document.getElementById('name').value.trim(),
+    company: document.getElementById('company').value.trim(),
+    email: document.getElementById('email').value.trim().toLowerCase(),
+    phone: document.getElementById('phone').value.trim(),
+    password: document.getElementById('password').value
+  };
+
+  try {
+    const response = await fetch(
+      window.location.origin + '/api/auth/register',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(data)
+      }
+    );
+
+    const raw = await response.text();
+
+    let result;
+
+    try {
+      result = JSON.parse(raw);
+    } catch {
+      throw new Error(
+        'Server odgovor nije JSON. HTTP ' +
+        response.status +
+        ': ' +
+        raw.substring(0, 200)
+      );
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        result.error ||
+        result.message ||
+        'Registration failed'
+      );
+    }
+
+    msg.className = 'msg ok';
+    msg.textContent =
+      '✓ Profil je napravljen. Čeka aktivaciju administratora.';
+
+    form.reset();
+
+  } catch (error) {
+    console.error('REGISTER ERROR:', error);
+
+    msg.className = 'msg err';
+    msg.textContent =
+      'Greška: ' + (error.message || String(error));
+  }
+});
+</script>
