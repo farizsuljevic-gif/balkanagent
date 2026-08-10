@@ -1,41 +1,42 @@
 const enc = new TextEncoder();
 
-function json(data, status=200, headers={}) {
+function json(data, status = 200, headers = {}) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
       "content-type": "application/json; charset=utf-8",
       "cache-control": "no-store",
-      ...headers
-    }
+      ...headers,
+    },
   });
 }
 
-function bad(message, status=400) {
-  return json({ok:false, error:message}, status);
+function bad(message, status = 400) {
+  return json({ ok: false, error: message }, status);
 }
 
 function base64url(bytes) {
   let s = "";
-  bytes.forEach(b => s += String.fromCharCode(b));
-  return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+  bytes.forEach((b) => (s += String.fromCharCode(b)));
+  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
 function fromBase64url(s) {
-  s = s.replace(/-/g,"+").replace(/_/g,"/");
+  s = s.replace(/-/g, "+").replace(/_/g, "/");
   while (s.length % 4) s += "=";
   const bin = atob(s);
-  return Uint8Array.from(bin, c => c.charCodeAt(0));
+  return Uint8Array.from(bin, (c) => c.charCodeAt(0));
 }
 
 async function hmac(secret, message) {
   const key = await crypto.subtle.importKey(
     "raw",
     enc.encode(secret),
-    {name:"HMAC", hash:"SHA-256"},
+    { name: "HMAC", hash: "SHA-256" },
     false,
-    ["sign","verify"]
+    ["sign", "verify"]
   );
+
   return new Uint8Array(
     await crypto.subtle.sign("HMAC", key, enc.encode(message))
   );
@@ -44,7 +45,7 @@ async function hmac(secret, message) {
 async function makeSession(env, payload) {
   const body = base64url(enc.encode(JSON.stringify(payload)));
   const sig = base64url(await hmac(env.SESSION_SECRET, body));
-  return body + "." + sig;
+  return `${body}.${sig}`;
 }
 
 async function readSession(request, env) {
@@ -54,13 +55,9 @@ async function readSession(request, env) {
   if (!m) return null;
 
   const [body, sig] = m[1].split(".");
-
   if (!body || !sig) return null;
 
-  const expected = base64url(
-    await hmac(env.SESSION_SECRET, body)
-  );
-
+  const expected = base64url(await hmac(env.SESSION_SECRET, body));
   if (expected !== sig) return null;
 
   try {
@@ -73,7 +70,6 @@ async function readSession(request, env) {
     }
 
     return payload;
-
   } catch {
     return null;
   }
@@ -84,22 +80,27 @@ function sessionCookie(token) {
 }
 
 function clearCookie() {
-  return `ba_session=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`;
+  return "ba_session=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0";
 }
 
-function randomHex(n=16) {
+function randomHex(n = 16) {
   const b = new Uint8Array(n);
   crypto.getRandomValues(b);
 
   return [...b]
-    .map(x => x.toString(16).padStart(2,"0"))
+    .map((x) => x.toString(16).padStart(2, "0"))
     .join("");
 }
 
 async function hashPassword(password, saltHex) {
+  const pairs = saltHex.match(/../g);
+
+  if (!pairs) {
+    throw new Error("Invalid password salt");
+  }
 
   const salt = Uint8Array.from(
-    saltHex.match(/../g).map(h => parseInt(h,16))
+    pairs.map((h) => parseInt(h, 16))
   );
 
   const key = await crypto.subtle.importKey(
@@ -112,22 +113,21 @@ async function hashPassword(password, saltHex) {
 
   const bits = await crypto.subtle.deriveBits(
     {
-      name:"PBKDF2",
-      hash:"SHA-256",
+      name: "PBKDF2",
+      hash: "SHA-256",
       salt,
-      iterations:210000
+      iterations: 210000,
     },
     key,
     256
   );
 
   return [...new Uint8Array(bits)]
-    .map(x => x.toString(16).padStart(2,"0"))
+    .map((x) => x.toString(16).padStart(2, "0"))
     .join("");
 }
 
 function safeUser(row) {
-
   if (!row) return null;
 
   return {
@@ -139,42 +139,36 @@ function safeUser(row) {
     plan: row.plan || "Starter",
     active: !!row.active,
     role: row.role || "customer",
-
     payment_method:
       row.payment_method || "Bank transfer / IBAN",
-
     iban: row.iban || "",
     bank_name: row.bank_name || "",
-
     payment_status:
       row.payment_status || "UNPAID",
-
-    created_at: row.created_at
+    created_at: row.created_at,
   };
 }
 
 async function requireSession(request, env) {
-
   const s = await readSession(request, env);
 
   if (!s) {
     return {
-      error: bad("Not authenticated",401)
+      error: bad("Not authenticated", 401),
     };
   }
 
-  return {session:s};
+  return { session: s };
 }
 
 async function requireAdmin(request, env) {
-
   const r = await requireSession(request, env);
 
   if (r.error) return r;
 
   if (r.session.role !== "admin") {
     return {
-      error: bad("Admin required",403)
+      error: bad("Admin required", 403),
     };
   }
 
@@ -182,7 +176,6 @@ async function requireAdmin(request, env) {
 }
 
 async function parseBody(request) {
-
   try {
     return await request.json();
   } catch {
@@ -196,13 +189,12 @@ async function parseBody(request) {
 // ==========================================
 
 const PLAN_PRICES = {
-  Starter:4900,
-  Business:7900,
-  Pro:19900
+  Starter: 4900,
+  Business: 7900,
+  Pro: 19900,
 };
 
 async function ensureInvoiceSchema(env) {
-
   await env.DB.prepare(`
     CREATE TABLE IF NOT EXISTS invoices (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -228,7 +220,6 @@ async function ensureInvoiceSchema(env) {
 }
 
 function planAmountCents(plan, env) {
-
   if (PLAN_PRICES[plan] !== undefined) {
     return PLAN_PRICES[plan];
   }
@@ -241,138 +232,155 @@ function planAmountCents(plan, env) {
     : 0;
 }
 
-function ascii(s='') {
-
+function ascii(s = "") {
   return String(s)
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g,'')
-    .replace(/[^\x20-\x7E]/g,'?');
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\x20-\x7E]/g, "?");
 }
 
-function pdfEsc(s='') {
-
+function pdfEsc(s = "") {
   return ascii(s)
-    .replace(/\\/g,'\\\\')
-    .replace(/\(/g,'\\(')
-    .replace(/\)/g,'\\)');
+    .replace(/\\/g, "\\\\")
+    .replace(/\(/g, "\\(")
+    .replace(/\)/g, "\\)");
 }
 
-function money(cents,currency='EUR') {
-
-  return `${(Number(cents||0)/100).toFixed(2)} ${currency}`;
+function money(cents, currency = "EUR") {
+  return `${(Number(cents || 0) / 100).toFixed(2)} ${currency}`;
 }
 
-function dueDate(days=7) {
-
-  const d=new Date();
+function dueDate(days = 7) {
+  const d = new Date();
 
   d.setUTCDate(
-    d.getUTCDate()+days
+    d.getUTCDate() + days
   );
 
-  return d.toISOString().slice(0,10);
-}function makeInvoicePdf(invoice, customer, env) {
-  const company = env.INVOICE_COMPANY_NAME || 'Balkan Agent';
-  const address = env.INVOICE_COMPANY_ADDRESS || '';
-  const tax = env.INVOICE_TAX_ID || '';
-  const iban = env.INVOICE_IBAN || '';
-  const bank = env.INVOICE_BANK_NAME || '';
-  const swift = env.INVOICE_SWIFT || '';
-  const phone = env.INVOICE_PHONE || '+382 68 400 509';
-  const email = env.INVOICE_CONTACT_EMAIL || 'info@balkanagent.com';
+  return d.toISOString().slice(0, 10);
+}
+
+function makeInvoicePdf(invoice, customer, env) {
+  const company =
+    env.INVOICE_COMPANY_NAME || "Balkan Agent";
+
+  const address =
+    env.INVOICE_COMPANY_ADDRESS || "";
+
+  const tax =
+    env.INVOICE_TAX_ID || "";
+
+  const iban =
+    env.INVOICE_IBAN || "";
+
+  const bank =
+    env.INVOICE_BANK_NAME || "";
+
+  const swift =
+    env.INVOICE_SWIFT || "";
+
+  const phone =
+    env.INVOICE_PHONE || "+382 68 400 509";
+
+  const email =
+    env.INVOICE_CONTACT_EMAIL ||
+    "info@balkanagent.com";
 
   const lines = [
-    ['B','BALKAN AGENT',48,795,18],
-    ['R','AI Automation & Digital Solutions',48,778,9],
+    ["B", "BALKAN AGENT", 48, 795, 18],
+    ["R", "AI Automation & Digital Solutions", 48, 778, 9],
 
-    ['B','INVOICE',430,795,22],
-    ['R',`Invoice No: ${invoice.invoice_number}`,430,773,9],
-    ['R',`Issue date: ${invoice.issue_date}`,430,760,9],
-    ['R',`Due date: ${invoice.due_date}`,430,747,9],
+    ["B", "INVOICE", 430, 795, 22],
+    ["R", `Invoice No: ${invoice.invoice_number}`, 430, 773, 9],
+    ["R", `Issue date: ${invoice.issue_date}`, 430, 760, 9],
+    ["R", `Due date: ${invoice.due_date}`, 430, 747, 9],
 
-    ['B','FROM',48,714,9],
-    ['R',company,48,697,10],
-    ['R',address,48,683,8],
-    ['R',tax ? `Tax ID: ${tax}` : '',48,670,8],
-    ['R',`Phone: ${phone}`,48,657,8],
-    ['R',`Email: ${email}`,48,644,8],
+    ["B", "FROM", 48, 714, 9],
+    ["R", company, 48, 697, 10],
+    ["R", address, 48, 683, 8],
+    ["R", tax ? `Tax ID: ${tax}` : "", 48, 670, 8],
+    ["R", `Phone: ${phone}`, 48, 657, 8],
+    ["R", `Email: ${email}`, 48, 644, 8],
 
-    ['B','BILL TO',315,714,9],
-    ['R',customer.company || customer.name,315,697,10],
-    ['R',customer.name,315,683,8],
-    ['R',customer.email,315,670,8],
-    ['R',customer.phone || '',315,657,8],
+    ["B", "BILL TO", 315, 714, 9],
+    ["R", customer.company || customer.name, 315, 697, 10],
+    ["R", customer.name, 315, 683, 8],
+    ["R", customer.email, 315, 670, 8],
+    ["R", customer.phone || "", 315, 657, 8],
 
-    ['B','DESCRIPTION / SERVICE',48,604,8],
-    ['B','AMOUNT',455,604,8],
+    ["B", "DESCRIPTION / SERVICE", 48, 604, 8],
+    ["B", "AMOUNT", 455, 604, 8],
 
-    ['R',invoice.description,48,578,10],
-    ['R',money(invoice.amount_cents,invoice.currency),455,578,10],
+    ["R", invoice.description, 48, 578, 10],
+    ["R", money(invoice.amount_cents, invoice.currency), 455, 578, 10],
 
-    ['B','TOTAL',390,520,11],
-    ['B',money(invoice.amount_cents,invoice.currency),455,520,11],
+    ["B", "TOTAL", 390, 520, 11],
+    ["B", money(invoice.amount_cents, invoice.currency), 455, 520, 11],
 
-    ['B','PAYMENT DETAILS',48,465,9],
-    ['R',`Account holder: ${company}`,48,447,8],
-    ['R',`Bank: ${bank}`,48,433,8],
-    ['R',`IBAN: ${iban}`,48,419,8],
-    ['R',`SWIFT / BIC: ${swift}`,48,405,8],
-    ['R',`Payment reference: ${invoice.invoice_number}`,48,391,8],
+    ["B", "PAYMENT DETAILS", 48, 465, 9],
+    ["R", `Account holder: ${company}`, 48, 447, 8],
+    ["R", `Bank: ${bank}`, 48, 433, 8],
+    ["R", `IBAN: ${iban}`, 48, 419, 8],
+    ["R", `SWIFT / BIC: ${swift}`, 48, 405, 8],
+    ["R", `Payment reference: ${invoice.invoice_number}`, 48, 391, 8],
 
-    ['R',
-      'Thank you for choosing Balkan Agent - intelligent automation for modern business.',
-      48,92,8
-    ]
-  ].filter(x => x[1]);
+    [
+      "R",
+      "Thank you for choosing Balkan Agent - intelligent automation for modern business.",
+      48,
+      92,
+      8,
+    ],
+  ].filter((x) => x[1]);
 
-  let stream = '';
-
-  stream += '0.04 0.09 0.20 rg 0 812 595 30 re f\n';
-  stream += '0.78 0.63 0.29 rg 0 0 595 8 re f\n';
-
-  stream +=
-    '0.78 0.63 0.29 RG 1.5 w 48 728 m 547 728 l S\n';
+  let stream = "";
 
   stream +=
-    '0.88 0.90 0.94 RG 0.6 w 48 592 m 547 592 l S ' +
-    '48 550 m 547 550 l S\n';
+    "0.04 0.09 0.20 rg 0 812 595 30 re f\n";
 
-  for (const [font,text,x,y,size] of lines) {
+  stream +=
+    "0.78 0.63 0.29 rg 0 0 595 8 re f\n";
 
+  stream +=
+    "0.78 0.63 0.29 RG 1.5 w 48 728 m 547 728 l S\n";
+
+  stream +=
+    "0.88 0.90 0.94 RG 0.6 w 48 592 m 547 592 l S 48 550 m 547 550 l S\n";
+
+  for (const [font, text, x, y, size] of lines) {
     stream +=
-      `BT /F${font === 'B' ? 2 : 1} ${size} Tf ` +
-      `${font === 'B' ? '0.04 0.09 0.20' : '0.20 0.25 0.33'} rg ` +
+      `BT /F${font === "B" ? 2 : 1} ${size} Tf ` +
+      `${font === "B" ? "0.04 0.09 0.20" : "0.20 0.25 0.33"} rg ` +
       `${x} ${y} Td (${pdfEsc(text)}) Tj ET\n`;
   }
 
   const objs = [];
 
   objs[1] =
-    '<< /Type /Catalog /Pages 2 0 R >>';
+    "<< /Type /Catalog /Pages 2 0 R >>";
 
   objs[2] =
-    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>';
+    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>";
 
   objs[3] =
-    '<< /Type /Page /Parent 2 0 R ' +
-    '/MediaBox [0 0 595 842] ' +
-    '/Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> ' +
-    '/Contents 6 0 R >>';
+    "<< /Type /Page /Parent 2 0 R " +
+    "/MediaBox [0 0 595 842] " +
+    "/Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> " +
+    "/Contents 6 0 R >>";
 
   objs[4] =
-    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>';
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>";
 
   objs[5] =
-    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>';
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>";
 
   objs[6] =
     `<< /Length ${stream.length} >>\nstream\n${stream}endstream`;
 
-  let pdf = '%PDF-1.4\n';
+  let pdf = "%PDF-1.4\n";
   const offs = [0];
 
-  for (let i=1; i<=6; i++) {
-
+  for (let i = 1; i <= 6; i++) {
     offs[i] = pdf.length;
 
     pdf +=
@@ -382,13 +390,12 @@ function dueDate(days=7) {
   const xref = pdf.length;
 
   pdf +=
-    'xref\n0 7\n0000000000 65535 f \n';
+    "xref\n0 7\n0000000000 65535 f \n";
 
-  for (let i=1; i<=6; i++) {
-
+  for (let i = 1; i <= 6; i++) {
     pdf +=
-      String(offs[i]).padStart(10,'0') +
-      ' 00000 n \n';
+      String(offs[i]).padStart(10, "0") +
+      " 00000 n \n";
   }
 
   pdf +=
@@ -398,35 +405,33 @@ function dueDate(days=7) {
   return enc.encode(pdf);
 }
 
-
 function bytesToBase64(bytes) {
-
-  let out = '';
+  let out = "";
   const chunk = 0x8000;
 
-  for (let i=0; i<bytes.length; i+=chunk) {
-
+  for (let i = 0; i < bytes.length; i += chunk) {
     out += String.fromCharCode(
-      ...bytes.subarray(i,i+chunk)
+      ...bytes.subarray(i, i + chunk)
     );
   }
 
   return btoa(out);
 }
 
-
-async function sendInvoiceEmail(env, invoice, customer) {
-
+async function sendInvoiceEmail(
+  env,
+  invoice,
+  customer
+) {
   if (!env.RESEND_API_KEY) {
-
     throw new Error(
-      'RESEND_API_KEY is not configured'
+      "RESEND_API_KEY is not configured"
     );
   }
 
   const from =
     env.INVOICE_FROM_EMAIL ||
-    'Balkan Agent <invoices@balkanagent.com>';
+    "Balkan Agent <invoices@balkanagent.com>";
 
   const pdf =
     makeInvoicePdf(invoice, customer, env);
@@ -458,7 +463,6 @@ async function sendInvoiceEmail(env, invoice, customer) {
         <div style="color:#667085">
           AI Automation & Digital Solutions
         </div>
-
       </div>
 
       <h2>
@@ -467,8 +471,8 @@ async function sendInvoiceEmail(env, invoice, customer) {
 
       <p>
         Hello ${
-          String(customer.name || '')
-            .replace(/[<>]/g,'')
+          String(customer.name || "")
+            .replace(/[<>]/g, "")
         },
         your Balkan Agent account has been activated.
       </p>
@@ -497,24 +501,23 @@ async function sendInvoiceEmail(env, invoice, customer) {
   `;
 
   const r = await fetch(
-    'https://api.resend.com/emails',
+    "https://api.resend.com/emails",
     {
-      method:'POST',
+      method: "POST",
 
-      headers:{
-        'authorization':
+      headers: {
+        authorization:
           `Bearer ${env.RESEND_API_KEY}`,
 
-        'content-type':
-          'application/json'
+        "content-type":
+          "application/json",
       },
 
-      body:JSON.stringify({
-
+      body: JSON.stringify({
         from,
 
-        to:[
-          customer.email
+        to: [
+          customer.email,
         ],
 
         subject:
@@ -522,24 +525,23 @@ async function sendInvoiceEmail(env, invoice, customer) {
 
         html,
 
-        attachments:[
+        attachments: [
           {
             filename:
               `${invoice.invoice_number}.pdf`,
 
             content:
-              bytesToBase64(pdf)
-          }
-        ]
-      })
+              bytesToBase64(pdf),
+          },
+        ],
+      }),
     }
   );
 
   const j =
-    await r.json().catch(()=>({}));
+    await r.json().catch(() => ({}));
 
   if (!r.ok) {
-
     throw new Error(
       j.message ||
       j.error ||
@@ -547,15 +549,13 @@ async function sendInvoiceEmail(env, invoice, customer) {
     );
   }
 
-  return j.id || '';
+  return j.id || "";
 }
-
 
 async function createActivationInvoice(
   env,
   customer
 ) {
-
   await ensureInvoiceSchema(env);
 
   const amount =
@@ -565,17 +565,16 @@ async function createActivationInvoice(
     );
 
   const tmp =
-    'TMP-' +
-    crypto.randomUUID();
+    `TMP-${crypto.randomUUID()}`;
 
   const description =
-    customer.plan === 'Enterprise'
-      ? 'Balkan Agent Enterprise - agreed monthly service'
+    customer.plan === "Enterprise"
+      ? "Balkan Agent Enterprise - agreed monthly service"
       : `Balkan Agent ${customer.plan} plan - monthly service`;
 
   const result =
     await env.DB.prepare(`
-      INSERT INTO invoices(
+      INSERT INTO invoices (
         customer_id,
         invoice_number,
         plan,
@@ -586,8 +585,8 @@ async function createActivationInvoice(
         issue_date,
         due_date
       )
-      VALUES(
-        ?,?,?,?,?, 
+      VALUES (
+        ?, ?, ?, ?, ?,
         'EUR',
         'ISSUED',
         date('now'),
@@ -614,34 +613,34 @@ async function createActivationInvoice(
       result.meta.last_row_id
     );
 
+  if (!id) {
+    throw new Error(
+      "Could not create invoice id"
+    );
+  }
+
   const year =
     new Date().getUTCFullYear();
 
   const number =
-    `BA-${year}-${String(id).padStart(6,'0')}`;
+    `BA-${year}-${String(id).padStart(6, "0")}`;
 
-  await env.DB.prepare(`
-    UPDATE invoices
-    SET invoice_number=?
-    WHERE id=?
-  `)
-  .bind(
-    number,
-    id
-  )
-  .run();
+  await env.DB
+    .prepare(
+      "UPDATE invoices SET invoice_number=? WHERE id=?"
+    )
+    .bind(number, id)
+    .run();
 
   let invoice =
-    await env.DB.prepare(`
-      SELECT *
-      FROM invoices
-      WHERE id=?
-    `)
-    .bind(id)
-    .first();
+    await env.DB
+      .prepare(
+        "SELECT * FROM invoices WHERE id=?"
+      )
+      .bind(id)
+      .first();
 
   try {
-
     const providerId =
       await sendInvoiceEmail(
         env,
@@ -663,35 +662,37 @@ async function createActivationInvoice(
     .run();
 
     invoice =
-      await env.DB.prepare(`
-        SELECT *
-        FROM invoices
-        WHERE id=?
-      `)
-      .bind(id)
-      .first();
+      await env.DB
+        .prepare(
+          "SELECT * FROM invoices WHERE id=?"
+        )
+        .bind(id)
+        .first();
 
     return {
       invoice,
-      email_sent:true
+      email_sent: true,
     };
 
-  } catch(e) {
-
+  } catch (e) {
     return {
       invoice,
-      email_sent:false,
-      email_error:e.message
+      email_sent: false,
+      email_error:
+        e.message,
     };
   }
 }
 
 
-export async function onRequest(context) {
+// ==========================================
+// MAIN API ROUTER
+// ==========================================
 
+export async function onRequest(context) {
   const {
     request,
-    env
+    env,
   } = context;
 
   const url =
@@ -708,7 +709,6 @@ export async function onRequest(context) {
 
 
   if (!env.DB) {
-
     return bad(
       "D1 binding DB is not configured",
       500
@@ -716,7 +716,6 @@ export async function onRequest(context) {
   }
 
   if (!env.SESSION_SECRET) {
-
     return bad(
       "SESSION_SECRET is not configured",
       500
@@ -724,7 +723,6 @@ export async function onRequest(context) {
   }
 
   if (!env.ADMIN_PASSWORD) {
-
     return bad(
       "ADMIN_PASSWORD is not configured",
       500
@@ -740,133 +738,173 @@ export async function onRequest(context) {
     path === "auth/register" &&
     method === "POST"
   ) {
+    try {
+      const b =
+        await parseBody(request);
 
-    const b =
-      await parseBody(request);
+      const name =
+        String(b.name || "")
+          .trim();
 
-    const name =
-      String(b.name || "")
-        .trim();
+      const company =
+        String(b.company || "")
+          .trim();
 
-    const company =
-      String(b.company || "")
-        .trim();
+      const email =
+        String(b.email || "")
+          .trim()
+          .toLowerCase();
 
-    const email =
-      String(b.email || "")
-        .trim()
-        .toLowerCase();
+      const phone =
+        String(b.phone || "")
+          .trim();
 
-    const phone =
-      String(b.phone || "")
-        .trim();
-
-    const password =
-      String(b.password || "");
+      const password =
+        String(b.password || "");
 
 
-    if (
-      !name ||
-      !email ||
-      password.length < 8
-    ) {
+      if (
+        !name ||
+        !email ||
+        password.length < 8
+      ) {
+        return bad(
+          "Name, email and password of at least 8 characters are required.",
+          400
+        );
+      }
 
+
+      if (
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/
+          .test(email)
+      ) {
+        return bad(
+          "Invalid email.",
+          400
+        );
+      }
+
+
+      const exists =
+        await env.DB
+          .prepare(
+            "SELECT id FROM users WHERE email=?"
+          )
+          .bind(email)
+          .first();
+
+
+      if (exists) {
+        return bad(
+          "Account already exists.",
+          409
+        );
+      }
+
+
+      const salt =
+        randomHex(16);
+
+
+      let password_hash;
+
+      try {
+        password_hash =
+          await hashPassword(
+            password,
+            salt
+          );
+
+      } catch (e) {
+        return bad(
+          "Password hashing error: " +
+          (
+            e && e.message
+              ? e.message
+              : String(e)
+          ),
+          500
+        );
+      }
+
+
+      const id =
+        crypto.randomUUID();
+
+
+      try {
+        await env.DB.prepare(`
+          INSERT INTO users (
+            id,
+            email,
+            password_hash,
+            password_salt,
+            name,
+            company,
+            phone,
+            plan,
+            active,
+            role,
+            payment_method,
+            payment_status,
+            created_at
+          )
+          VALUES (
+            ?,?,?,?,?,?,?,?,
+            0,
+            'customer',
+            'Bank transfer / IBAN',
+            'UNPAID',
+            datetime('now')
+          )
+        `)
+        .bind(
+          id,
+          email,
+          password_hash,
+          salt,
+          name,
+          company,
+          phone,
+          "Starter"
+        )
+        .run();
+
+      } catch (e) {
+        return bad(
+          "Database error: " +
+          (
+            e && e.message
+              ? e.message
+              : String(e)
+          ),
+          500
+        );
+      }
+
+
+      return json(
+        {
+          ok: true,
+          status: "pending",
+          message:
+            "Account created. Admin activation is required.",
+        },
+        201
+      );
+
+    } catch (e) {
       return bad(
-        "Name, email and password of at least 8 characters are required."
+        "Registration backend error: " +
+        (
+          e && e.message
+            ? e.message
+            : String(e)
+        ),
+        500
       );
     }
-
-
-    if (
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        .test(email)
-    ) {
-
-      return bad(
-        "Invalid email."
-      );
-    }
-
-
-    const exists =
-      await env.DB
-      .prepare(
-        "SELECT id FROM users WHERE email=?"
-      )
-      .bind(email)
-      .first();
-
-
-    if (exists) {
-
-      return bad(
-        "Account already exists.",
-        409
-      );
-    }
-
-
-    const salt =
-      randomHex(16);
-
-    const password_hash =
-      await hashPassword(
-        password,
-        salt
-      );
-
-    const id =
-      crypto.randomUUID();
-
-
-    await env.DB.prepare(`
-      INSERT INTO users
-      (
-        id,
-        email,
-        password_hash,
-        password_salt,
-        name,
-        company,
-        phone,
-        plan,
-        active,
-        role,
-        payment_method,
-        payment_status,
-        created_at
-      )
-      VALUES(
-        ?,?,?,?,?,?,?,?,
-        0,
-        'customer',
-        'Bank transfer / IBAN',
-        'UNPAID',
-        datetime('now')
-      )
-    `)
-    .bind(
-      id,
-      email,
-      password_hash,
-      salt,
-      name,
-      company,
-      phone,
-      "Starter"
-    )
-    .run();
-
-
-    return json(
-      {
-        ok:true,
-        status:"pending",
-        message:
-          "Account created. Admin activation is required."
-      },
-      201
-    );
   }
 
 
@@ -878,7 +916,6 @@ export async function onRequest(context) {
     path === "auth/login" &&
     method === "POST"
   ) {
-
     const b =
       await parseBody(request);
 
@@ -897,12 +934,10 @@ export async function onRequest(context) {
       email ===
       "ceo@balkanagent.com"
     ) {
-
       if (
         password !==
         env.ADMIN_PASSWORD
       ) {
-
         return bad(
           "Wrong email or password.",
           401
@@ -914,25 +949,25 @@ export async function onRequest(context) {
         await makeSession(
           env,
           {
-            sub:"admin",
-            role:"admin",
+            sub: "admin",
+            role: "admin",
             email,
             exp:
               Date.now() +
-              7*24*60*60*1000
+              7 * 24 * 60 * 60 * 1000,
           }
         );
 
 
       return json(
         {
-          ok:true,
-          role:"admin"
+          ok: true,
+          role: "admin",
         },
         200,
         {
           "set-cookie":
-            sessionCookie(token)
+            sessionCookie(token),
         }
       );
     }
@@ -941,8 +976,7 @@ export async function onRequest(context) {
     // CUSTOMER
 
     const user =
-      await env.DB
-      .prepare(`
+      await env.DB.prepare(`
         SELECT *
         FROM users
         WHERE email=?
@@ -953,7 +987,6 @@ export async function onRequest(context) {
 
 
     if (!user) {
-
       return bad(
         "Wrong email or password.",
         401
@@ -972,7 +1005,6 @@ export async function onRequest(context) {
       test !==
       user.password_hash
     ) {
-
       return bad(
         "Wrong email or password.",
         401
@@ -981,7 +1013,6 @@ export async function onRequest(context) {
 
 
     if (!user.active) {
-
       return bad(
         "Account is waiting for admin activation.",
         403
@@ -993,27 +1024,27 @@ export async function onRequest(context) {
       await makeSession(
         env,
         {
-          sub:user.id,
-          role:"customer",
-          email:user.email,
+          sub: user.id,
+          role: "customer",
+          email: user.email,
           exp:
             Date.now() +
-            7*24*60*60*1000
+            7 * 24 * 60 * 60 * 1000,
         }
       );
 
 
     return json(
       {
-        ok:true,
-        role:"customer",
+        ok: true,
+        role: "customer",
         user:
-          safeUser(user)
+          safeUser(user),
       },
       200,
       {
         "set-cookie":
-          sessionCookie(token)
+          sessionCookie(token),
       }
     );
   }
@@ -1027,15 +1058,14 @@ export async function onRequest(context) {
     path === "auth/logout" &&
     method === "POST"
   ) {
-
     return json(
       {
-        ok:true
+        ok: true,
       },
       200,
       {
         "set-cookie":
-          clearCookie()
+          clearCookie(),
       }
     );
   }
@@ -1049,7 +1079,6 @@ export async function onRequest(context) {
     path === "auth/me" &&
     method === "GET"
   ) {
-
     const r =
       await requireSession(
         request,
@@ -1066,32 +1095,30 @@ export async function onRequest(context) {
       r.session.role ===
       "admin"
     ) {
-
       return json({
-        ok:true,
-        role:"admin",
+        ok: true,
+        role: "admin",
         email:
-          r.session.email
+          r.session.email,
       });
     }
 
 
     const user =
       await env.DB
-      .prepare(
-        "SELECT * FROM users WHERE id=?"
-      )
-      .bind(
-        r.session.sub
-      )
-      .first();
+        .prepare(
+          "SELECT * FROM users WHERE id=?"
+        )
+        .bind(
+          r.session.sub
+        )
+        .first();
 
 
     if (
       !user ||
       !user.active
     ) {
-
       return bad(
         "Account inactive",
         403
@@ -1100,12 +1127,15 @@ export async function onRequest(context) {
 
 
     return json({
-      ok:true,
-      role:"customer",
+      ok: true,
+      role: "customer",
       user:
-        safeUser(user)
+        safeUser(user),
     });
-  }  // ==========================================
+  }
+
+
+  // ==========================================
   // CUSTOMER PROFILE
   // ==========================================
 
@@ -1113,7 +1143,6 @@ export async function onRequest(context) {
     path === "profile" &&
     method === "GET"
   ) {
-
     const r =
       await requireSession(
         request,
@@ -1128,7 +1157,6 @@ export async function onRequest(context) {
       r.session.role !==
       "customer"
     ) {
-
       return bad(
         "Customer required",
         403
@@ -1137,18 +1165,18 @@ export async function onRequest(context) {
 
     const user =
       await env.DB
-      .prepare(
-        "SELECT * FROM users WHERE id=?"
-      )
-      .bind(
-        r.session.sub
-      )
-      .first();
+        .prepare(
+          "SELECT * FROM users WHERE id=?"
+        )
+        .bind(
+          r.session.sub
+        )
+        .first();
 
     return json({
-      ok:true,
+      ok: true,
       user:
-        safeUser(user)
+        safeUser(user),
     });
   }
 
@@ -1157,7 +1185,6 @@ export async function onRequest(context) {
     path === "profile" &&
     method === "PATCH"
   ) {
-
     const r =
       await requireSession(
         request,
@@ -1172,7 +1199,6 @@ export async function onRequest(context) {
       r.session.role !==
       "customer"
     ) {
-
       return bad(
         "Customer required",
         403
@@ -1204,9 +1230,9 @@ export async function onRequest(context) {
 
 
     if (!name) {
-
       return bad(
-        "Name is required"
+        "Name is required",
+        400
       );
     }
 
@@ -1235,19 +1261,19 @@ export async function onRequest(context) {
 
     const user =
       await env.DB
-      .prepare(
-        "SELECT * FROM users WHERE id=?"
-      )
-      .bind(
-        r.session.sub
-      )
-      .first();
+        .prepare(
+          "SELECT * FROM users WHERE id=?"
+        )
+        .bind(
+          r.session.sub
+        )
+        .first();
 
 
     return json({
-      ok:true,
+      ok: true,
       user:
-        safeUser(user)
+        safeUser(user),
     });
   }
 
@@ -1261,7 +1287,6 @@ export async function onRequest(context) {
       "admin/customers" &&
     method === "GET"
   ) {
-
     const r =
       await requireAdmin(
         request,
@@ -1275,39 +1300,38 @@ export async function onRequest(context) {
 
     const rows =
       await env.DB
-      .prepare(`
-        SELECT *
-        FROM users
-        WHERE role='customer'
-        ORDER BY created_at DESC
-      `)
-      .all();
+        .prepare(`
+          SELECT *
+          FROM users
+          WHERE role='customer'
+          ORDER BY created_at DESC
+        `)
+        .all();
 
 
     return json({
-      ok:true,
+      ok: true,
       customers:
         (rows.results || [])
-          .map(safeUser)
+          .map(safeUser),
     });
   }
 
 
-  const match =
+  const customerMatch =
     path.match(
       /^admin\/customers\/([^/]+)$/
     );
 
 
   // ==========================================
-  // ADMIN — ACTIVATE / DEACTIVATE / PLAN
+  // ADMIN — UPDATE CUSTOMER
   // ==========================================
 
   if (
-    match &&
+    customerMatch &&
     method === "PATCH"
   ) {
-
     const r =
       await requireAdmin(
         request,
@@ -1320,7 +1344,7 @@ export async function onRequest(context) {
 
 
     const id =
-      match[1];
+      customerMatch[1];
 
     const b =
       await parseBody(request);
@@ -1328,18 +1352,17 @@ export async function onRequest(context) {
 
     const current =
       await env.DB
-      .prepare(`
-        SELECT *
-        FROM users
-        WHERE id=?
-        AND role='customer'
-      `)
-      .bind(id)
-      .first();
+        .prepare(`
+          SELECT *
+          FROM users
+          WHERE id=?
+          AND role='customer'
+        `)
+        .bind(id)
+        .first();
 
 
     if (!current) {
-
       return bad(
         "Customer not found",
         404
@@ -1350,11 +1373,9 @@ export async function onRequest(context) {
     const active =
       b.active === undefined
         ? current.active
-        : (
-            b.active
-              ? 1
-              : 0
-          );
+        : b.active
+          ? 1
+          : 0;
 
 
     const plan =
@@ -1384,7 +1405,9 @@ export async function onRequest(context) {
     const paymentStatus =
       b.payment_status === undefined
         ? current.payment_status
-        : String(b.payment_status);
+        : String(
+            b.payment_status
+          );
 
 
     await env.DB.prepare(`
@@ -1414,11 +1437,11 @@ export async function onRequest(context) {
 
     const updated =
       await env.DB
-      .prepare(
-        "SELECT * FROM users WHERE id=?"
-      )
-      .bind(id)
-      .first();
+        .prepare(
+          "SELECT * FROM users WHERE id=?"
+        )
+        .bind(id)
+        .first();
 
 
     let invoiceResult =
@@ -1429,7 +1452,6 @@ export async function onRequest(context) {
       !current.active &&
       active
     ) {
-
       invoiceResult =
         await createActivationInvoice(
           env,
@@ -1439,11 +1461,48 @@ export async function onRequest(context) {
 
 
     return json({
-      ok:true,
+      ok: true,
       customer:
         safeUser(updated),
       invoice:
-        invoiceResult
+        invoiceResult,
+    });
+  }
+
+
+  // ==========================================
+  // ADMIN — DELETE CUSTOMER
+  // ==========================================
+
+  if (
+    customerMatch &&
+    method === "DELETE"
+  ) {
+    const r =
+      await requireAdmin(
+        request,
+        env
+      );
+
+    if (r.error) {
+      return r.error;
+    }
+
+
+    await env.DB
+      .prepare(`
+        DELETE FROM users
+        WHERE id=?
+        AND role='customer'
+      `)
+      .bind(
+        customerMatch[1]
+      )
+      .run();
+
+
+    return json({
+      ok: true,
     });
   }
 
@@ -1462,7 +1521,6 @@ export async function onRequest(context) {
     customerInvoicesMatch &&
     method === "GET"
   ) {
-
     const r =
       await requireAdmin(
         request,
@@ -1493,9 +1551,9 @@ export async function onRequest(context) {
 
 
     return json({
-      ok:true,
+      ok: true,
       invoices:
-        rows.results || []
+        rows.results || [],
     });
   }
 
@@ -1514,7 +1572,6 @@ export async function onRequest(context) {
     resendMatch &&
     method === "POST"
   ) {
-
     const r =
       await requireAdmin(
         request,
@@ -1533,20 +1590,19 @@ export async function onRequest(context) {
 
     const customer =
       await env.DB
-      .prepare(`
-        SELECT *
-        FROM users
-        WHERE id=?
-        AND role='customer'
-      `)
-      .bind(
-        resendMatch[1]
-      )
-      .first();
+        .prepare(`
+          SELECT *
+          FROM users
+          WHERE id=?
+          AND role='customer'
+        `)
+        .bind(
+          resendMatch[1]
+        )
+        .first();
 
 
     if (!customer) {
-
       return bad(
         "Customer not found",
         404
@@ -1556,21 +1612,20 @@ export async function onRequest(context) {
 
     const invoice =
       await env.DB
-      .prepare(`
-        SELECT *
-        FROM invoices
-        WHERE customer_id=?
-        ORDER BY id DESC
-        LIMIT 1
-      `)
-      .bind(
-        customer.id
-      )
-      .first();
+        .prepare(`
+          SELECT *
+          FROM invoices
+          WHERE customer_id=?
+          ORDER BY id DESC
+          LIMIT 1
+        `)
+        .bind(
+          customer.id
+        )
+        .first();
 
 
     if (!invoice) {
-
       return bad(
         "No invoice exists for this customer yet.",
         404
@@ -1579,7 +1634,6 @@ export async function onRequest(context) {
 
 
     try {
-
       const providerId =
         await sendInvoiceEmail(
           env,
@@ -1603,15 +1657,14 @@ export async function onRequest(context) {
 
 
       return json({
-        ok:true,
+        ok: true,
         message:
           "Invoice sent",
         invoice_number:
-          invoice.invoice_number
+          invoice.invoice_number,
       });
 
-    } catch(e) {
-
+    } catch (e) {
       return bad(
         e.message,
         502
@@ -1634,7 +1687,6 @@ export async function onRequest(context) {
     adminPdfMatch &&
     method === "GET"
   ) {
-
     const r =
       await requireAdmin(
         request,
@@ -1653,19 +1705,18 @@ export async function onRequest(context) {
 
     const invoice =
       await env.DB
-      .prepare(
-        "SELECT * FROM invoices WHERE id=?"
-      )
-      .bind(
-        Number(
-          adminPdfMatch[1]
+        .prepare(
+          "SELECT * FROM invoices WHERE id=?"
         )
-      )
-      .first();
+        .bind(
+          Number(
+            adminPdfMatch[1]
+          )
+        )
+        .first();
 
 
     if (!invoice) {
-
       return bad(
         "Invoice not found",
         404
@@ -1675,13 +1726,13 @@ export async function onRequest(context) {
 
     const customer =
       await env.DB
-      .prepare(
-        "SELECT * FROM users WHERE id=?"
-      )
-      .bind(
-        invoice.customer_id
-      )
-      .first();
+        .prepare(
+          "SELECT * FROM users WHERE id=?"
+        )
+        .bind(
+          invoice.customer_id
+        )
+        .first();
 
 
     const pdf =
@@ -1695,7 +1746,7 @@ export async function onRequest(context) {
     return new Response(
       pdf,
       {
-        headers:{
+        headers: {
           "content-type":
             "application/pdf",
 
@@ -1703,8 +1754,8 @@ export async function onRequest(context) {
             `attachment; filename="${invoice.invoice_number}.pdf"`,
 
           "cache-control":
-            "no-store"
-        }
+            "no-store",
+        },
       }
     );
   }
@@ -1718,7 +1769,6 @@ export async function onRequest(context) {
     path === "invoices" &&
     method === "GET"
   ) {
-
     const r =
       await requireSession(
         request,
@@ -1734,7 +1784,6 @@ export async function onRequest(context) {
       r.session.role !==
       "customer"
     ) {
-
       return bad(
         "Customer required",
         403
@@ -1770,9 +1819,9 @@ export async function onRequest(context) {
 
 
     return json({
-      ok:true,
+      ok: true,
       invoices:
-        rows.results || []
+        rows.results || [],
     });
   }
 
@@ -1791,7 +1840,6 @@ export async function onRequest(context) {
     customerPdfMatch &&
     method === "GET"
   ) {
-
     const r =
       await requireSession(
         request,
@@ -1807,7 +1855,6 @@ export async function onRequest(context) {
       r.session.role !==
       "customer"
     ) {
-
       return bad(
         "Customer required",
         403
@@ -1837,7 +1884,6 @@ export async function onRequest(context) {
 
 
     if (!invoice) {
-
       return bad(
         "Invoice not found",
         404
@@ -1847,13 +1893,13 @@ export async function onRequest(context) {
 
     const customer =
       await env.DB
-      .prepare(
-        "SELECT * FROM users WHERE id=?"
-      )
-      .bind(
-        r.session.sub
-      )
-      .first();
+        .prepare(
+          "SELECT * FROM users WHERE id=?"
+        )
+        .bind(
+          r.session.sub
+        )
+        .first();
 
 
     const pdf =
@@ -1867,7 +1913,7 @@ export async function onRequest(context) {
     return new Response(
       pdf,
       {
-        headers:{
+        headers: {
           "content-type":
             "application/pdf",
 
@@ -1875,48 +1921,10 @@ export async function onRequest(context) {
             `attachment; filename="${invoice.invoice_number}.pdf"`,
 
           "cache-control":
-            "no-store"
-        }
+            "no-store",
+        },
       }
     );
-  }
-
-
-  // ==========================================
-  // ADMIN — DELETE CUSTOMER
-  // ==========================================
-
-  if (
-    match &&
-    method === "DELETE"
-  ) {
-
-    const r =
-      await requireAdmin(
-        request,
-        env
-      );
-
-    if (r.error) {
-      return r.error;
-    }
-
-
-    await env.DB
-      .prepare(`
-        DELETE FROM users
-        WHERE id=?
-        AND role='customer'
-      `)
-      .bind(
-        match[1]
-      )
-      .run();
-
-
-    return json({
-      ok:true
-    });
   }
 
 
