@@ -11,17 +11,18 @@ function json(data, status = 200, headers = {}) {
   });
 }
 
-function bad(message, status = 400) {
+function bad(message, status = 400, headers = {}) {
   return json(
     {
       ok: false,
       error: message,
     },
-    status
+    status,
+    headers
   );
 }
 
-function parseBody(request) {
+async function parseBody(request) {
   return request
     .json()
     .catch(() => ({}));
@@ -145,11 +146,13 @@ async function readSession(
   }
 
   try {
+
     const payload =
       JSON.parse(
-        new TextDecoder().decode(
-          fromB64url(body)
-        )
+        new TextDecoder()
+          .decode(
+            fromB64url(body)
+          )
       );
 
     if (
@@ -163,13 +166,13 @@ async function readSession(
     return payload;
 
   } catch {
+
     return null;
   }
 }
 
-function sessionCookie(
-  token
-) {
+function sessionCookie(token) {
+
   return (
     `ba_session=${token}; ` +
     `Path=/; ` +
@@ -181,6 +184,7 @@ function sessionCookie(
 }
 
 function clearCookie() {
+
   return (
     "ba_session=; " +
     "Path=/; " +
@@ -195,6 +199,7 @@ async function requireSession(
   request,
   env
 ) {
+
   const session =
     await readSession(
       request,
@@ -202,6 +207,7 @@ async function requireSession(
     );
 
   if (!session) {
+
     return {
       error:
         bad(
@@ -220,6 +226,7 @@ async function requireAdmin(
   request,
   env
 ) {
+
   const r =
     await requireSession(
       request,
@@ -234,6 +241,7 @@ async function requireAdmin(
     r.session.role !==
     "admin"
   ) {
+
     return {
       error:
         bad(
@@ -249,18 +257,24 @@ async function requireAdmin(
 function randomHex(
   n = 16
 ) {
+
   const bytes =
     new Uint8Array(n);
 
-  crypto.getRandomValues(
-    bytes
-  );
+  crypto
+    .getRandomValues(
+      bytes
+    );
 
   return [...bytes]
     .map(
       x =>
-        x.toString(16)
-          .padStart(2, "0")
+        x
+          .toString(16)
+          .padStart(
+            2,
+            "0"
+          )
     )
     .join("");
 }
@@ -269,10 +283,14 @@ async function hashPassword(
   password,
   saltHex
 ) {
+
   const pairs =
-    saltHex.match(/../g);
+    saltHex.match(
+      /../g
+    );
 
   if (!pairs) {
+
     throw new Error(
       "Invalid password salt"
     );
@@ -290,25 +308,33 @@ async function hashPassword(
     );
 
   const key =
-    await crypto.subtle.importKey(
-      "raw",
-      enc.encode(password),
-      "PBKDF2",
-      false,
-      ["deriveBits"]
-    );
+    await crypto.subtle
+      .importKey(
+        "raw",
+        enc.encode(password),
+        "PBKDF2",
+        false,
+        ["deriveBits"]
+      );
 
   const bits =
-    await crypto.subtle.deriveBits(
-      {
-        name: "PBKDF2",
-        hash: "SHA-256",
-        salt,
-        iterations: 100000,
-      },
-      key,
-      256
-    );
+    await crypto.subtle
+      .deriveBits(
+        {
+          name:
+            "PBKDF2",
+
+          hash:
+            "SHA-256",
+
+          salt,
+
+          iterations:
+            100000,
+        },
+        key,
+        256
+      );
 
   return [
     ...new Uint8Array(
@@ -317,18 +343,24 @@ async function hashPassword(
   ]
     .map(
       x =>
-        x.toString(16)
-          .padStart(2, "0")
+        x
+          .toString(16)
+          .padStart(
+            2,
+            "0"
+          )
     )
     .join("");
 }
 
 function safeUser(row) {
+
   if (!row) {
     return null;
   }
 
   return {
+
     id:
       row.id,
 
@@ -375,46 +407,65 @@ function safeUser(row) {
 }
 
 const PLAN_PRICES = {
-  Starter: 4900,
-  Business: 7900,
-  Pro: 19900,
+
+  Starter:
+    4900,
+
+  Business:
+    7900,
+
+  Pro:
+    19900,
 };
 
 const DEFAULT_AGENTS = [
+
   {
     agent_type:
       "receptionist",
+
     name:
       "AI Receptionist",
   },
+
   {
     agent_type:
       "sales",
+
     name:
       "AI Sales",
   },
+
   {
     agent_type:
       "support",
+
     name:
       "AI Support",
   },
 ];
 
 const CHANNELS = [
+
   "Website",
+
   "WhatsApp",
+
   "Instagram",
+
   "Facebook",
+
   "Viber",
+
   "Telegram",
+
   "Email",
+
   "SMS",
 ];
 
-async function ensureSchemas(
-  env
-) {
+async function ensureSchemas(env) {
+
   await env.DB.prepare(`
     CREATE TABLE IF NOT EXISTS invoices (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -480,10 +531,12 @@ async function seedAgents(
   env,
   customerId
 ) {
+
   for (
     const agent
     of DEFAULT_AGENTS
   ) {
+
     await env.DB.prepare(`
       INSERT OR IGNORE
       INTO customer_agents (
@@ -514,10 +567,12 @@ async function seedIntegrations(
   env,
   customerId
 ) {
+
   for (
     const channel
     of CHANNELS
   ) {
+
     await env.DB.prepare(`
       INSERT OR IGNORE
       INTO customer_integrations (
@@ -545,7 +600,8 @@ async function customerExists(
   env,
   id
 ) {
-  const customer =
+
+  const row =
     await env.DB.prepare(`
       SELECT id
       FROM users
@@ -556,17 +612,150 @@ async function customerExists(
       .bind(id)
       .first();
 
-  return !!customer;
+  return !!row;
+}
+
+function parseConfig(value) {
+
+  try {
+
+    const parsed =
+      JSON.parse(
+        value || "{}"
+      );
+
+    return (
+      parsed &&
+      typeof parsed ===
+      "object"
+    )
+      ? parsed
+      : {};
+
+  } catch {
+
+    return {};
+  }
+}
+
+function integrationForApi(row) {
+
+  if (!row) {
+    return null;
+  }
+
+  return {
+
+    ...row,
+
+    config:
+      parseConfig(
+        row.config_json
+      ),
+  };
+}
+
+function normalizeDomain(value) {
+
+  let raw =
+    String(
+      value || ""
+    )
+      .trim()
+      .toLowerCase();
+
+  if (!raw) {
+    return "";
+  }
+
+  if (
+    !/^https?:\/\//
+      .test(raw)
+  ) {
+
+    raw =
+      `https://${raw}`;
+  }
+
+  try {
+
+    const u =
+      new URL(raw);
+
+    return u.hostname
+      .replace(
+        /^www\./,
+        ""
+      );
+
+  } catch {
+
+    return "";
+  }
+}
+
+function originAllowed(
+  origin,
+  domain
+) {
+
+  if (
+    !origin ||
+    !domain
+  ) {
+    return true;
+  }
+
+  try {
+
+    const host =
+      new URL(origin)
+        .hostname
+        .replace(
+          /^www\./,
+          ""
+        )
+        .toLowerCase();
+
+    return (
+      host ===
+      domain.toLowerCase()
+    );
+
+  } catch {
+
+    return false;
+  }
+}
+
+function corsHeaders(origin) {
+
+  return {
+
+    "access-control-allow-origin":
+      origin || "*",
+
+    "access-control-allow-methods":
+      "GET,POST,OPTIONS",
+
+    "access-control-allow-headers":
+      "content-type",
+
+    "vary":
+      "Origin",
+  };
 }
 
 function planAmountCents(
   plan,
   env
 ) {
+
   if (
     PLAN_PRICES[plan] !==
     undefined
   ) {
+
     return PLAN_PRICES[
       plan
     ];
@@ -594,34 +783,38 @@ function money(
   cents,
   currency = "EUR"
 ) {
-  return (
-    `${(
-      Number(
-        cents || 0
-      ) / 100
-    ).toFixed(2)} ${currency}`
-  );
+
+  return `${(
+    Number(
+      cents || 0
+    ) / 100
+  ).toFixed(2)} ${currency}`;
 }
 
 function dueDate(
   days = 7
 ) {
-  const date =
+
+  const d =
     new Date();
 
-  date.setUTCDate(
-    date.getUTCDate() +
+  d.setUTCDate(
+    d.getUTCDate() +
     days
   );
 
-  return date
+  return d
     .toISOString()
-    .slice(0, 10);
+    .slice(
+      0,
+      10
+    );
 }
 
 function ascii(
   value = ""
 ) {
+
   return String(value)
     .normalize("NFD")
     .replace(
@@ -637,6 +830,7 @@ function ascii(
 function pdfEsc(
   value = ""
 ) {
+
   return ascii(value)
     .replace(
       /\\/g,
@@ -657,6 +851,7 @@ function makeInvoicePdf(
   customer,
   env
 ) {
+
   const company =
     env.INVOICE_COMPANY_NAME ||
     "Balkan Agent";
@@ -843,7 +1038,8 @@ function makeInvoicePdf(
     [
       "R",
       customer.company
-        ? customer.name || ""
+        ? customer.name ||
+          ""
         : "",
       315,
       673,
@@ -853,7 +1049,8 @@ function makeInvoicePdf(
 
     [
       "R",
-      customer.email || "",
+      customer.email ||
+      "",
       315,
       660,
       8,
@@ -862,7 +1059,8 @@ function makeInvoicePdf(
 
     [
       "R",
-      customer.phone || "",
+      customer.phone ||
+      "",
       315,
       647,
       8,
@@ -983,42 +1181,6 @@ function makeInvoicePdf(
     ],
 
     [
-      "B",
-      "IMPORTANT",
-      48,
-      328,
-      8,
-      "gold"
-    ],
-
-    [
-      "R",
-      `Please include ${invoice.invoice_number} as the payment reference.`,
-      48,
-      311,
-      8,
-      "normal"
-    ],
-
-    [
-      "B",
-      "BALKAN AGENT",
-      48,
-      115,
-      9,
-      "navy"
-    ],
-
-    [
-      "R",
-      "Smart automation. Real results. Built for modern business.",
-      48,
-      99,
-      8,
-      "normal"
-    ],
-
-    [
       "R",
       `${email} | ${phone} | balkanagent.com`,
       48,
@@ -1036,43 +1198,37 @@ function makeInvoicePdf(
       "gold"
     ],
 
-    [
-      "R",
-      "Fariz Suljevic",
-      430,
-      83,
-      8,
-      "normal"
-    ],
-
   ].filter(
-    item =>
-      item[1]
+    x =>
+      x[1]
   );
 
-  function color(
-    type
-  ) {
+  function color(type) {
+
     if (
-      type === "gold"
+      type ===
+      "gold"
     ) {
       return "0.62 0.47 0.16";
     }
 
     if (
-      type === "navy"
+      type ===
+      "navy"
     ) {
       return "0.04 0.09 0.20";
     }
 
     if (
-      type === "muted"
+      type ===
+      "muted"
     ) {
       return "0.42 0.46 0.52";
     }
 
     if (
-      type === "white"
+      type ===
+      "white"
     ) {
       return "1 1 1";
     }
@@ -1132,54 +1288,59 @@ function makeInvoicePdf(
     ]
     of lines
   ) {
+
     stream +=
-      `BT /F${font === "B" ? 2 : 1} ${size} Tf ` +
+      `BT /F${
+        font === "B"
+          ? 2
+          : 1
+      } ${size} Tf ` +
       `${color(type)} rg ` +
       `${x} ${y} Td ` +
       `(${pdfEsc(text)}) Tj ET\n`;
   }
 
-  const objects = [];
+  const objs = [];
 
-  objects[1] =
+  objs[1] =
     "<< /Type /Catalog /Pages 2 0 R >>";
 
-  objects[2] =
+  objs[2] =
     "<< /Type /Pages /Kids [3 0 R] /Count 1 >>";
 
-  objects[3] =
+  objs[3] =
     "<< /Type /Page /Parent 2 0 R " +
     "/MediaBox [0 0 595 842] " +
     "/Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> " +
     "/Contents 6 0 R >>";
 
-  objects[4] =
+  objs[4] =
     "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>";
 
-  objects[5] =
+  objs[5] =
     "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>";
 
-  objects[6] =
+  objs[6] =
     `<< /Length ${stream.length} >>\n` +
     `stream\n${stream}endstream`;
 
   let pdf =
     "%PDF-1.4\n";
 
-  const offsets =
-    [0];
+  const offs = [0];
 
   for (
     let i = 1;
     i <= 6;
     i++
   ) {
-    offsets[i] =
+
+    offs[i] =
       pdf.length;
 
     pdf +=
       `${i} 0 obj\n` +
-      `${objects[i]}\n` +
+      `${objs[i]}\n` +
       `endobj\n`;
   }
 
@@ -1195,9 +1356,10 @@ function makeInvoicePdf(
     i <= 6;
     i++
   ) {
+
     pdf +=
       String(
-        offsets[i]
+        offs[i]
       )
         .padStart(
           10,
@@ -1217,9 +1379,8 @@ function makeInvoicePdf(
   );
 }
 
-function bytesToBase64(
-  bytes
-) {
+function bytesToBase64(bytes) {
+
   let out = "";
 
   for (
@@ -1227,13 +1388,16 @@ function bytesToBase64(
     i < bytes.length;
     i += 0x8000
   ) {
+
     out +=
-      String.fromCharCode(
-        ...bytes.subarray(
-          i,
-          i + 0x8000
-        )
-      );
+      String
+        .fromCharCode(
+          ...bytes
+            .subarray(
+              i,
+              i + 0x8000
+            )
+        );
   }
 
   return btoa(out);
@@ -1244,9 +1408,11 @@ async function sendInvoiceEmail(
   invoice,
   customer
 ) {
+
   if (
     !env.RESEND_API_KEY
   ) {
+
     throw new Error(
       "RESEND_API_KEY is not configured"
     );
@@ -1361,6 +1527,7 @@ async function sendInvoiceEmail(
           "POST",
 
         headers: {
+
           authorization:
             `Bearer ${env.RESEND_API_KEY}`,
 
@@ -1376,7 +1543,7 @@ async function sendInvoiceEmail(
               "Balkan Agent <info@balkanagent.com>",
 
             to: [
-              customer.email,
+              customer.email
             ],
 
             reply_to:
@@ -1388,6 +1555,7 @@ async function sendInvoiceEmail(
             html,
 
             attachments: [
+
               {
                 filename:
                   `${invoice.invoice_number}.pdf`,
@@ -1412,6 +1580,7 @@ async function sendInvoiceEmail(
   if (
     !response.ok
   ) {
+
     throw new Error(
       result.message ||
       result.error ||
@@ -1426,6 +1595,7 @@ async function createActivationInvoice(
   env,
   customer
 ) {
+
   const amount =
     planAmountCents(
       customer.plan,
@@ -1433,9 +1603,12 @@ async function createActivationInvoice(
     );
 
   const description =
+
     customer.plan ===
     "Enterprise"
+
       ? "Balkan Agent Enterprise - agreed monthly service"
+
       : `Balkan Agent ${customer.plan} plan - monthly service`;
 
   const temporary =
@@ -1488,6 +1661,7 @@ async function createActivationInvoice(
     );
 
   if (!id) {
+
     throw new Error(
       "Could not create invoice id"
     );
@@ -1522,6 +1696,7 @@ async function createActivationInvoice(
       .first();
 
   try {
+
     const providerId =
       await sendInvoiceEmail(
         env,
@@ -1550,14 +1725,19 @@ async function createActivationInvoice(
         .first();
 
     return {
+
       invoice,
+
       email_sent:
         true,
     };
 
   } catch (error) {
+
     return {
+
       invoice,
+
       email_sent:
         false,
 
@@ -1568,9 +1748,101 @@ async function createActivationInvoice(
   }
 }
 
+function extractOpenAIText(data) {
+
+  if (
+    typeof data.output_text ===
+    "string" &&
+    data.output_text.trim()
+  ) {
+
+    return data.output_text
+      .trim();
+  }
+
+  const parts = [];
+
+  for (
+    const item
+    of data.output ||
+    []
+  ) {
+
+    for (
+      const content
+      of item.content ||
+      []
+    ) {
+
+      if (
+        content.type ===
+        "output_text" &&
+        content.text
+      ) {
+
+        parts.push(
+          content.text
+        );
+      }
+    }
+  }
+
+  return parts
+    .join("\n")
+    .trim();
+}
+
+async function findWebsiteByKey(
+  env,
+  key
+) {
+
+  const rows =
+    await env.DB.prepare(`
+      SELECT
+        ci.*,
+        u.name,
+        u.company,
+        u.email
+      FROM customer_integrations ci
+      JOIN users u
+        ON u.id = ci.customer_id
+      WHERE
+        ci.channel='Website'
+        AND ci.status='CONNECTED'
+    `)
+      .all();
+
+  for (
+    const row
+    of rows.results ||
+    []
+  ) {
+
+    const config =
+      parseConfig(
+        row.config_json
+      );
+
+    if (
+      config.widget_key ===
+      key
+    ) {
+
+      return {
+        row,
+        config,
+      };
+    }
+  }
+
+  return null;
+}
+
 export async function onRequest(
   context
 ) {
+
   const {
     request,
     env
@@ -1582,16 +1854,18 @@ export async function onRequest(
     );
 
   const path =
-    url.pathname.replace(
-      /^\/api\/?/,
-      ""
-    );
+    url.pathname
+      .replace(
+        /^\/api\/?/,
+        ""
+      );
 
   const method =
     request.method
       .toUpperCase();
 
   if (!env.DB) {
+
     return bad(
       "D1 binding DB is not configured",
       500
@@ -1601,6 +1875,7 @@ export async function onRequest(
   if (
     !env.SESSION_SECRET
   ) {
+
     return bad(
       "SESSION_SECRET is not configured",
       500
@@ -1610,6 +1885,7 @@ export async function onRequest(
   if (
     !env.ADMIN_PASSWORD
   ) {
+
     return bad(
       "ADMIN_PASSWORD is not configured",
       500
@@ -1621,9 +1897,11 @@ export async function onRequest(
   );
 
 
-  // ==========================================
-  // REGISTER
-  // ==========================================
+  /*
+  ==========================================
+  REGISTER
+  ==========================================
+  */
 
   if (
     path ===
@@ -1631,6 +1909,7 @@ export async function onRequest(
     method ===
     "POST"
   ) {
+
     const body =
       await parseBody(
         request
@@ -1638,29 +1917,37 @@ export async function onRequest(
 
     const name =
       String(
-        body.name || ""
-      ).trim();
+        body.name ||
+        ""
+      )
+        .trim();
 
     const company =
       String(
-        body.company || ""
-      ).trim();
+        body.company ||
+        ""
+      )
+        .trim();
 
     const email =
       String(
-        body.email || ""
+        body.email ||
+        ""
       )
         .trim()
         .toLowerCase();
 
     const phone =
       String(
-        body.phone || ""
-      ).trim();
+        body.phone ||
+        ""
+      )
+        .trim();
 
     const password =
       String(
-        body.password || ""
+        body.password ||
+        ""
       );
 
     if (
@@ -1668,6 +1955,7 @@ export async function onRequest(
       !email ||
       password.length < 8
     ) {
+
       return bad(
         "Name, email and password of at least 8 characters are required.",
         400
@@ -1678,6 +1966,7 @@ export async function onRequest(
       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/
         .test(email)
     ) {
+
       return bad(
         "Invalid email.",
         400
@@ -1692,6 +1981,7 @@ export async function onRequest(
         .first();
 
     if (exists) {
+
       return bad(
         "Account already exists.",
         409
@@ -1711,6 +2001,7 @@ export async function onRequest(
       crypto.randomUUID();
 
     try {
+
       await env.DB.prepare(`
         INSERT INTO users (
           id,
@@ -1756,9 +2047,12 @@ export async function onRequest(
 
       return json(
         {
-          ok: true,
+          ok:
+            true,
+
           status:
             "pending",
+
           message:
             "Account created. Admin activation is required.",
         },
@@ -1766,6 +2060,7 @@ export async function onRequest(
       );
 
     } catch (error) {
+
       return bad(
         `Database error: ${
           error?.message ||
@@ -1777,9 +2072,11 @@ export async function onRequest(
   }
 
 
-  // ==========================================
-  // LOGIN
-  // ==========================================
+  /*
+  ==========================================
+  LOGIN
+  ==========================================
+  */
 
   if (
     path ===
@@ -1787,6 +2084,7 @@ export async function onRequest(
     method ===
     "POST"
   ) {
+
     const body =
       await parseBody(
         request
@@ -1794,24 +2092,28 @@ export async function onRequest(
 
     const email =
       String(
-        body.email || ""
+        body.email ||
+        ""
       )
         .trim()
         .toLowerCase();
 
     const password =
       String(
-        body.password || ""
+        body.password ||
+        ""
       );
 
     if (
       email ===
       "ceo@balkanagent.com"
     ) {
+
       if (
         password !==
         env.ADMIN_PASSWORD
       ) {
+
         return bad(
           "Wrong email or password.",
           401
@@ -1838,7 +2140,9 @@ export async function onRequest(
 
       return json(
         {
-          ok: true,
+          ok:
+            true,
+
           role:
             "admin",
         },
@@ -1863,25 +2167,25 @@ export async function onRequest(
         .bind(email)
         .first();
 
-    if (
-      !user
-    ) {
+    if (!user) {
+
       return bad(
         "Wrong email or password.",
         401
       );
     }
 
-    const passwordCheck =
+    const check =
       await hashPassword(
         password,
         user.password_salt
       );
 
     if (
-      passwordCheck !==
+      check !==
       user.password_hash
     ) {
+
       return bad(
         "Wrong email or password.",
         401
@@ -1891,6 +2195,7 @@ export async function onRequest(
     if (
       !user.active
     ) {
+
       return bad(
         "Account is waiting for admin activation.",
         403
@@ -1918,9 +2223,12 @@ export async function onRequest(
 
     return json(
       {
-        ok: true,
+        ok:
+          true,
+
         role:
           "customer",
+
         user:
           safeUser(user),
       },
@@ -1935,9 +2243,11 @@ export async function onRequest(
   }
 
 
-  // ==========================================
-  // LOGOUT
-  // ==========================================
+  /*
+  ==========================================
+  LOGOUT
+  ==========================================
+  */
 
   if (
     path ===
@@ -1945,9 +2255,11 @@ export async function onRequest(
     method ===
     "POST"
   ) {
+
     return json(
       {
-        ok: true,
+        ok:
+          true,
       },
       200,
       {
@@ -1958,9 +2270,11 @@ export async function onRequest(
   }
 
 
-  // ==========================================
-  // SESSION
-  // ==========================================
+  /*
+  ==========================================
+  AUTH ME
+  ==========================================
+  */
 
   if (
     path ===
@@ -1968,6 +2282,7 @@ export async function onRequest(
     method ===
     "GET"
   ) {
+
     const r =
       await requireSession(
         request,
@@ -1977,6 +2292,7 @@ export async function onRequest(
     if (
       r.error
     ) {
+
       return r.error;
     }
 
@@ -1984,10 +2300,15 @@ export async function onRequest(
       r.session.role ===
       "admin"
     ) {
+
       return json({
-        ok: true,
+
+        ok:
+          true,
+
         role:
           "admin",
+
         email:
           r.session.email,
       });
@@ -2006,6 +2327,7 @@ export async function onRequest(
       !user ||
       !user.active
     ) {
+
       return bad(
         "Account inactive",
         403
@@ -2013,18 +2335,24 @@ export async function onRequest(
     }
 
     return json({
-      ok: true,
+
+      ok:
+        true,
+
       role:
         "customer",
+
       user:
         safeUser(user),
     });
   }
 
 
-  // ==========================================
-  // CUSTOMER PROFILE
-  // ==========================================
+  /*
+  ==========================================
+  PROFILE
+  ==========================================
+  */
 
   if (
     path ===
@@ -2032,6 +2360,7 @@ export async function onRequest(
     method ===
     "GET"
   ) {
+
     const r =
       await requireSession(
         request,
@@ -2041,6 +2370,7 @@ export async function onRequest(
     if (
       r.error
     ) {
+
       return r.error;
     }
 
@@ -2048,6 +2378,7 @@ export async function onRequest(
       r.session.role !==
       "customer"
     ) {
+
       return bad(
         "Customer required",
         403
@@ -2064,7 +2395,10 @@ export async function onRequest(
         .first();
 
     return json({
-      ok: true,
+
+      ok:
+        true,
+
       user:
         safeUser(user),
     });
@@ -2076,6 +2410,7 @@ export async function onRequest(
     method ===
     "PATCH"
   ) {
+
     const r =
       await requireSession(
         request,
@@ -2085,6 +2420,7 @@ export async function onRequest(
     if (
       r.error
     ) {
+
       return r.error;
     }
 
@@ -2092,6 +2428,7 @@ export async function onRequest(
       r.session.role !==
       "customer"
     ) {
+
       return bad(
         "Customer required",
         403
@@ -2105,12 +2442,13 @@ export async function onRequest(
 
     const name =
       String(
-        body.name || ""
-      ).trim();
+        body.name ||
+        ""
+      )
+        .trim();
 
-    if (
-      !name
-    ) {
+    if (!name) {
+
       return bad(
         "Name is required",
         400
@@ -2131,17 +2469,25 @@ export async function onRequest(
       .bind(
         name,
         String(
-          body.company || ""
-        ).trim(),
+          body.company ||
+          ""
+        )
+          .trim(),
         String(
-          body.phone || ""
-        ).trim(),
+          body.phone ||
+          ""
+        )
+          .trim(),
         String(
-          body.iban || ""
-        ).trim(),
+          body.iban ||
+          ""
+        )
+          .trim(),
         String(
-          body.bank_name || ""
-        ).trim(),
+          body.bank_name ||
+          ""
+        )
+          .trim(),
         r.session.sub
       )
       .run();
@@ -2156,16 +2502,21 @@ export async function onRequest(
         .first();
 
     return json({
-      ok: true,
+
+      ok:
+        true,
+
       user:
         safeUser(user),
     });
   }
 
 
-  // ==========================================
-  // ADMIN CUSTOMERS
-  // ==========================================
+  /*
+  ==========================================
+  ADMIN CUSTOMERS
+  ==========================================
+  */
 
   if (
     path ===
@@ -2173,6 +2524,7 @@ export async function onRequest(
     method ===
     "GET"
   ) {
+
     const r =
       await requireAdmin(
         request,
@@ -2182,6 +2534,7 @@ export async function onRequest(
     if (
       r.error
     ) {
+
       return r.error;
     }
 
@@ -2195,15 +2548,18 @@ export async function onRequest(
         .all();
 
     return json({
-      ok: true,
+
+      ok:
+        true,
 
       customers:
         (
           rows.results ||
           []
-        ).map(
-          safeUser
-        ),
+        )
+          .map(
+            safeUser
+          ),
     });
   }
 
@@ -2217,6 +2573,7 @@ export async function onRequest(
     method ===
     "PATCH"
   ) {
+
     const r =
       await requireAdmin(
         request,
@@ -2226,6 +2583,7 @@ export async function onRequest(
     if (
       r.error
     ) {
+
       return r.error;
     }
 
@@ -2250,9 +2608,8 @@ export async function onRequest(
         .bind(id)
         .first();
 
-    if (
-      !current
-    ) {
+    if (!current) {
+
       return bad(
         "Customer not found",
         404
@@ -2260,52 +2617,70 @@ export async function onRequest(
     }
 
     const active =
+
       body.active ===
       undefined
+
         ? current.active
+
         : body.active
           ? 1
           : 0;
 
     const plan =
+
       body.plan ===
       undefined
+
         ? current.plan
+
         : String(
             body.plan
           );
 
     const phone =
+
       body.phone ===
       undefined
+
         ? current.phone
+
         : String(
             body.phone ||
             ""
           );
 
     const iban =
+
       body.iban ===
       undefined
+
         ? current.iban
+
         : String(
             body.iban ||
             ""
           );
 
     const bank =
+
       body.bank_name ===
       undefined
+
         ? current.bank_name
+
         : String(
             body.bank_name ||
             ""
           );
 
     const paymentStatus =
+
       body.payment_status ===
       undefined
+
         ? current.payment_status
+
         : String(
             body.payment_status
           );
@@ -2349,6 +2724,7 @@ export async function onRequest(
       !current.active &&
       active
     ) {
+
       invoice =
         await createActivationInvoice(
           env,
@@ -2357,11 +2733,15 @@ export async function onRequest(
     }
 
     return json({
-      ok: true,
+
+      ok:
+        true,
+
       customer:
         safeUser(
           updated
         ),
+
       invoice,
     });
   }
@@ -2371,6 +2751,7 @@ export async function onRequest(
     method ===
     "DELETE"
   ) {
+
     const r =
       await requireAdmin(
         request,
@@ -2380,6 +2761,7 @@ export async function onRequest(
     if (
       r.error
     ) {
+
       return r.error;
     }
 
@@ -2416,14 +2798,17 @@ export async function onRequest(
       .run();
 
     return json({
-      ok: true,
+      ok:
+        true,
     });
   }
 
 
-  // ==========================================
-  // ADMIN - AI AGENTS OF CUSTOMER
-  // ==========================================
+  /*
+  ==========================================
+  ADMIN AI AGENTS
+  ==========================================
+  */
 
   const adminAgents =
     path.match(
@@ -2435,6 +2820,7 @@ export async function onRequest(
     method ===
     "GET"
   ) {
+
     const r =
       await requireAdmin(
         request,
@@ -2444,6 +2830,7 @@ export async function onRequest(
     if (
       r.error
     ) {
+
       return r.error;
     }
 
@@ -2458,6 +2845,7 @@ export async function onRequest(
         id
       )
     ) {
+
       return bad(
         "Customer not found",
         404
@@ -2487,7 +2875,10 @@ export async function onRequest(
         .all();
 
     return json({
-      ok: true,
+
+      ok:
+        true,
+
       agents:
         rows.results ||
         [],
@@ -2504,6 +2895,7 @@ export async function onRequest(
     method ===
     "PATCH"
   ) {
+
     const r =
       await requireAdmin(
         request,
@@ -2513,6 +2905,7 @@ export async function onRequest(
     if (
       r.error
     ) {
+
       return r.error;
     }
 
@@ -2532,6 +2925,7 @@ export async function onRequest(
         id
       )
     ) {
+
       return bad(
         "Customer not found",
         404
@@ -2539,15 +2933,17 @@ export async function onRequest(
     }
 
     const definition =
-      DEFAULT_AGENTS.find(
-        item =>
-          item.agent_type ===
-          type
-      );
+      DEFAULT_AGENTS
+        .find(
+          item =>
+            item.agent_type ===
+            type
+        );
 
     if (
       !definition
     ) {
+
       return bad(
         "Invalid agent type",
         400
@@ -2570,39 +2966,22 @@ export async function onRequest(
       ![
         "ACTIVE",
         "INACTIVE",
-      ].includes(
-        status
-      )
+      ]
+        .includes(
+          status
+        )
     ) {
+
       return bad(
         "Invalid agent status",
         400
       );
     }
 
-    await env.DB.prepare(`
-      INSERT OR IGNORE
-      INTO customer_agents (
-        customer_id,
-        agent_type,
-        name,
-        status,
-        config_json
-      )
-      VALUES (
-        ?,
-        ?,
-        ?,
-        'INACTIVE',
-        '{}'
-      )
-    `)
-      .bind(
-        id,
-        type,
-        definition.name
-      )
-      .run();
+    await seedAgents(
+      env,
+      id
+    );
 
     await env.DB.prepare(`
       UPDATE customer_agents
@@ -2622,14 +3001,7 @@ export async function onRequest(
 
     const agent =
       await env.DB.prepare(`
-        SELECT
-          id,
-          agent_type,
-          name,
-          status,
-          config_json,
-          created_at,
-          updated_at
+        SELECT *
         FROM customer_agents
         WHERE
           customer_id=?
@@ -2642,15 +3014,20 @@ export async function onRequest(
         .first();
 
     return json({
-      ok: true,
+
+      ok:
+        true,
+
       agent,
     });
   }
 
 
-  // ==========================================
-  // ADMIN - INTEGRATIONS OF CUSTOMER
-  // ==========================================
+  /*
+  ==========================================
+  ADMIN INTEGRATIONS
+  ==========================================
+  */
 
   const adminIntegrations =
     path.match(
@@ -2662,6 +3039,7 @@ export async function onRequest(
     method ===
     "GET"
   ) {
+
     const r =
       await requireAdmin(
         request,
@@ -2671,6 +3049,7 @@ export async function onRequest(
     if (
       r.error
     ) {
+
       return r.error;
     }
 
@@ -2685,6 +3064,7 @@ export async function onRequest(
         id
       )
     ) {
+
       return bad(
         "Customer not found",
         404
@@ -2713,10 +3093,18 @@ export async function onRequest(
         .all();
 
     return json({
-      ok: true,
+
+      ok:
+        true,
+
       integrations:
-        rows.results ||
-        [],
+        (
+          rows.results ||
+          []
+        )
+          .map(
+            integrationForApi
+          ),
     });
   }
 
@@ -2730,6 +3118,7 @@ export async function onRequest(
     method ===
     "PATCH"
   ) {
+
     const r =
       await requireAdmin(
         request,
@@ -2739,6 +3128,7 @@ export async function onRequest(
     if (
       r.error
     ) {
+
       return r.error;
     }
 
@@ -2758,6 +3148,7 @@ export async function onRequest(
         id
       )
     ) {
+
       return bad(
         "Customer not found",
         404
@@ -2765,10 +3156,12 @@ export async function onRequest(
     }
 
     if (
-      !CHANNELS.includes(
-        channel
-      )
+      !CHANNELS
+        .includes(
+          channel
+        )
     ) {
+
       return bad(
         "Invalid integration channel",
         400
@@ -2791,41 +3184,123 @@ export async function onRequest(
       ![
         "CONNECTED",
         "NOT_CONNECTED",
-      ].includes(
-        status
-      )
+      ]
+        .includes(
+          status
+        )
     ) {
+
       return bad(
         "Invalid integration status",
         400
       );
     }
 
-    await env.DB.prepare(`
-      INSERT OR IGNORE
-      INTO customer_integrations (
-        customer_id,
-        channel,
-        status,
-        config_json
-      )
-      VALUES (
-        ?,
-        ?,
-        'NOT_CONNECTED',
-        '{}'
-      )
-    `)
-      .bind(
-        id,
-        channel
-      )
-      .run();
+    await seedIntegrations(
+      env,
+      id
+    );
+
+    const existing =
+      await env.DB.prepare(`
+        SELECT *
+        FROM customer_integrations
+        WHERE
+          customer_id=?
+          AND channel=?
+      `)
+        .bind(
+          id,
+          channel
+        )
+        .first();
+
+    let config =
+      parseConfig(
+        existing?.config_json
+      );
+
+
+    /*
+    WEBSITE SPECIAL CONFIGURATION
+    */
+
+    if (
+      channel ===
+      "Website"
+    ) {
+
+      if (
+        status ===
+        "CONNECTED"
+      ) {
+
+        const domain =
+          normalizeDomain(
+            body.domain ||
+            config.domain
+          );
+
+        if (!domain) {
+
+          return bad(
+            "Valid website domain is required",
+            400
+          );
+        }
+
+        config = {
+
+          ...config,
+
+          domain,
+
+          widget_key:
+            config.widget_key ||
+            randomHex(24),
+
+          agent_type:
+            "receptionist",
+
+          connected_at:
+            new Date()
+              .toISOString(),
+
+          business_context:
+            String(
+              body.business_context ||
+              config.business_context ||
+              ""
+            )
+              .trim(),
+
+          welcome_message:
+            String(
+              body.welcome_message ||
+              config.welcome_message ||
+              "Zdravo! Kako vam mogu pomoći?"
+            )
+              .trim(),
+        };
+
+      } else {
+
+        config = {
+
+          ...config,
+
+          disconnected_at:
+            new Date()
+              .toISOString(),
+        };
+      }
+    }
 
     await env.DB.prepare(`
       UPDATE customer_integrations
       SET
         status=?,
+        config_json=?,
         updated_at=datetime('now')
       WHERE
         customer_id=?
@@ -2833,6 +3308,9 @@ export async function onRequest(
     `)
       .bind(
         status,
+        JSON.stringify(
+          config
+        ),
         id,
         channel
       )
@@ -2840,13 +3318,7 @@ export async function onRequest(
 
     const integration =
       await env.DB.prepare(`
-        SELECT
-          id,
-          channel,
-          status,
-          config_json,
-          created_at,
-          updated_at
+        SELECT *
         FROM customer_integrations
         WHERE
           customer_id=?
@@ -2859,15 +3331,23 @@ export async function onRequest(
         .first();
 
     return json({
-      ok: true,
-      integration,
+
+      ok:
+        true,
+
+      integration:
+        integrationForApi(
+          integration
+        ),
     });
   }
 
 
-  // ==========================================
-  // ADMIN INVOICES
-  // ==========================================
+  /*
+  ==========================================
+  ADMIN INVOICES
+  ==========================================
+  */
 
   const adminInvoices =
     path.match(
@@ -2879,6 +3359,7 @@ export async function onRequest(
     method ===
     "GET"
   ) {
+
     const r =
       await requireAdmin(
         request,
@@ -2888,6 +3369,7 @@ export async function onRequest(
     if (
       r.error
     ) {
+
       return r.error;
     }
 
@@ -2907,7 +3389,10 @@ export async function onRequest(
         .all();
 
     return json({
-      ok: true,
+
+      ok:
+        true,
+
       invoices:
         rows.results ||
         [],
@@ -2924,6 +3409,7 @@ export async function onRequest(
     method ===
     "POST"
   ) {
+
     const r =
       await requireAdmin(
         request,
@@ -2933,6 +3419,7 @@ export async function onRequest(
     if (
       r.error
     ) {
+
       return r.error;
     }
 
@@ -2955,6 +3442,7 @@ export async function onRequest(
     if (
       !customer
     ) {
+
       return bad(
         "Customer not found",
         404
@@ -2975,6 +3463,7 @@ export async function onRequest(
     if (
       !invoice
     ) {
+
       return bad(
         "No invoice exists for this customer yet.",
         404
@@ -2982,6 +3471,7 @@ export async function onRequest(
     }
 
     try {
+
       const providerId =
         await sendInvoiceEmail(
           env,
@@ -3003,14 +3493,19 @@ export async function onRequest(
         .run();
 
       return json({
-        ok: true,
+
+        ok:
+          true,
+
         message:
           "Invoice sent",
+
         invoice_number:
           invoice.invoice_number,
       });
 
     } catch (error) {
+
       return bad(
         error?.message ||
         String(error),
@@ -3029,6 +3524,7 @@ export async function onRequest(
     method ===
     "GET"
   ) {
+
     const r =
       await requireAdmin(
         request,
@@ -3038,6 +3534,7 @@ export async function onRequest(
     if (
       r.error
     ) {
+
       return r.error;
     }
 
@@ -3055,6 +3552,7 @@ export async function onRequest(
     if (
       !invoice
     ) {
+
       return bad(
         "Invoice not found",
         404
@@ -3081,6 +3579,7 @@ export async function onRequest(
       pdf,
       {
         headers: {
+
           "content-type":
             "application/pdf",
 
@@ -3095,9 +3594,11 @@ export async function onRequest(
   }
 
 
-  // ==========================================
-  // CUSTOMER INVOICES
-  // ==========================================
+  /*
+  ==========================================
+  CUSTOMER INVOICES
+  ==========================================
+  */
 
   if (
     path ===
@@ -3105,6 +3606,7 @@ export async function onRequest(
     method ===
     "GET"
   ) {
+
     const r =
       await requireSession(
         request,
@@ -3114,6 +3616,7 @@ export async function onRequest(
     if (
       r.error
     ) {
+
       return r.error;
     }
 
@@ -3121,6 +3624,7 @@ export async function onRequest(
       r.session.role !==
       "customer"
     ) {
+
       return bad(
         "Customer required",
         403
@@ -3149,7 +3653,10 @@ export async function onRequest(
         .all();
 
     return json({
-      ok: true,
+
+      ok:
+        true,
+
       invoices:
         rows.results ||
         [],
@@ -3166,6 +3673,7 @@ export async function onRequest(
     method ===
     "GET"
   ) {
+
     const r =
       await requireSession(
         request,
@@ -3175,6 +3683,7 @@ export async function onRequest(
     if (
       r.error
     ) {
+
       return r.error;
     }
 
@@ -3182,6 +3691,7 @@ export async function onRequest(
       r.session.role !==
       "customer"
     ) {
+
       return bad(
         "Customer required",
         403
@@ -3207,6 +3717,7 @@ export async function onRequest(
     if (
       !invoice
     ) {
+
       return bad(
         "Invoice not found",
         404
@@ -3233,6 +3744,7 @@ export async function onRequest(
       pdf,
       {
         headers: {
+
           "content-type":
             "application/pdf",
 
@@ -3247,9 +3759,11 @@ export async function onRequest(
   }
 
 
-  // ==========================================
-  // CUSTOMER AI AGENTS
-  // ==========================================
+  /*
+  ==========================================
+  CUSTOMER AGENTS
+  ==========================================
+  */
 
   if (
     path ===
@@ -3257,6 +3771,7 @@ export async function onRequest(
     method ===
     "GET"
   ) {
+
     const r =
       await requireSession(
         request,
@@ -3266,6 +3781,7 @@ export async function onRequest(
     if (
       r.error
     ) {
+
       return r.error;
     }
 
@@ -3273,6 +3789,7 @@ export async function onRequest(
       r.session.role !==
       "customer"
     ) {
+
       return bad(
         "Customer required",
         403
@@ -3304,7 +3821,10 @@ export async function onRequest(
         .all();
 
     return json({
-      ok: true,
+
+      ok:
+        true,
+
       agents:
         rows.results ||
         [],
@@ -3321,6 +3841,7 @@ export async function onRequest(
     method ===
     "PATCH"
   ) {
+
     const r =
       await requireSession(
         request,
@@ -3330,6 +3851,7 @@ export async function onRequest(
     if (
       r.error
     ) {
+
       return r.error;
     }
 
@@ -3337,6 +3859,7 @@ export async function onRequest(
       r.session.role !==
       "customer"
     ) {
+
       return bad(
         "Customer required",
         403
@@ -3348,16 +3871,15 @@ export async function onRequest(
         agentMatch[1]
       );
 
-    const definition =
-      DEFAULT_AGENTS.find(
-        item =>
-          item.agent_type ===
-          type
-      );
-
     if (
-      !definition
+      !DEFAULT_AGENTS
+        .some(
+          item =>
+            item.agent_type ===
+            type
+        )
     ) {
+
       return bad(
         "Invalid agent type",
         400
@@ -3373,16 +3895,19 @@ export async function onRequest(
       String(
         body.status ||
         ""
-      ).toUpperCase();
+      )
+        .toUpperCase();
 
     if (
       ![
         "ACTIVE",
         "INACTIVE",
-      ].includes(
-        status
-      )
+      ]
+        .includes(
+          status
+        )
     ) {
+
       return bad(
         "Invalid agent status",
         400
@@ -3412,14 +3937,7 @@ export async function onRequest(
 
     const agent =
       await env.DB.prepare(`
-        SELECT
-          id,
-          agent_type,
-          name,
-          status,
-          config_json,
-          created_at,
-          updated_at
+        SELECT *
         FROM customer_agents
         WHERE
           customer_id=?
@@ -3432,15 +3950,20 @@ export async function onRequest(
         .first();
 
     return json({
-      ok: true,
+
+      ok:
+        true,
+
       agent,
     });
   }
 
 
-  // ==========================================
-  // CUSTOMER INTEGRATIONS
-  // ==========================================
+  /*
+  ==========================================
+  CUSTOMER INTEGRATIONS
+  ==========================================
+  */
 
   if (
     path ===
@@ -3448,6 +3971,7 @@ export async function onRequest(
     method ===
     "GET"
   ) {
+
     const r =
       await requireSession(
         request,
@@ -3457,6 +3981,7 @@ export async function onRequest(
     if (
       r.error
     ) {
+
       return r.error;
     }
 
@@ -3464,6 +3989,7 @@ export async function onRequest(
       r.session.role !==
       "customer"
     ) {
+
       return bad(
         "Customer required",
         403
@@ -3494,10 +4020,18 @@ export async function onRequest(
         .all();
 
     return json({
-      ok: true,
+
+      ok:
+        true,
+
       integrations:
-        rows.results ||
-        [],
+        (
+          rows.results ||
+          []
+        )
+          .map(
+            integrationForApi
+          ),
     });
   }
 
@@ -3511,6 +4045,7 @@ export async function onRequest(
     method ===
     "PATCH"
   ) {
+
     const r =
       await requireSession(
         request,
@@ -3520,6 +4055,7 @@ export async function onRequest(
     if (
       r.error
     ) {
+
       return r.error;
     }
 
@@ -3527,6 +4063,7 @@ export async function onRequest(
       r.session.role !==
       "customer"
     ) {
+
       return bad(
         "Customer required",
         403
@@ -3539,13 +4076,26 @@ export async function onRequest(
       );
 
     if (
-      !CHANNELS.includes(
-        channel
-      )
+      !CHANNELS
+        .includes(
+          channel
+        )
     ) {
+
       return bad(
         "Invalid integration channel",
         400
+      );
+    }
+
+    if (
+      channel ===
+      "Website"
+    ) {
+
+      return bad(
+        "Website integration must be configured by Balkan Agent admin.",
+        403
       );
     }
 
@@ -3558,16 +4108,19 @@ export async function onRequest(
       String(
         body.status ||
         ""
-      ).toUpperCase();
+      )
+        .toUpperCase();
 
     if (
       ![
         "CONNECTED",
         "NOT_CONNECTED",
-      ].includes(
-        status
-      )
+      ]
+        .includes(
+          status
+        )
     ) {
+
       return bad(
         "Invalid integration status",
         400
@@ -3597,13 +4150,7 @@ export async function onRequest(
 
     const integration =
       await env.DB.prepare(`
-        SELECT
-          id,
-          channel,
-          status,
-          config_json,
-          created_at,
-          updated_at
+        SELECT *
         FROM customer_integrations
         WHERE
           customer_id=?
@@ -3616,9 +4163,404 @@ export async function onRequest(
         .first();
 
     return json({
-      ok: true,
-      integration,
+
+      ok:
+        true,
+
+      integration:
+        integrationForApi(
+          integration
+        ),
     });
+  }
+
+
+  /*
+  ==========================================
+  PUBLIC WEBSITE WIDGET CONFIG
+  ==========================================
+  */
+
+  if (
+    path ===
+    "widget/config" &&
+    method ===
+    "GET"
+  ) {
+
+    const key =
+      String(
+        url.searchParams
+          .get(
+            "key"
+          ) ||
+        ""
+      )
+        .trim();
+
+    const origin =
+      request.headers
+        .get(
+          "Origin"
+        ) ||
+      "";
+
+    if (!key) {
+
+      return bad(
+        "Widget key required",
+        400,
+        corsHeaders(
+          origin
+        )
+      );
+    }
+
+    const found =
+      await findWebsiteByKey(
+        env,
+        key
+      );
+
+    if (!found) {
+
+      return bad(
+        "Widget not found",
+        404,
+        corsHeaders(
+          origin
+        )
+      );
+    }
+
+    if (
+      !originAllowed(
+        origin,
+        found.config.domain
+      )
+    ) {
+
+      return bad(
+        "Domain not allowed",
+        403,
+        corsHeaders(
+          origin
+        )
+      );
+    }
+
+    return json(
+      {
+
+        ok:
+          true,
+
+        company:
+          found.row.company ||
+          found.row.name ||
+          "Business",
+
+        welcome_message:
+          found.config
+            .welcome_message ||
+          "Zdravo! Kako vam mogu pomoći?",
+      },
+      200,
+      corsHeaders(
+        origin
+      )
+    );
+  }
+
+
+  /*
+  ==========================================
+  WEBSITE WIDGET CORS
+  ==========================================
+  */
+
+  if (
+    path ===
+    "widget/chat" &&
+    method ===
+    "OPTIONS"
+  ) {
+
+    return new Response(
+      null,
+      {
+        status:
+          204,
+
+        headers:
+          corsHeaders(
+            request.headers
+              .get(
+                "Origin"
+              )
+          ),
+      }
+    );
+  }
+
+
+  /*
+  ==========================================
+  WEBSITE AI CHAT
+  ==========================================
+  */
+
+  if (
+    path ===
+    "widget/chat" &&
+    method ===
+    "POST"
+  ) {
+
+    const origin =
+      request.headers
+        .get(
+          "Origin"
+        ) ||
+      "";
+
+    const body =
+      await parseBody(
+        request
+      );
+
+    const key =
+      String(
+        body.key ||
+        ""
+      )
+        .trim();
+
+    const message =
+      String(
+        body.message ||
+        ""
+      )
+        .trim();
+
+    if (
+      !key ||
+      !message
+    ) {
+
+      return bad(
+        "Widget key and message are required",
+        400,
+        corsHeaders(
+          origin
+        )
+      );
+    }
+
+    if (
+      message.length >
+      4000
+    ) {
+
+      return bad(
+        "Message too long",
+        400,
+        corsHeaders(
+          origin
+        )
+      );
+    }
+
+    const found =
+      await findWebsiteByKey(
+        env,
+        key
+      );
+
+    if (!found) {
+
+      return bad(
+        "Widget not found",
+        404,
+        corsHeaders(
+          origin
+        )
+      );
+    }
+
+    if (
+      !originAllowed(
+        origin,
+        found.config.domain
+      )
+    ) {
+
+      return bad(
+        "Domain not allowed",
+        403,
+        corsHeaders(
+          origin
+        )
+      );
+    }
+
+    const agent =
+      await env.DB.prepare(`
+        SELECT *
+        FROM customer_agents
+        WHERE
+          customer_id=?
+          AND agent_type='receptionist'
+      `)
+        .bind(
+          found.row.customer_id
+        )
+        .first();
+
+    if (
+      !agent ||
+      agent.status !==
+      "ACTIVE"
+    ) {
+
+      return bad(
+        "AI Receptionist is not active for this customer",
+        403,
+        corsHeaders(
+          origin
+        )
+      );
+    }
+
+    if (
+      !env.OPENAI_API_KEY
+    ) {
+
+      return bad(
+        "OPENAI_API_KEY is not configured",
+        500,
+        corsHeaders(
+          origin
+        )
+      );
+    }
+
+    const company =
+      found.row.company ||
+      found.row.name ||
+      "the business";
+
+    const businessContext =
+      String(
+        found.config
+          .business_context ||
+        ""
+      )
+        .trim();
+
+    const instructions =
+      [
+
+        `You are the AI Receptionist for ${company}.`,
+
+        "Be professional, helpful, concise and friendly.",
+
+        "Answer only as the business assistant, not as Balkan Agent.",
+
+        "If you do not know a business-specific fact, say you can pass the question to the team instead of inventing information.",
+
+        businessContext
+          ? `Business information: ${businessContext}`
+          : "",
+
+      ]
+        .filter(Boolean)
+        .join("\n");
+
+    const openai =
+      await fetch(
+        "https://api.openai.com/v1/responses",
+        {
+          method:
+            "POST",
+
+          headers: {
+
+            authorization:
+              `Bearer ${env.OPENAI_API_KEY}`,
+
+            "content-type":
+              "application/json",
+          },
+
+          body:
+            JSON.stringify({
+
+              model:
+                env.OPENAI_MODEL ||
+                "gpt-5-mini",
+
+              instructions,
+
+              input:
+                message,
+
+              store:
+                false,
+            }),
+        }
+      );
+
+    const data =
+      await openai
+        .json()
+        .catch(
+          () => ({})
+        );
+
+    if (
+      !openai.ok
+    ) {
+
+      return bad(
+        data?.error?.message ||
+        `OpenAI error ${openai.status}`,
+        502,
+        corsHeaders(
+          origin
+        )
+      );
+    }
+
+    const reply =
+      extractOpenAIText(
+        data
+      );
+
+    if (!reply) {
+
+      return bad(
+        "AI returned an empty response",
+        502,
+        corsHeaders(
+          origin
+        )
+      );
+    }
+
+    return json(
+      {
+
+        ok:
+          true,
+
+        reply,
+      },
+      200,
+      corsHeaders(
+        origin
+      )
+    );
   }
 
 
