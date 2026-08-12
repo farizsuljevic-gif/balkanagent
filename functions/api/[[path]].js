@@ -2393,7 +2393,439 @@ export async function onRequest(context) {
     );
   }
 
+  // ==========================================
+  // CUSTOMER - AI AGENTS
+  // ==========================================
 
+  if (
+    path === "agents" &&
+    method === "GET"
+  ) {
+    const r =
+      await requireSession(
+        request,
+        env
+      );
+
+    if (r.error) {
+      return r.error;
+    }
+
+    if (
+      r.session.role !==
+      "customer"
+    ) {
+      return bad(
+        "Customer required",
+        403
+      );
+    }
+
+    const defaults = [
+      {
+        agent_type: "receptionist",
+        name: "AI Receptionist"
+      },
+      {
+        agent_type: "sales",
+        name: "AI Sales"
+      },
+      {
+        agent_type: "support",
+        name: "AI Support"
+      }
+    ];
+
+    for (
+      const agent of defaults
+    ) {
+      await env.DB.prepare(`
+        INSERT OR IGNORE INTO customer_agents (
+          customer_id,
+          agent_type,
+          name,
+          status,
+          config_json
+        )
+        VALUES (
+          ?,
+          ?,
+          ?,
+          'INACTIVE',
+          '{}'
+        )
+      `)
+        .bind(
+          r.session.sub,
+          agent.agent_type,
+          agent.name
+        )
+        .run();
+    }
+
+    const rows =
+      await env.DB.prepare(`
+        SELECT
+          id,
+          agent_type,
+          name,
+          status,
+          config_json,
+          created_at,
+          updated_at
+        FROM customer_agents
+        WHERE customer_id=?
+        ORDER BY id ASC
+      `)
+        .bind(
+          r.session.sub
+        )
+        .all();
+
+    return json({
+      ok: true,
+      agents:
+        rows.results || []
+    });
+  }
+
+
+  const customerAgentMatch =
+    path.match(
+      /^agents\/([^/]+)$/
+    );
+
+  if (
+    customerAgentMatch &&
+    method === "PATCH"
+  ) {
+    const r =
+      await requireSession(
+        request,
+        env
+      );
+
+    if (r.error) {
+      return r.error;
+    }
+
+    if (
+      r.session.role !==
+      "customer"
+    ) {
+      return bad(
+        "Customer required",
+        403
+      );
+    }
+
+    const agentType =
+      decodeURIComponent(
+        customerAgentMatch[1]
+      );
+
+    const b =
+      await parseBody(
+        request
+      );
+
+    const allowedStatus = [
+      "ACTIVE",
+      "INACTIVE"
+    ];
+
+    const status =
+      String(
+        b.status || ""
+      ).toUpperCase();
+
+    if (
+      !allowedStatus.includes(
+        status
+      )
+    ) {
+      return bad(
+        "Invalid agent status",
+        400
+      );
+    }
+
+    const existing =
+      await env.DB.prepare(`
+        SELECT *
+        FROM customer_agents
+        WHERE
+          customer_id=?
+          AND agent_type=?
+      `)
+        .bind(
+          r.session.sub,
+          agentType
+        )
+        .first();
+
+    if (!existing) {
+      return bad(
+        "Agent not found",
+        404
+      );
+    }
+
+    await env.DB.prepare(`
+      UPDATE customer_agents
+      SET
+        status=?,
+        updated_at=datetime('now')
+      WHERE
+        customer_id=?
+        AND agent_type=?
+    `)
+      .bind(
+        status,
+        r.session.sub,
+        agentType
+      )
+      .run();
+
+    const updated =
+      await env.DB.prepare(`
+        SELECT
+          id,
+          agent_type,
+          name,
+          status,
+          config_json,
+          created_at,
+          updated_at
+        FROM customer_agents
+        WHERE
+          customer_id=?
+          AND agent_type=?
+      `)
+        .bind(
+          r.session.sub,
+          agentType
+        )
+        .first();
+
+    return json({
+      ok: true,
+      agent: updated
+    });
+  }
+
+
+  // ==========================================
+  // CUSTOMER - INTEGRATIONS
+  // ==========================================
+
+  if (
+    path === "integrations" &&
+    method === "GET"
+  ) {
+    const r =
+      await requireSession(
+        request,
+        env
+      );
+
+    if (r.error) {
+      return r.error;
+    }
+
+    if (
+      r.session.role !==
+      "customer"
+    ) {
+      return bad(
+        "Customer required",
+        403
+      );
+    }
+
+    const channels = [
+      "Website",
+      "WhatsApp",
+      "Instagram",
+      "Facebook",
+      "Viber",
+      "Telegram",
+      "Email",
+      "SMS"
+    ];
+
+    for (
+      const channel of channels
+    ) {
+      await env.DB.prepare(`
+        INSERT OR IGNORE INTO customer_integrations (
+          customer_id,
+          channel,
+          status,
+          config_json
+        )
+        VALUES (
+          ?,
+          ?,
+          'NOT_CONNECTED',
+          '{}'
+        )
+      `)
+        .bind(
+          r.session.sub,
+          channel
+        )
+        .run();
+    }
+
+    const rows =
+      await env.DB.prepare(`
+        SELECT
+          id,
+          channel,
+          status,
+          config_json,
+          created_at,
+          updated_at
+        FROM customer_integrations
+        WHERE customer_id=?
+        ORDER BY id ASC
+      `)
+        .bind(
+          r.session.sub
+        )
+        .all();
+
+    return json({
+      ok: true,
+      integrations:
+        rows.results || []
+    });
+  }
+
+
+  const integrationMatch =
+    path.match(
+      /^integrations\/([^/]+)$/
+    );
+
+  if (
+    integrationMatch &&
+    method === "PATCH"
+  ) {
+    const r =
+      await requireSession(
+        request,
+        env
+      );
+
+    if (r.error) {
+      return r.error;
+    }
+
+    if (
+      r.session.role !==
+      "customer"
+    ) {
+      return bad(
+        "Customer required",
+        403
+      );
+    }
+
+    const channel =
+      decodeURIComponent(
+        integrationMatch[1]
+      );
+
+    const b =
+      await parseBody(
+        request
+      );
+
+    const allowedStatus = [
+      "CONNECTED",
+      "NOT_CONNECTED"
+    ];
+
+    const status =
+      String(
+        b.status || ""
+      ).toUpperCase();
+
+    if (
+      !allowedStatus.includes(
+        status
+      )
+    ) {
+      return bad(
+        "Invalid integration status",
+        400
+      );
+    }
+
+    const existing =
+      await env.DB.prepare(`
+        SELECT *
+        FROM customer_integrations
+        WHERE
+          customer_id=?
+          AND channel=?
+      `)
+        .bind(
+          r.session.sub,
+          channel
+        )
+        .first();
+
+    if (!existing) {
+      return bad(
+        "Integration not found",
+        404
+      );
+    }
+
+    await env.DB.prepare(`
+      UPDATE customer_integrations
+      SET
+        status=?,
+        updated_at=datetime('now')
+      WHERE
+        customer_id=?
+        AND channel=?
+    `)
+      .bind(
+        status,
+        r.session.sub,
+        channel
+      )
+      .run();
+
+    const updated =
+      await env.DB.prepare(`
+        SELECT
+          id,
+          channel,
+          status,
+          config_json,
+          created_at,
+          updated_at
+        FROM customer_integrations
+        WHERE
+          customer_id=?
+          AND channel=?
+      `)
+        .bind(
+          r.session.sub,
+          channel
+        )
+        .first();
+
+    return json({
+      ok: true,
+      integration: updated
+    });
+  }
   return bad(
     "Not found",
     404
