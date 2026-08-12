@@ -1,10 +1,8 @@
 <!doctype html>
 <html lang="me">
-
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-
 <title>Balkan Agent — Admin Control Center</title>
 
 <style>
@@ -17,7 +15,6 @@
   --text:#f7f9fd;
   --muted:#96a7bd;
   --violet:#7544ff;
-  --blue:#4c7dff;
   --gold:#d8a94c;
   --green:#30dc85;
   --red:#ff6478;
@@ -29,6 +26,7 @@
 
 body{
   margin:0;
+  min-height:100vh;
   background:
     radial-gradient(
       circle at 70% 0,
@@ -46,7 +44,8 @@ a{
 
 button,
 input,
-select{
+select,
+textarea{
   font:inherit;
 }
 
@@ -62,7 +61,7 @@ button:disabled{
 }
 
 aside{
-  background:#06101f;
+  background:var(--side);
   border-right:1px solid #172842;
   padding:22px;
   position:sticky;
@@ -202,8 +201,8 @@ main{
 
 .metric,
 .panel{
-  background:#091426;
-  border:1px solid #1d304d;
+  background:var(--panel);
+  border:1px solid var(--line);
   border-radius:13px;
 }
 
@@ -308,10 +307,6 @@ th{
   border-bottom:1px solid #172842;
 }
 
-.activityItem:last-child{
-  border-bottom:0;
-}
-
 .detail{
   display:grid;
   grid-template-columns:repeat(2,1fr);
@@ -328,7 +323,8 @@ th{
   color:#879ab3;
 }
 
-.formGrid{
+.formGrid,
+.websiteForm{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:10px;
@@ -337,13 +333,16 @@ th{
   border-top:1px solid #172842;
 }
 
-.formGrid label{
+.formGrid label,
+.websiteForm label{
   font-size:11px;
   color:#8ea0b5;
 }
 
 .formGrid input,
-.formGrid select{
+.formGrid select,
+.websiteForm input,
+.websiteForm textarea{
   width:100%;
   display:block;
   margin-top:5px;
@@ -354,7 +353,13 @@ th{
   padding:10px;
 }
 
-.full{
+.websiteForm textarea{
+  min-height:110px;
+  resize:vertical;
+}
+
+.full,
+.websiteWide{
   grid-column:1/-1;
 }
 
@@ -397,11 +402,7 @@ th{
 .controlSection{
   margin-top:22px;
   padding-top:18px;
-  border-top:1px solid #1d304d;
-}
-
-.controlSection h3{
-  margin:0 0 12px;
+  border-top:1px solid var(--line);
 }
 
 .controlGrid{
@@ -428,9 +429,25 @@ th{
   margin-bottom:10px;
 }
 
-.loadingMini{
-  color:#71839a;
-  padding:10px 0;
+.codeBox{
+  margin-top:8px;
+  padding:12px;
+  border-radius:9px;
+  background:#030814;
+  border:1px solid #263b5d;
+  color:#d7e2f1;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:12px;
+  white-space:pre-wrap;
+  word-break:break-all;
+}
+
+.websiteMeta{
+  margin-top:12px;
+  padding:12px;
+  border:1px solid #1e3250;
+  border-radius:10px;
+  background:#0c1a31;
 }
 
 .loading{
@@ -441,7 +458,6 @@ th{
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:15px;
 }
 
 .loading.hidden{
@@ -476,16 +492,6 @@ th{
   color:#ff9aa7;
 }
 
-@media(max-width:1100px){
-  .metrics{
-    grid-template-columns:repeat(2,1fr);
-  }
-
-  .controlGrid{
-    grid-template-columns:repeat(2,1fr);
-  }
-}
-
 @media(max-width:1000px){
   .shell{
     grid-template-columns:1fr;
@@ -514,6 +520,10 @@ th{
     border:0;
     display:flex;
   }
+
+  .metrics{
+    grid-template-columns:repeat(2,1fr);
+  }
 }
 
 @media(max-width:650px){
@@ -522,8 +532,16 @@ th{
   }
 
   .metrics,
-  .controlGrid{
+  .controlGrid,
+  .detail,
+  .formGrid,
+  .websiteForm{
     grid-template-columns:1fr;
+  }
+
+  .full,
+  .websiteWide{
+    grid-column:auto;
   }
 
   .top{
@@ -537,15 +555,6 @@ th{
 
   .tools{
     width:100%;
-  }
-
-  .detail,
-  .formGrid{
-    grid-template-columns:1fr;
-  }
-
-  .full{
-    grid-column:auto;
   }
 }
 </style>
@@ -563,428 +572,554 @@ th{
 
 <aside>
 
-  <div class="brand">
-    BALKAN<span>AGENT</span>
-  </div>
+<div class="brand">
+  BALKAN<span>AGENT</span>
+</div>
 
-  <div class="tag">
-    ADMIN CONTROL CENTER
-  </div>
+<div class="tag">
+  ADMIN CONTROL CENTER
+</div>
 
-  <nav>
+<nav>
 
-    <button
-      class="active"
-      data-tab="overview"
-    >
-      Pregled
-    </button>
+<button
+  class="active"
+  data-tab="overview"
+>
+  Pregled
+</button>
 
-    <button data-tab="applications">
-      Prijave
-    </button>
+<button data-tab="applications">
+  Prijave
+</button>
 
-    <button data-tab="customers">
-      Mušterije
-    </button>
+<button data-tab="customers">
+  Mušterije
+</button>
 
-    <button data-tab="active">
-      Aktivne
-    </button>
+<button data-tab="active">
+  Aktivne
+</button>
 
-    <button data-tab="inactive">
-      Neaktivne
-    </button>
+<button data-tab="inactive">
+  Neaktivne
+</button>
 
-    <button data-tab="payments">
-      Plaćanja
-    </button>
+<button data-tab="payments">
+  Plaćanja
+</button>
 
-    <div class="navBottom">
+<div class="navBottom">
 
-      <a href="index.html">
-        ← Sajt
-      </a>
+<a href="index.html">
+  ← Sajt
+</a>
 
-      <a
-        href="#"
-        id="logoutAdmin"
-      >
-        Logout
-      </a>
+<a
+  href="#"
+  id="logoutAdmin"
+>
+  Logout
+</a>
 
-    </div>
+</div>
 
-  </nav>
+</nav>
 
 </aside>
 
-
 <main>
 
-  <div class="top">
+<div class="top">
 
-    <div>
+<div>
 
-      <h1 id="title">
-        Pregled
-      </h1>
+<h1 id="title">
+  Pregled
+</h1>
 
-      <small class="adminMail">
-        ceo@balkanagent.com
-      </small>
+<small class="adminMail">
+  ceo@balkanagent.com
+</small>
 
-    </div>
+</div>
 
-    <div class="tools">
+<div class="tools">
 
-      <input
-        id="search"
-        class="search"
-        placeholder="Pretraga mušterija..."
-      >
+<input
+  id="search"
+  class="search"
+  placeholder="Pretraga mušterija..."
+>
 
-      <button
-        id="refresh"
-        class="btn"
-      >
-        Osvježi
-      </button>
+<button
+  id="refresh"
+  class="btn"
+>
+  Osvježi
+</button>
 
-      <button
-        id="export"
-        class="btn"
-      >
-        Izvezi CSV
-      </button>
+<button
+  id="export"
+  class="btn"
+>
+  Izvezi CSV
+</button>
 
-    </div>
+</div>
 
-  </div>
+</div>
 
 
-  <!-- OVERVIEW -->
+<section
+  id="overview"
+  class="section active"
+>
 
-  <section
-    id="overview"
-    class="section active"
-  >
+<div class="metrics">
 
-    <div class="metrics">
+<div class="metric">
+  <small>PRIJAVE</small>
+  <b id="mApps">0</b>
+</div>
 
-      <div class="metric">
-        <small>PRIJAVE</small>
-        <b id="mApps">0</b>
-      </div>
+<div class="metric">
+  <small>MUŠTERIJE</small>
+  <b id="mCust">0</b>
+</div>
 
-      <div class="metric">
-        <small>MUŠTERIJE</small>
-        <b id="mCust">0</b>
-      </div>
+<div class="metric">
+  <small>AKTIVNE</small>
+  <b id="mActive">0</b>
+</div>
 
-      <div class="metric">
-        <small>AKTIVNE</small>
-        <b id="mActive">0</b>
-      </div>
+<div class="metric">
+  <small>NEAKTIVNE</small>
+  <b id="mInactive">0</b>
+</div>
 
-      <div class="metric">
-        <small>NEAKTIVNE</small>
-        <b id="mInactive">0</b>
-      </div>
+<div class="metric">
+  <small>PLAĆENO</small>
+  <b id="mPaid">0</b>
+</div>
 
-      <div class="metric">
-        <small>PLAĆENO</small>
-        <b id="mPaid">0</b>
-      </div>
+</div>
 
-    </div>
+<div class="panel">
 
-    <div class="panel">
+<h2>
+  Posljednje mušterije
+</h2>
 
-      <h2>
-        Posljednje mušterije
-      </h2>
+<div
+  id="activity"
+  class="empty"
+>
+  Nema aktivnosti.
+</div>
 
-      <div
-        id="activity"
-        class="empty"
-      >
-        Nema aktivnosti.
-      </div>
+</div>
 
-    </div>
+</section>
 
-  </section>
 
+<section
+  id="applications"
+  class="section"
+>
 
-  <!-- APPLICATIONS -->
+<div class="panel">
 
-  <section
-    id="applications"
-    class="section"
-  >
+<h2>
+  Prijave koje čekaju aktivaciju
+</h2>
 
-    <div class="panel">
+<div class="tableWrap">
 
-      <h2>
-        Prijave koje čekaju aktivaciju
-      </h2>
+<table>
 
-      <div class="tableWrap">
+<thead>
+<tr>
+<th>Ime</th>
+<th>Firma</th>
+<th>Email</th>
+<th>Telefon</th>
+<th>Paket</th>
+<th>Plaćanje</th>
+<th>Datum</th>
+<th>Akcije</th>
+</tr>
+</thead>
 
-        <table>
+<tbody id="applicationRows"></tbody>
 
-          <thead>
-            <tr>
-              <th>Ime</th>
-              <th>Firma</th>
-              <th>Email</th>
-              <th>Telefon</th>
-              <th>Paket</th>
-              <th>Plaćanje</th>
-              <th>Datum</th>
-              <th>Akcije</th>
-            </tr>
-          </thead>
+</table>
 
-          <tbody id="applicationRows"></tbody>
+</div>
 
-        </table>
+</div>
 
-      </div>
+</section>
 
-    </div>
 
-  </section>
+<section
+  id="customers"
+  class="section"
+>
 
+<div class="panel">
 
-  <!-- CUSTOMERS -->
+<h2>
+  Sve mušterije
+</h2>
 
-  <section
-    id="customers"
-    class="section"
-  >
+<div class="tableWrap">
 
-    <div class="panel">
+<table>
 
-      <h2>
-        Sve mušterije
-      </h2>
+<thead>
+<tr>
+<th>Ime</th>
+<th>Firma</th>
+<th>Email</th>
+<th>Telefon</th>
+<th>Paket</th>
+<th>Plaćanje</th>
+<th>Status</th>
+<th>Akcije</th>
+</tr>
+</thead>
 
-      <div class="tableWrap">
+<tbody id="customerRows"></tbody>
 
-        <table>
+</table>
 
-          <thead>
-            <tr>
-              <th>Ime</th>
-              <th>Firma</th>
-              <th>Email</th>
-              <th>Telefon</th>
-              <th>Paket</th>
-              <th>Plaćanje</th>
-              <th>Status</th>
-              <th>Akcije</th>
-            </tr>
-          </thead>
+</div>
 
-          <tbody id="customerRows"></tbody>
+</div>
 
-        </table>
+</section>
 
-      </div>
 
-    </div>
+<section
+  id="active"
+  class="section"
+>
 
-  </section>
+<div class="panel">
 
+<h2>
+  Aktivne mušterije
+</h2>
 
-  <!-- ACTIVE -->
+<div class="tableWrap">
 
-  <section
-    id="active"
-    class="section"
-  >
+<table>
 
-    <div class="panel">
+<thead>
+<tr>
+<th>Ime</th>
+<th>Firma</th>
+<th>Email</th>
+<th>Telefon</th>
+<th>Paket</th>
+<th>Plaćanje</th>
+<th>Status</th>
+<th>Akcije</th>
+</tr>
+</thead>
 
-      <h2>
-        Aktivne mušterije
-      </h2>
+<tbody id="activeRows"></tbody>
 
-      <div class="tableWrap">
+</table>
 
-        <table>
+</div>
 
-          <thead>
-            <tr>
-              <th>Ime</th>
-              <th>Firma</th>
-              <th>Email</th>
-              <th>Telefon</th>
-              <th>Paket</th>
-              <th>Plaćanje</th>
-              <th>Status</th>
-              <th>Akcije</th>
-            </tr>
-          </thead>
+</div>
 
-          <tbody id="activeRows"></tbody>
+</section>
 
-        </table>
 
-      </div>
+<section
+  id="inactive"
+  class="section"
+>
 
-    </div>
+<div class="panel">
 
-  </section>
+<h2>
+  Neaktivne mušterije
+</h2>
 
+<div class="tableWrap">
 
-  <!-- INACTIVE -->
+<table>
 
-  <section
-    id="inactive"
-    class="section"
-  >
+<thead>
+<tr>
+<th>Ime</th>
+<th>Firma</th>
+<th>Email</th>
+<th>Telefon</th>
+<th>Paket</th>
+<th>Plaćanje</th>
+<th>Status</th>
+<th>Akcije</th>
+</tr>
+</thead>
 
-    <div class="panel">
+<tbody id="inactiveRows"></tbody>
 
-      <h2>
-        Neaktivne mušterije
-      </h2>
+</table>
 
-      <div class="tableWrap">
+</div>
 
-        <table>
+</div>
 
-          <thead>
-            <tr>
-              <th>Ime</th>
-              <th>Firma</th>
-              <th>Email</th>
-              <th>Telefon</th>
-              <th>Paket</th>
-              <th>Plaćanje</th>
-              <th>Status</th>
-              <th>Akcije</th>
-            </tr>
-          </thead>
+</section>
 
-          <tbody id="inactiveRows"></tbody>
 
-        </table>
+<section
+  id="payments"
+  class="section"
+>
 
-      </div>
+<div class="metrics">
 
-    </div>
+<div class="metric">
+  <small>UNPAID</small>
+  <b id="pUnpaid">0</b>
+</div>
 
-  </section>
+<div class="metric">
+  <small>PENDING</small>
+  <b id="pPending">0</b>
+</div>
 
+<div class="metric">
+  <small>PAID</small>
+  <b id="pPaid">0</b>
+</div>
 
-  <!-- PAYMENTS -->
+<div class="metric">
+  <small>OVERDUE</small>
+  <b id="pOverdue">0</b>
+</div>
 
-  <section
-    id="payments"
-    class="section"
-  >
+</div>
 
-    <div class="metrics">
+<div class="panel">
 
-      <div class="metric">
-        <small>UNPAID</small>
-        <b id="pUnpaid">0</b>
-      </div>
+<h2>
+  Status plaćanja mušterija
+</h2>
 
-      <div class="metric">
-        <small>PENDING</small>
-        <b id="pPending">0</b>
-      </div>
+<div class="tableWrap">
 
-      <div class="metric">
-        <small>PAID</small>
-        <b id="pPaid">0</b>
-      </div>
+<table>
 
-      <div class="metric">
-        <small>OVERDUE</small>
-        <b id="pOverdue">0</b>
-      </div>
+<thead>
+<tr>
+<th>Mušterija</th>
+<th>Firma</th>
+<th>Email</th>
+<th>Paket</th>
+<th>Status plaćanja</th>
+<th>Status naloga</th>
+<th>Akcije</th>
+</tr>
+</thead>
 
-    </div>
+<tbody id="paymentRows"></tbody>
 
-    <div class="panel">
+</table>
 
-      <h2>
-        Status plaćanja mušterija
-      </h2>
+</div>
 
-      <div class="tableWrap">
+</div>
 
-        <table>
-
-          <thead>
-            <tr>
-              <th>Mušterija</th>
-              <th>Firma</th>
-              <th>Email</th>
-              <th>Paket</th>
-              <th>Status plaćanja</th>
-              <th>Status naloga</th>
-              <th>Akcije</th>
-            </tr>
-          </thead>
-
-          <tbody id="paymentRows"></tbody>
-
-        </table>
-
-      </div>
-
-    </div>
-
-  </section>
+</section>
 
 </main>
 
 </div>
 
 
-<!-- DETAILS MODAL -->
-
 <div
   class="modal"
   id="detailModal"
 >
 
-  <div class="modalCard">
+<div class="modalCard">
 
-    <div class="modalTop">
+<div class="modalTop">
 
-      <h2>
-        Detalji mušterije
-      </h2>
+<h2>
+  Detalji mušterije
+</h2>
 
-      <button
-        class="btn"
-        id="closeDetail"
-      >
-        ✕
-      </button>
+<button
+  class="btn"
+  id="closeDetail"
+>
+  ✕
+</button>
 
-    </div>
+</div>
 
-    <div id="detailBody"></div>
+<div id="detailBody"></div>
 
-  </div>
+</div>
+
+</div>
+
+
+<div
+  class="modal"
+  id="websiteModal"
+>
+
+<div class="modalCard">
+
+<div class="modalTop">
+
+<div>
+
+<h2>
+  Website integracija
+</h2>
+
+<div
+  style="
+    color:#8ea0b5;
+    font-size:12px;
+    margin-top:4px
+  "
+>
+  Poveži AI Receptionist sa sajtom ove mušterije.
+</div>
+
+</div>
+
+<button
+  class="btn"
+  id="closeWebsiteModal"
+>
+  ✕
+</button>
+
+</div>
+
+
+<div class="websiteForm">
+
+<label class="websiteWide">
+
+Domen mušterije
+
+<input
+  id="websiteDomain"
+  placeholder="npr. firma.me"
+>
+
+</label>
+
+
+<label class="websiteWide">
+
+Podaci o biznisu koje AI smije koristiti
+
+<textarea
+  id="websiteBusinessContext"
+  placeholder="Naziv firme, usluge, radno vrijeme, lokacija, cijene, kontakt..."
+></textarea>
+
+</label>
+
+
+<label class="websiteWide">
+
+Pozdravna poruka
+
+<input
+  id="websiteWelcomeMessage"
+  placeholder="Zdravo! Kako vam mogu pomoći?"
+>
+
+</label>
+
+
+<div class="websiteWide">
+
+<button
+  class="btn primary"
+  id="saveWebsiteIntegration"
+>
+  Sačuvaj i poveži Website
+</button>
+
+<button
+  class="btn danger"
+  id="disconnectWebsiteIntegration"
+  style="
+    display:none;
+    margin-left:8px
+  "
+>
+  Isključi Website
+</button>
+
+</div>
+
+</div>
+
+
+<div
+  id="websiteConnectedInfo"
+  class="websiteMeta"
+  style="display:none"
+>
+
+<small style="color:#8ea0b5">
+  WIDGET KEY
+</small>
+
+<div
+  id="websiteWidgetKey"
+  class="codeBox"
+></div>
+
+
+<div style="margin-top:12px">
+
+<small style="color:#8ea0b5">
+  KOD ZA SAJT MUŠTERIJE
+</small>
+
+<div
+  id="websiteWidgetCode"
+  class="codeBox"
+></div>
+
+</div>
+
+
+<button
+  class="btn gold"
+  id="copyWebsiteCode"
+  style="margin-top:10px"
+>
+  Kopiraj widget kod
+</button>
+
+</div>
+
+</div>
 
 </div>
 
 
 <script>
-
-/* ==========================================
-   STATE
-========================================== */
 
 let customers = [];
 
@@ -994,10 +1129,6 @@ let currentAgents = [];
 
 let currentIntegrations = [];
 
-
-/* ==========================================
-   API
-========================================== */
 
 async function api(
   path,
@@ -1042,10 +1173,6 @@ async function api(
 }
 
 
-/* ==========================================
-   HELPERS
-========================================== */
-
 function esc(value) {
 
   return String(
@@ -1068,6 +1195,7 @@ function formatDate(value) {
   if (!value) {
     return "—";
   }
+
 
   try {
 
@@ -1112,8 +1240,10 @@ function toast(
       "toast"
     );
 
+
   el.textContent =
     message;
+
 
   el.className =
     `toast show ${
@@ -1122,29 +1252,26 @@ function toast(
         : "ok"
     }`;
 
+
   clearTimeout(
     window.toastTimer
   );
 
+
   window.toastTimer =
     setTimeout(
       () => {
+
         el.className =
           "toast";
+
       },
       3500
     );
 }
 
 
-/* ==========================================
-   ACTION BUTTONS
-========================================== */
-
 function actions(customer) {
-
-  const active =
-    !!customer.active;
 
   return `
 
@@ -1157,14 +1284,14 @@ function actions(customer) {
 
     <button
       class="btn ${
-        active
+        customer.active
           ? "danger"
           : "success"
       }"
       data-toggle="${esc(customer.id)}"
     >
       ${
-        active
+        customer.active
           ? "Deaktiviraj"
           : "Aktiviraj"
       }
@@ -1189,37 +1316,27 @@ function actions(customer) {
       data-planid="${esc(customer.id)}"
     >
 
-      <option ${
-        customer.plan === "Starter"
-          ? "selected"
-          : ""
-      }>
-        Starter
-      </option>
-
-      <option ${
-        customer.plan === "Business"
-          ? "selected"
-          : ""
-      }>
-        Business
-      </option>
-
-      <option ${
-        customer.plan === "Pro"
-          ? "selected"
-          : ""
-      }>
-        Pro
-      </option>
-
-      <option ${
-        customer.plan === "Enterprise"
-          ? "selected"
-          : ""
-      }>
-        Enterprise
-      </option>
+      ${
+        [
+          "Starter",
+          "Business",
+          "Pro",
+          "Enterprise"
+        ]
+          .map(
+            plan =>
+              `
+                <option ${
+                  customer.plan === plan
+                    ? "selected"
+                    : ""
+                }>
+                  ${plan}
+                </option>
+              `
+          )
+          .join("")
+      }
 
     </select>
 
@@ -1234,10 +1351,6 @@ function actions(customer) {
 }
 
 
-/* ==========================================
-   CUSTOMER ROW
-========================================== */
-
 function customerRow(
   customer
 ) {
@@ -1245,6 +1358,7 @@ function customerRow(
   const paymentStatus =
     customer.payment_status ||
     "UNPAID";
+
 
   return `
 
@@ -1300,10 +1414,6 @@ function customerRow(
 }
 
 
-/* ==========================================
-   PAYMENT ROW
-========================================== */
-
 function paymentRow(
   customer
 ) {
@@ -1311,6 +1421,7 @@ function paymentRow(
   const paymentStatus =
     customer.payment_status ||
     "UNPAID";
+
 
   return `
 
@@ -1362,10 +1473,6 @@ function paymentRow(
 }
 
 
-/* ==========================================
-   RENDER
-========================================== */
-
 function render() {
 
   const query =
@@ -1394,7 +1501,7 @@ function render() {
   const activeCustomers =
     filtered.filter(
       customer =>
-        !!customer.active
+        customer.active
     );
 
 
@@ -1405,339 +1512,364 @@ function render() {
     );
 
 
-  document.getElementById(
-    "customerRows"
-  ).innerHTML =
+  document
+    .getElementById(
+      "customerRows"
+    )
+    .innerHTML =
 
-    filtered.length
+      filtered.length
 
-      ? filtered
-          .map(
-            customerRow
-          )
-          .join("")
+        ? filtered
+            .map(
+              customerRow
+            )
+            .join("")
 
-      : `
-        <tr>
-          <td
-            colspan="8"
-            class="empty"
-          >
-            Nema mušterija.
-          </td>
-        </tr>
-      `;
-
-
-  document.getElementById(
-    "activeRows"
-  ).innerHTML =
-
-    activeCustomers.length
-
-      ? activeCustomers
-          .map(
-            customerRow
-          )
-          .join("")
-
-      : `
-        <tr>
-          <td
-            colspan="8"
-            class="empty"
-          >
-            Nema aktivnih mušterija.
-          </td>
-        </tr>
-      `;
+        : `
+          <tr>
+            <td
+              colspan="8"
+              class="empty"
+            >
+              Nema mušterija.
+            </td>
+          </tr>
+        `;
 
 
-  document.getElementById(
-    "inactiveRows"
-  ).innerHTML =
+  document
+    .getElementById(
+      "activeRows"
+    )
+    .innerHTML =
 
-    inactiveCustomers.length
+      activeCustomers.length
 
-      ? inactiveCustomers
-          .map(
-            customerRow
-          )
-          .join("")
+        ? activeCustomers
+            .map(
+              customerRow
+            )
+            .join("")
 
-      : `
-        <tr>
-          <td
-            colspan="8"
-            class="empty"
-          >
-            Nema neaktivnih mušterija.
-          </td>
-        </tr>
-      `;
-
-
-  document.getElementById(
-    "applicationRows"
-  ).innerHTML =
-
-    inactiveCustomers.length
-
-      ? inactiveCustomers
-          .map(
-            customer =>
-              `
-                <tr>
-
-                  <td>
-                    ${esc(customer.name)}
-                  </td>
-
-                  <td>
-                    ${esc(customer.company || "—")}
-                  </td>
-
-                  <td>
-                    ${esc(customer.email)}
-                  </td>
-
-                  <td>
-                    ${esc(customer.phone || "—")}
-                  </td>
-
-                  <td>
-                    ${esc(customer.plan)}
-                  </td>
-
-                  <td>
-                    ${esc(
-                      customer.payment_status ||
-                      "UNPAID"
-                    )}
-                  </td>
-
-                  <td>
-                    ${formatDate(
-                      customer.created_at
-                    )}
-                  </td>
-
-                  <td>
-
-                    <button
-                      class="btn success"
-                      data-toggle="${esc(customer.id)}"
-                    >
-                      Aktiviraj
-                    </button>
-
-                    <button
-                      class="btn"
-                      data-detail="${esc(customer.id)}"
-                    >
-                      Detalji
-                    </button>
-
-                    <button
-                      class="btn danger"
-                      data-delete="${esc(customer.id)}"
-                    >
-                      Obriši
-                    </button>
-
-                  </td>
-
-                </tr>
-              `
-          )
-          .join("")
-
-      : `
-        <tr>
-          <td
-            colspan="8"
-            class="empty"
-          >
-            Nema novih prijava.
-          </td>
-        </tr>
-      `;
+        : `
+          <tr>
+            <td
+              colspan="8"
+              class="empty"
+            >
+              Nema aktivnih mušterija.
+            </td>
+          </tr>
+        `;
 
 
-  document.getElementById(
-    "paymentRows"
-  ).innerHTML =
+  document
+    .getElementById(
+      "inactiveRows"
+    )
+    .innerHTML =
 
-    filtered.length
+      inactiveCustomers.length
 
-      ? filtered
-          .map(
-            paymentRow
-          )
-          .join("")
+        ? inactiveCustomers
+            .map(
+              customerRow
+            )
+            .join("")
 
-      : `
-        <tr>
-          <td
-            colspan="7"
-            class="empty"
-          >
-            Nema podataka.
-          </td>
-        </tr>
-      `;
-
-
-  document.getElementById(
-    "mApps"
-  ).textContent =
-    customers.filter(
-      c => !c.active
-    ).length;
+        : `
+          <tr>
+            <td
+              colspan="8"
+              class="empty"
+            >
+              Nema neaktivnih mušterija.
+            </td>
+          </tr>
+        `;
 
 
-  document.getElementById(
-    "mCust"
-  ).textContent =
-    customers.length;
+  document
+    .getElementById(
+      "applicationRows"
+    )
+    .innerHTML =
+
+      inactiveCustomers.length
+
+        ? inactiveCustomers
+            .map(
+              customer =>
+                `
+
+                  <tr>
+
+                    <td>
+                      ${esc(customer.name)}
+                    </td>
+
+                    <td>
+                      ${esc(customer.company || "—")}
+                    </td>
+
+                    <td>
+                      ${esc(customer.email)}
+                    </td>
+
+                    <td>
+                      ${esc(customer.phone || "—")}
+                    </td>
+
+                    <td>
+                      ${esc(customer.plan)}
+                    </td>
+
+                    <td>
+                      ${esc(
+                        customer.payment_status ||
+                        "UNPAID"
+                      )}
+                    </td>
+
+                    <td>
+                      ${formatDate(
+                        customer.created_at
+                      )}
+                    </td>
+
+                    <td>
+
+                      <button
+                        class="btn success"
+                        data-toggle="${esc(customer.id)}"
+                      >
+                        Aktiviraj
+                      </button>
+
+                      <button
+                        class="btn"
+                        data-detail="${esc(customer.id)}"
+                      >
+                        Detalji
+                      </button>
+
+                      <button
+                        class="btn danger"
+                        data-delete="${esc(customer.id)}"
+                      >
+                        Obriši
+                      </button>
+
+                    </td>
+
+                  </tr>
+
+                `
+            )
+            .join("")
+
+        : `
+          <tr>
+            <td
+              colspan="8"
+              class="empty"
+            >
+              Nema novih prijava.
+            </td>
+          </tr>
+        `;
 
 
-  document.getElementById(
-    "mActive"
-  ).textContent =
-    customers.filter(
-      c => c.active
-    ).length;
+  document
+    .getElementById(
+      "paymentRows"
+    )
+    .innerHTML =
+
+      filtered.length
+
+        ? filtered
+            .map(
+              paymentRow
+            )
+            .join("")
+
+        : `
+          <tr>
+            <td
+              colspan="7"
+              class="empty"
+            >
+              Nema podataka.
+            </td>
+          </tr>
+        `;
 
 
-  document.getElementById(
-    "mInactive"
-  ).textContent =
-    customers.filter(
-      c => !c.active
-    ).length;
+  document
+    .getElementById(
+      "mApps"
+    )
+    .textContent =
+      customers.filter(
+        c => !c.active
+      ).length;
 
 
-  document.getElementById(
-    "mPaid"
-  ).textContent =
-    customers.filter(
-      c =>
-        (
-          c.payment_status ||
+  document
+    .getElementById(
+      "mCust"
+    )
+    .textContent =
+      customers.length;
+
+
+  document
+    .getElementById(
+      "mActive"
+    )
+    .textContent =
+      customers.filter(
+        c => c.active
+      ).length;
+
+
+  document
+    .getElementById(
+      "mInactive"
+    )
+    .textContent =
+      customers.filter(
+        c => !c.active
+      ).length;
+
+
+  document
+    .getElementById(
+      "mPaid"
+    )
+    .textContent =
+      customers.filter(
+        c =>
+          (
+            c.payment_status ||
+            "UNPAID"
+          ) ===
+          "PAID"
+      ).length;
+
+
+  document
+    .getElementById(
+      "pUnpaid"
+    )
+    .textContent =
+      customers.filter(
+        c =>
+          (
+            c.payment_status ||
+            "UNPAID"
+          ) ===
           "UNPAID"
-        ) === "PAID"
-    ).length;
+      ).length;
 
 
-  document.getElementById(
-    "pUnpaid"
-  ).textContent =
-    customers.filter(
-      c =>
-        (
-          c.payment_status ||
-          "UNPAID"
-        ) === "UNPAID"
-    ).length;
+  document
+    .getElementById(
+      "pPending"
+    )
+    .textContent =
+      customers.filter(
+        c =>
+          c.payment_status ===
+          "PENDING"
+      ).length;
 
 
-  document.getElementById(
-    "pPending"
-  ).textContent =
-    customers.filter(
-      c =>
-        c.payment_status ===
-        "PENDING"
-    ).length;
+  document
+    .getElementById(
+      "pPaid"
+    )
+    .textContent =
+      customers.filter(
+        c =>
+          c.payment_status ===
+          "PAID"
+      ).length;
 
 
-  document.getElementById(
-    "pPaid"
-  ).textContent =
-    customers.filter(
-      c =>
-        c.payment_status ===
-        "PAID"
-    ).length;
+  document
+    .getElementById(
+      "pOverdue"
+    )
+    .textContent =
+      customers.filter(
+        c =>
+          c.payment_status ===
+          "OVERDUE"
+      ).length;
 
 
-  document.getElementById(
-    "pOverdue"
-  ).textContent =
-    customers.filter(
-      c =>
-        c.payment_status ===
-        "OVERDUE"
-    ).length;
+  document
+    .getElementById(
+      "activity"
+    )
+    .innerHTML =
 
+      customers
+        .slice(
+          0,
+          6
+        )
+        .map(
+          customer =>
+            `
 
-  const latest =
-    customers.slice(
-      0,
-      6
-    );
+              <div class="activityItem">
 
+                <b>
+                  ${esc(customer.name)}
+                </b>
 
-  document.getElementById(
-    "activity"
-  ).innerHTML =
+                · ${esc(customer.plan)} ·
 
-    latest.length
+                <span
+                  class="${
+                    customer.active
+                      ? "activeBadge"
+                      : "inactiveBadge"
+                  }"
+                >
+                  ${
+                    customer.active
+                      ? "ACTIVE"
+                      : "INACTIVE"
+                  }
+                </span>
 
-      ? latest
-          .map(
-            customer =>
-              `
-                <div class="activityItem">
-
-                  <b>
-                    ${esc(customer.name)}
-                  </b>
-
-                  · ${esc(customer.plan)} ·
-
-                  <span
-                    class="${
-                      customer.active
-                        ? "activeBadge"
-                        : "inactiveBadge"
-                    }"
-                  >
-                    ${
-                      customer.active
-                        ? "ACTIVE"
-                        : "INACTIVE"
-                    }
-                  </span>
-
-                  <div
-                    style="
-                      color:#71839a;
-                      font-size:11px;
-                      margin-top:2px
-                    "
-                  >
-                    ${esc(customer.email)}
-                    ·
-                    ${formatDate(customer.created_at)}
-                  </div>
-
+                <div
+                  style="
+                    color:#71839a;
+                    font-size:11px
+                  "
+                >
+                  ${esc(customer.email)}
+                  ·
+                  ${formatDate(customer.created_at)}
                 </div>
-              `
-          )
-          .join("")
 
-      : "Nema aktivnosti.";
+              </div>
+
+            `
+        )
+        .join("") ||
+      "Nema aktivnosti.";
 
 
   bindActions();
 }
 
-
-/* ==========================================
-   LOAD CUSTOMERS
-========================================== */
 
 async function loadCustomers() {
 
@@ -1775,6 +1907,7 @@ async function loadCustomers() {
         .map(
           customer => ({
             ...customer,
+
             active:
               !!customer.active
           })
@@ -1796,11 +1929,6 @@ async function loadCustomers() {
 
   } catch (error) {
 
-    console.error(
-      error
-    );
-
-
     document
       .getElementById(
         "loading"
@@ -1815,30 +1943,9 @@ async function loadCustomers() {
       error.message,
       "err"
     );
-
-
-    if (
-      error.message ===
-      "Not authenticated"
-    ) {
-
-      setTimeout(
-        () => {
-
-          location.href =
-            "login.html";
-
-        },
-        700
-      );
-    }
   }
 }
 
-
-/* ==========================================
-   NORMAL ACTIONS
-========================================== */
 
 function bindActions() {
 
@@ -1865,10 +1972,6 @@ function bindActions() {
             }
 
 
-            const activating =
-              !customer.active;
-
-
             button.disabled =
               true;
 
@@ -1879,19 +1982,20 @@ function bindActions() {
                 await api(
                   `/api/admin/customers/${customer.id}`,
                   {
-                    method:"PATCH",
+                    method:
+                      "PATCH",
 
                     body:
                       JSON.stringify({
                         active:
-                          activating
+                          !customer.active
                       })
                   }
                 );
 
 
               if (
-                activating &&
+                !customer.active &&
                 result.invoice
               ) {
 
@@ -1900,13 +2004,13 @@ function bindActions() {
                 ) {
 
                   toast(
-                    `Mušterija aktivirana. Račun ${result.invoice.invoice.invoice_number} je poslat na ${customer.email}.`
+                    `Mušterija aktivirana. Račun ${result.invoice.invoice.invoice_number} je poslat.`
                   );
 
                 } else {
 
                   toast(
-                    `Mušterija aktivirana. Račun je napravljen, ali email nije poslat: ${result.invoice.email_error || "Nepoznata greška"}`,
+                    `Mušterija aktivirana. Račun napravljen, email nije poslat: ${result.invoice.email_error || "greška"}`,
                     "err"
                   );
                 }
@@ -1914,7 +2018,7 @@ function bindActions() {
               } else {
 
                 toast(
-                  activating
+                  !customer.active
                     ? "Mušterija je aktivirana."
                     : "Mušterija je deaktivirana."
                 );
@@ -1930,6 +2034,7 @@ function bindActions() {
                 error.message,
                 "err"
               );
+
 
               button.disabled =
                 false;
@@ -1967,7 +2072,8 @@ function bindActions() {
               await api(
                 `/api/admin/customers/${customer.id}`,
                 {
-                  method:"PATCH",
+                  method:
+                    "PATCH",
 
                   body:
                     JSON.stringify({
@@ -2016,18 +2122,12 @@ function bindActions() {
               );
 
 
-            if (!customer) {
-              return;
-            }
-
-
-            const confirmed =
-              confirm(
+            if (
+              !customer ||
+              !confirm(
                 `Da li sigurno želiš obrisati mušteriju ${customer.name}?`
-              );
-
-
-            if (!confirmed) {
+              )
+            ) {
               return;
             }
 
@@ -2037,7 +2137,8 @@ function bindActions() {
               await api(
                 `/api/admin/customers/${customer.id}`,
                 {
-                  method:"DELETE"
+                  method:
+                    "DELETE"
                 }
               );
 
@@ -2094,12 +2195,8 @@ function bindActions() {
               }
 
 
-              const invoice =
-                result.invoices[0];
-
-
               window.open(
-                `/api/admin/invoices/${invoice.id}/pdf`,
+                `/api/admin/invoices/${result.invoices[0].id}/pdf`,
                 "_blank"
               );
 
@@ -2132,8 +2229,11 @@ function bindActions() {
                 await api(
                   `/api/admin/customers/${button.dataset.resend}/invoices/resend`,
                   {
-                    method:"POST",
-                    body:"{}"
+                    method:
+                      "POST",
+
+                    body:
+                      "{}"
                   }
                 );
 
@@ -2174,13 +2274,7 @@ function bindActions() {
 }
 
 
-/* ==========================================
-   DETAILS
-========================================== */
-
-async function openDetails(
-  id
-) {
+async function openDetails(id) {
 
   const customer =
     customers.find(
@@ -2268,7 +2362,9 @@ async function openDetails(
         <div>
           <small>Status plaćanja</small>
           <br>
-          <b class="${paymentClass(paymentStatus)}">
+          <b
+            class="${paymentClass(paymentStatus)}"
+          >
             ${esc(paymentStatus)}
           </b>
         </div>
@@ -2276,7 +2372,9 @@ async function openDetails(
         <div>
           <small>Datum registracije</small>
           <br>
-          <b>${formatDate(customer.created_at)}</b>
+          <b>
+            ${formatDate(customer.created_at)}
+          </b>
         </div>
 
       </div>
@@ -2326,37 +2424,27 @@ async function openDetails(
 
           <select id="detailPaymentStatus">
 
-            <option ${
-              paymentStatus === "UNPAID"
-                ? "selected"
-                : ""
-            }>
-              UNPAID
-            </option>
-
-            <option ${
-              paymentStatus === "PENDING"
-                ? "selected"
-                : ""
-            }>
-              PENDING
-            </option>
-
-            <option ${
-              paymentStatus === "PAID"
-                ? "selected"
-                : ""
-            }>
-              PAID
-            </option>
-
-            <option ${
-              paymentStatus === "OVERDUE"
-                ? "selected"
-                : ""
-            }>
-              OVERDUE
-            </option>
+            ${
+              [
+                "UNPAID",
+                "PENDING",
+                "PAID",
+                "OVERDUE"
+              ]
+                .map(
+                  status =>
+                    `
+                      <option ${
+                        paymentStatus === status
+                          ? "selected"
+                          : ""
+                      }>
+                        ${status}
+                      </option>
+                    `
+                )
+                .join("")
+            }
 
           </select>
 
@@ -2387,8 +2475,8 @@ async function openDetails(
           id="adminAgentGrid"
           class="controlGrid"
         >
-          <div class="loadingMini">
-            Učitavanje AI zaposlenih...
+          <div class="empty">
+            Učitavanje...
           </div>
         </div>
 
@@ -2405,8 +2493,8 @@ async function openDetails(
           id="adminIntegrationGrid"
           class="controlGrid"
         >
-          <div class="loadingMini">
-            Učitavanje integracija...
+          <div class="empty">
+            Učitavanje...
           </div>
         </div>
 
@@ -2440,25 +2528,15 @@ async function openDetails(
 }
 
 
-/* ==========================================
-   SAVE CUSTOMER
-========================================== */
-
 async function saveCustomerDetails() {
-
-  if (
-    !currentCustomerId
-  ) {
-    return;
-  }
-
 
   try {
 
     await api(
       `/api/admin/customers/${currentCustomerId}`,
       {
-        method:"PATCH",
+        method:
+          "PATCH",
 
         body:
           JSON.stringify({
@@ -2516,18 +2594,7 @@ async function saveCustomerDetails() {
 }
 
 
-/* ==========================================
-   ADMIN AI AGENTS
-========================================== */
-
 async function loadAdminAgents() {
-
-  if (
-    !currentCustomerId
-  ) {
-    return;
-  }
-
 
   try {
 
@@ -2542,7 +2609,115 @@ async function loadAdminAgents() {
       [];
 
 
-    renderAdminAgents();
+    document
+      .getElementById(
+        "adminAgentGrid"
+      )
+      .innerHTML =
+
+        currentAgents
+          .map(
+            agent =>
+              `
+
+                <div class="controlCard">
+
+                  <strong>
+                    ${esc(agent.name)}
+                  </strong>
+
+                  <div
+                    class="controlStatus ${
+                      agent.status === "ACTIVE"
+                        ? "activeBadge"
+                        : "inactiveBadge"
+                    }"
+                  >
+                    ${agent.status}
+                  </div>
+
+                  <button
+                    class="btn ${
+                      agent.status === "ACTIVE"
+                        ? "danger"
+                        : "success"
+                    } adminAgentToggle"
+                    data-agent="${encodeURIComponent(agent.agent_type)}"
+                    data-status="${agent.status}"
+                  >
+                    ${
+                      agent.status === "ACTIVE"
+                        ? "Deaktiviraj"
+                        : "Aktiviraj"
+                    }
+                  </button>
+
+                </div>
+
+              `
+          )
+          .join("") ||
+        `
+          <div class="empty">
+            Nema AI zaposlenih.
+          </div>
+        `;
+
+
+    document
+      .querySelectorAll(
+        ".adminAgentToggle"
+      )
+      .forEach(
+        button => {
+
+          button.onclick =
+            async () => {
+
+              const next =
+                button.dataset.status ===
+                "ACTIVE"
+                  ? "INACTIVE"
+                  : "ACTIVE";
+
+
+              try {
+
+                await api(
+                  `/api/admin/customers/${currentCustomerId}/agents/${button.dataset.agent}`,
+                  {
+                    method:
+                      "PATCH",
+
+                    body:
+                      JSON.stringify({
+                        status:
+                          next
+                      })
+                  }
+                );
+
+
+                toast(
+                  next === "ACTIVE"
+                    ? "AI zaposleni je aktiviran."
+                    : "AI zaposleni je deaktiviran."
+                );
+
+
+                await loadAdminAgents();
+
+
+              } catch (error) {
+
+                toast(
+                  error.message,
+                  "err"
+                );
+              }
+            };
+        }
+      );
 
 
   } catch (error) {
@@ -2553,7 +2728,7 @@ async function loadAdminAgents() {
       )
       .innerHTML =
         `
-          <div class="loadingMini">
+          <div class="empty">
             Greška: ${esc(error.message)}
           </div>
         `;
@@ -2561,165 +2736,7 @@ async function loadAdminAgents() {
 }
 
 
-function renderAdminAgents() {
-
-  const grid =
-    document.getElementById(
-      "adminAgentGrid"
-    );
-
-
-  if (
-    !currentAgents.length
-  ) {
-
-    grid.innerHTML =
-      `
-        <div class="loadingMini">
-          Nema AI zaposlenih.
-        </div>
-      `;
-
-    return;
-  }
-
-
-  grid.innerHTML =
-    currentAgents
-      .map(
-        agent => {
-
-          const active =
-            agent.status ===
-            "ACTIVE";
-
-
-          return `
-
-            <div class="controlCard">
-
-              <strong>
-                ${esc(agent.name)}
-              </strong>
-
-              <div
-                class="controlStatus ${
-                  active
-                    ? "activeBadge"
-                    : "inactiveBadge"
-                }"
-              >
-                ${
-                  active
-                    ? "ACTIVE"
-                    : "INACTIVE"
-                }
-              </div>
-
-              <button
-                class="btn ${
-                  active
-                    ? "danger"
-                    : "success"
-                } adminAgentToggle"
-                data-agent="${encodeURIComponent(agent.agent_type)}"
-                data-status="${
-                  active
-                    ? "ACTIVE"
-                    : "INACTIVE"
-                }"
-              >
-                ${
-                  active
-                    ? "Deaktiviraj"
-                    : "Aktiviraj"
-                }
-              </button>
-
-            </div>
-
-          `;
-        }
-      )
-      .join("");
-
-
-  document
-    .querySelectorAll(
-      ".adminAgentToggle"
-    )
-    .forEach(
-      button => {
-
-        button.onclick =
-          async () => {
-
-            const next =
-              button.dataset.status ===
-              "ACTIVE"
-                ? "INACTIVE"
-                : "ACTIVE";
-
-
-            button.disabled =
-              true;
-
-
-            try {
-
-              await api(
-                `/api/admin/customers/${currentCustomerId}/agents/${button.dataset.agent}`,
-                {
-                  method:"PATCH",
-
-                  body:
-                    JSON.stringify({
-                      status:
-                        next
-                    })
-                }
-              );
-
-
-              toast(
-                next === "ACTIVE"
-                  ? "AI zaposleni je aktiviran."
-                  : "AI zaposleni je deaktiviran."
-              );
-
-
-              await loadAdminAgents();
-
-
-            } catch (error) {
-
-              toast(
-                error.message,
-                "err"
-              );
-
-
-              button.disabled =
-                false;
-            }
-          };
-      }
-    );
-}
-
-
-/* ==========================================
-   ADMIN INTEGRATIONS
-========================================== */
-
 async function loadAdminIntegrations() {
-
-  if (
-    !currentCustomerId
-  ) {
-    return;
-  }
-
 
   try {
 
@@ -2745,7 +2762,7 @@ async function loadAdminIntegrations() {
       )
       .innerHTML =
         `
-          <div class="loadingMini">
+          <div class="empty">
             Greška: ${esc(error.message)}
           </div>
         `;
@@ -2761,22 +2778,8 @@ function renderAdminIntegrations() {
     );
 
 
-  if (
-    !currentIntegrations.length
-  ) {
-
-    grid.innerHTML =
-      `
-        <div class="loadingMini">
-          Nema integracija.
-        </div>
-      `;
-
-    return;
-  }
-
-
   grid.innerHTML =
+
     currentIntegrations
       .map(
         integration => {
@@ -2784,6 +2787,16 @@ function renderAdminIntegrations() {
           const connected =
             integration.status ===
             "CONNECTED";
+
+
+          const website =
+            integration.channel ===
+            "Website";
+
+
+          const domain =
+            integration.config?.domain ||
+            "";
 
 
           return `
@@ -2808,23 +2821,48 @@ function renderAdminIntegrations() {
                 }
               </div>
 
+              ${
+                website &&
+                domain
+
+                  ? `
+                    <div
+                      style="
+                        color:#8ea0b5;
+                        font-size:11px;
+                        margin:-4px 0 10px
+                      "
+                    >
+                      ${esc(domain)}
+                    </div>
+                  `
+
+                  : ""
+              }
+
               <button
                 class="btn ${
                   connected
-                    ? "danger"
+                    ? "gold"
                     : "success"
-                } adminIntegrationToggle"
-                data-channel="${encodeURIComponent(integration.channel)}"
-                data-status="${
-                  connected
-                    ? "CONNECTED"
-                    : "NOT_CONNECTED"
+                } ${
+                  website
+                    ? "websiteIntegrationButton"
+                    : "adminIntegrationToggle"
                 }"
+                data-channel="${encodeURIComponent(integration.channel)}"
+                data-status="${integration.status}"
               >
                 ${
-                  connected
-                    ? "Disconnect"
-                    : "Connect"
+                  website
+
+                    ? connected
+                      ? "Podešavanje"
+                      : "Connect"
+
+                    : connected
+                      ? "Disconnect"
+                      : "Connect"
                 }
               </button>
 
@@ -2833,7 +2871,34 @@ function renderAdminIntegrations() {
           `;
         }
       )
-      .join("");
+      .join("") ||
+    `
+      <div class="empty">
+        Nema integracija.
+      </div>
+    `;
+
+
+  document
+    .querySelectorAll(
+      ".websiteIntegrationButton"
+    )
+    .forEach(
+      button => {
+
+        button.onclick =
+          () => {
+
+            openWebsiteSetup(
+              currentIntegrations.find(
+                integration =>
+                  integration.channel ===
+                  "Website"
+              )
+            );
+          };
+      }
+    );
 
 
   document
@@ -2853,16 +2918,13 @@ function renderAdminIntegrations() {
                 : "CONNECTED";
 
 
-            button.disabled =
-              true;
-
-
             try {
 
               await api(
                 `/api/admin/customers/${currentCustomerId}/integrations/${button.dataset.channel}`,
                 {
-                  method:"PATCH",
+                  method:
+                    "PATCH",
 
                   body:
                     JSON.stringify({
@@ -2889,10 +2951,6 @@ function renderAdminIntegrations() {
                 error.message,
                 "err"
               );
-
-
-              button.disabled =
-                false;
             }
           };
       }
@@ -2900,9 +2958,315 @@ function renderAdminIntegrations() {
 }
 
 
-/* ==========================================
-   NAVIGATION
-========================================== */
+function widgetCode(key) {
+
+  if (!key) {
+    return "";
+  }
+
+
+  return `<script src="https://balkanagent.com/widget.js" data-key="${key}"><\/script>`;
+}
+
+
+function openWebsiteSetup(
+  integration
+) {
+
+  const config =
+    integration?.config ||
+    {};
+
+
+  const connected =
+    integration?.status ===
+    "CONNECTED";
+
+
+  document
+    .getElementById(
+      "websiteDomain"
+    )
+    .value =
+      config.domain ||
+      "";
+
+
+  document
+    .getElementById(
+      "websiteBusinessContext"
+    )
+    .value =
+      config.business_context ||
+      "";
+
+
+  document
+    .getElementById(
+      "websiteWelcomeMessage"
+    )
+    .value =
+      config.welcome_message ||
+      "Zdravo! Kako vam mogu pomoći?";
+
+
+  document
+    .getElementById(
+      "disconnectWebsiteIntegration"
+    )
+    .style
+    .display =
+      connected
+        ? "inline-block"
+        : "none";
+
+
+  document
+    .getElementById(
+      "websiteConnectedInfo"
+    )
+    .style
+    .display =
+      connected &&
+      config.widget_key
+        ? "block"
+        : "none";
+
+
+  document
+    .getElementById(
+      "websiteWidgetKey"
+    )
+    .textContent =
+      config.widget_key ||
+      "";
+
+
+  document
+    .getElementById(
+      "websiteWidgetCode"
+    )
+    .textContent =
+      widgetCode(
+        config.widget_key ||
+        ""
+      );
+
+
+  document
+    .getElementById(
+      "websiteModal"
+    )
+    .classList
+    .add(
+      "show"
+    );
+}
+
+
+async function saveWebsiteIntegration() {
+
+  const domain =
+    document
+      .getElementById(
+        "websiteDomain"
+      )
+      .value
+      .trim();
+
+
+  if (!domain) {
+
+    toast(
+      "Unesi domen mušterije.",
+      "err"
+    );
+
+    return;
+  }
+
+
+  const button =
+    document
+      .getElementById(
+        "saveWebsiteIntegration"
+      );
+
+
+  button.disabled =
+    true;
+
+
+  try {
+
+    await api(
+      `/api/admin/customers/${currentCustomerId}/integrations/Website`,
+      {
+        method:
+          "PATCH",
+
+        body:
+          JSON.stringify({
+
+            status:
+              "CONNECTED",
+
+            domain,
+
+            business_context:
+              document
+                .getElementById(
+                  "websiteBusinessContext"
+                )
+                .value
+                .trim(),
+
+            welcome_message:
+              document
+                .getElementById(
+                  "websiteWelcomeMessage"
+                )
+                .value
+                .trim()
+          })
+      }
+    );
+
+
+    toast(
+      "Website integracija je sačuvana i povezana."
+    );
+
+
+    await loadAdminIntegrations();
+
+
+    openWebsiteSetup(
+      currentIntegrations.find(
+        integration =>
+          integration.channel ===
+          "Website"
+      )
+    );
+
+
+  } catch (error) {
+
+    toast(
+      error.message,
+      "err"
+    );
+
+
+  } finally {
+
+    button.disabled =
+      false;
+  }
+}
+
+
+async function disconnectWebsiteIntegration() {
+
+  if (
+    !confirm(
+      "Da li želiš isključiti Website integraciju?"
+    )
+  ) {
+    return;
+  }
+
+
+  try {
+
+    await api(
+      `/api/admin/customers/${currentCustomerId}/integrations/Website`,
+      {
+        method:
+          "PATCH",
+
+        body:
+          JSON.stringify({
+            status:
+              "NOT_CONNECTED"
+          })
+      }
+    );
+
+
+    toast(
+      "Website integracija je isključena."
+    );
+
+
+    document
+      .getElementById(
+        "websiteModal"
+      )
+      .classList
+      .remove(
+        "show"
+      );
+
+
+    await loadAdminIntegrations();
+
+
+  } catch (error) {
+
+    toast(
+      error.message,
+      "err"
+    );
+  }
+}
+
+
+async function copyWebsiteCode() {
+
+  const code =
+    document
+      .getElementById(
+        "websiteWidgetCode"
+      )
+      .textContent
+      .trim();
+
+
+  if (!code) {
+
+    toast(
+      "Widget kod još nije generisan.",
+      "err"
+    );
+
+    return;
+  }
+
+
+  try {
+
+    await navigator
+      .clipboard
+      .writeText(
+        code
+      );
+
+
+    toast(
+      "Widget kod je kopiran."
+    );
+
+
+  } catch {
+
+    toast(
+      "Kopiranje nije uspjelo. Kopiraj ručno.",
+      "err"
+    );
+  }
+}
+
 
 document
   .querySelectorAll(
@@ -2972,10 +3336,6 @@ document
   );
 
 
-/* ==========================================
-   SEARCH
-========================================== */
-
 document
   .getElementById(
     "search"
@@ -2984,28 +3344,13 @@ document
     render;
 
 
-/* ==========================================
-   REFRESH
-========================================== */
-
 document
   .getElementById(
     "refresh"
   )
   .onclick =
-    async () => {
+    loadCustomers;
 
-      toast(
-        "Osvježavanje..."
-      );
-
-      await loadCustomers();
-    };
-
-
-/* ==========================================
-   CLOSE MODAL
-========================================== */
 
 document
   .getElementById(
@@ -3037,7 +3382,8 @@ document
         "detailModal"
       ) {
 
-        event.currentTarget
+        event
+          .currentTarget
           .classList
           .remove(
             "show"
@@ -3046,9 +3392,69 @@ document
     };
 
 
-/* ==========================================
-   CSV
-========================================== */
+document
+  .getElementById(
+    "closeWebsiteModal"
+  )
+  .onclick =
+    () => {
+
+      document
+        .getElementById(
+          "websiteModal"
+        )
+        .classList
+        .remove(
+          "show"
+        );
+    };
+
+
+document
+  .getElementById(
+    "websiteModal"
+  )
+  .onclick =
+    event => {
+
+      if (
+        event.target.id ===
+        "websiteModal"
+      ) {
+
+        event
+          .currentTarget
+          .classList
+          .remove(
+            "show"
+          );
+      }
+    };
+
+
+document
+  .getElementById(
+    "saveWebsiteIntegration"
+  )
+  .onclick =
+    saveWebsiteIntegration;
+
+
+document
+  .getElementById(
+    "disconnectWebsiteIntegration"
+  )
+  .onclick =
+    disconnectWebsiteIntegration;
+
+
+document
+  .getElementById(
+    "copyWebsiteCode"
+  )
+  .onclick =
+    copyWebsiteCode;
+
 
 document
   .getElementById(
@@ -3105,10 +3511,11 @@ document
                   value =>
                     `"${String(
                       value ?? ""
-                    ).replaceAll(
-                      '"',
-                      '""'
-                    )}"`
+                    )
+                      .replaceAll(
+                        '"',
+                        '""'
+                      )}"`
                 )
                 .join(",")
           )
@@ -3116,9 +3523,10 @@ document
 
 
       const link =
-        document.createElement(
-          "a"
-        );
+        document
+          .createElement(
+            "a"
+          );
 
 
       link.href =
@@ -3141,10 +3549,6 @@ document
     };
 
 
-/* ==========================================
-   LOGOUT
-========================================== */
-
 document
   .getElementById(
     "logoutAdmin"
@@ -3160,24 +3564,21 @@ document
         await api(
           "/api/auth/logout",
           {
-            method:"POST",
-            body:"{}"
+            method:
+              "POST",
+
+            body:
+              "{}"
           }
         );
 
-      } catch {
-
-      }
+      } catch {}
 
 
       location.href =
         "login.html";
     };
 
-
-/* ==========================================
-   START
-========================================== */
 
 loadCustomers();
 
