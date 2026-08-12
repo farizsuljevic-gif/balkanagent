@@ -374,7 +374,7 @@ th{
 }
 
 .modalCard{
-  width:min(650px,100%);
+  width:min(900px,100%);
   max-height:90vh;
   overflow:auto;
   background:#081321;
@@ -392,6 +392,45 @@ th{
 
 .modalTop h2{
   margin:0;
+}
+
+.controlSection{
+  margin-top:22px;
+  padding-top:18px;
+  border-top:1px solid #1d304d;
+}
+
+.controlSection h3{
+  margin:0 0 12px;
+}
+
+.controlGrid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+}
+
+.controlCard{
+  background:#0c1a31;
+  border:1px solid #1e3250;
+  border-radius:11px;
+  padding:14px;
+}
+
+.controlCard strong{
+  display:block;
+  margin-bottom:5px;
+}
+
+.controlStatus{
+  font-size:11px;
+  font-weight:800;
+  margin-bottom:10px;
+}
+
+.loadingMini{
+  color:#71839a;
+  padding:10px 0;
 }
 
 .loading{
@@ -441,6 +480,10 @@ th{
   .metrics{
     grid-template-columns:repeat(2,1fr);
   }
+
+  .controlGrid{
+    grid-template-columns:repeat(2,1fr);
+  }
 }
 
 @media(max-width:1000px){
@@ -478,7 +521,8 @@ th{
     padding:16px;
   }
 
-  .metrics{
+  .metrics,
+  .controlGrid{
     grid-template-columns:1fr;
   }
 
@@ -557,6 +601,7 @@ th{
     </button>
 
     <div class="navBottom">
+
       <a href="index.html">
         ← Sajt
       </a>
@@ -567,6 +612,7 @@ th{
       >
         Logout
       </a>
+
     </div>
 
   </nav>
@@ -579,6 +625,7 @@ th{
   <div class="top">
 
     <div>
+
       <h1 id="title">
         Pregled
       </h1>
@@ -586,6 +633,7 @@ th{
       <small class="adminMail">
         ceo@balkanagent.com
       </small>
+
     </div>
 
     <div class="tools">
@@ -699,8 +747,7 @@ th{
             </tr>
           </thead>
 
-          <tbody id="applicationRows">
-          </tbody>
+          <tbody id="applicationRows"></tbody>
 
         </table>
 
@@ -711,7 +758,7 @@ th{
   </section>
 
 
-  <!-- ALL CUSTOMERS -->
+  <!-- CUSTOMERS -->
 
   <section
     id="customers"
@@ -741,8 +788,7 @@ th{
             </tr>
           </thead>
 
-          <tbody id="customerRows">
-          </tbody>
+          <tbody id="customerRows"></tbody>
 
         </table>
 
@@ -783,8 +829,7 @@ th{
             </tr>
           </thead>
 
-          <tbody id="activeRows">
-          </tbody>
+          <tbody id="activeRows"></tbody>
 
         </table>
 
@@ -825,8 +870,7 @@ th{
             </tr>
           </thead>
 
-          <tbody id="inactiveRows">
-          </tbody>
+          <tbody id="inactiveRows"></tbody>
 
         </table>
 
@@ -890,8 +934,7 @@ th{
             </tr>
           </thead>
 
-          <tbody id="paymentRows">
-          </tbody>
+          <tbody id="paymentRows"></tbody>
 
         </table>
 
@@ -906,7 +949,7 @@ th{
 </div>
 
 
-<!-- CUSTOMER DETAILS MODAL -->
+<!-- DETAILS MODAL -->
 
 <div
   class="modal"
@@ -930,8 +973,7 @@ th{
 
     </div>
 
-    <div id="detailBody">
-    </div>
+    <div id="detailBody"></div>
 
   </div>
 
@@ -940,9 +982,17 @@ th{
 
 <script>
 
+/* ==========================================
+   STATE
+========================================== */
+
 let customers = [];
 
 let currentCustomerId = null;
+
+let currentAgents = [];
+
+let currentIntegrations = [];
 
 
 /* ==========================================
@@ -954,20 +1004,19 @@ async function api(
   options = {}
 ) {
 
-  const config = {
-    ...options,
-    headers:{
-      "content-type":
-        "application/json",
-      ...(options.headers || {})
-    }
-  };
-
-
   const response =
     await fetch(
       path,
-      config
+      {
+        ...options,
+
+        headers:{
+          "content-type":
+            "application/json",
+
+          ...(options.headers || {})
+        }
+      }
     );
 
 
@@ -1037,11 +1086,15 @@ function formatDate(value) {
 
 function paymentClass(status) {
 
-  if (status === "PAID") {
+  if (
+    status === "PAID"
+  ) {
     return "paidBadge";
   }
 
-  if (status === "OVERDUE") {
+  if (
+    status === "OVERDUE"
+  ) {
     return "overdueBadge";
   }
 
@@ -1069,19 +1122,15 @@ function toast(
         : "ok"
     }`;
 
-
   clearTimeout(
     window.toastTimer
   );
 
-
   window.toastTimer =
     setTimeout(
       () => {
-
         el.className =
           "toast";
-
       },
       3500
     );
@@ -1089,14 +1138,13 @@ function toast(
 
 
 /* ==========================================
-   CUSTOMER ACTION BUTTONS
+   ACTION BUTTONS
 ========================================== */
 
 function actions(customer) {
 
   const active =
     !!customer.active;
-
 
   return `
 
@@ -1141,47 +1189,35 @@ function actions(customer) {
       data-planid="${esc(customer.id)}"
     >
 
-      <option
-        ${
-          customer.plan ===
-          "Starter"
-            ? "selected"
-            : ""
-        }
-      >
+      <option ${
+        customer.plan === "Starter"
+          ? "selected"
+          : ""
+      }>
         Starter
       </option>
 
-      <option
-        ${
-          customer.plan ===
-          "Business"
-            ? "selected"
-            : ""
-        }
-      >
+      <option ${
+        customer.plan === "Business"
+          ? "selected"
+          : ""
+      }>
         Business
       </option>
 
-      <option
-        ${
-          customer.plan ===
-          "Pro"
-            ? "selected"
-            : ""
-        }
-      >
+      <option ${
+        customer.plan === "Pro"
+          ? "selected"
+          : ""
+      }>
         Pro
       </option>
 
-      <option
-        ${
-          customer.plan ===
-          "Enterprise"
-            ? "selected"
-            : ""
-        }
-      >
+      <option ${
+        customer.plan === "Enterprise"
+          ? "selected"
+          : ""
+      }>
         Enterprise
       </option>
 
@@ -1208,9 +1244,7 @@ function customerRow(
 
   const paymentStatus =
     customer.payment_status ||
-    customer.paymentStatus ||
     "UNPAID";
-
 
   return `
 
@@ -1276,9 +1310,7 @@ function paymentRow(
 
   const paymentStatus =
     customer.payment_status ||
-    customer.paymentStatus ||
     "UNPAID";
-
 
   return `
 
@@ -1556,8 +1588,6 @@ function render() {
       `;
 
 
-  /* METRICS */
-
   document.getElementById(
     "mApps"
   ).textContent =
@@ -1642,8 +1672,6 @@ function render() {
     ).length;
 
 
-  /* ACTIVITY */
-
   const latest =
     customers.slice(
       0,
@@ -1667,10 +1695,7 @@ function render() {
                     ${esc(customer.name)}
                   </b>
 
-                  ·
-                  ${esc(customer.plan)}
-
-                  ·
+                  · ${esc(customer.plan)} ·
 
                   <span
                     class="${
@@ -1711,7 +1736,7 @@ function render() {
 
 
 /* ==========================================
-   LOAD FROM D1 BACKEND
+   LOAD CUSTOMERS
 ========================================== */
 
 async function loadCustomers() {
@@ -1750,18 +1775,8 @@ async function loadCustomers() {
         .map(
           customer => ({
             ...customer,
-
             active:
-              !!customer.active,
-
-            paymentStatus:
-              customer.payment_status,
-
-            paymentMethod:
-              customer.payment_method,
-
-            bankName:
-              customer.bank_name
+              !!customer.active
           })
         );
 
@@ -1809,8 +1824,10 @@ async function loadCustomers() {
 
       setTimeout(
         () => {
+
           location.href =
             "login.html";
+
         },
         700
       );
@@ -1820,12 +1837,10 @@ async function loadCustomers() {
 
 
 /* ==========================================
-   ACTIONS
+   NORMAL ACTIONS
 ========================================== */
 
 function bindActions() {
-
-  /* ACTIVATE / DEACTIVATE */
 
   document
     .querySelectorAll(
@@ -1885,7 +1900,7 @@ function bindActions() {
                 ) {
 
                   toast(
-                    `Mušterija aktivirana. Račun ${result.invoice.invoice.invoice_number} automatski je poslat na ${customer.email}.`
+                    `Mušterija aktivirana. Račun ${result.invoice.invoice.invoice_number} je poslat na ${customer.email}.`
                   );
 
                 } else {
@@ -1923,8 +1938,6 @@ function bindActions() {
       }
     );
 
-
-  /* PLAN */
 
   document
     .querySelectorAll(
@@ -1984,8 +1997,6 @@ function bindActions() {
       }
     );
 
-
-  /* DELETE */
 
   document
     .querySelectorAll(
@@ -2051,8 +2062,6 @@ function bindActions() {
     );
 
 
-  /* INVOICE DOWNLOAD */
-
   document
     .querySelectorAll(
       "[data-invoice]"
@@ -2077,7 +2086,7 @@ function bindActions() {
               ) {
 
                 toast(
-                  "Za ovu mušteriju još nema računa. Račun se automatski pravi pri aktivaciji.",
+                  "Za ovu mušteriju još nema računa.",
                   "err"
                 );
 
@@ -2106,8 +2115,6 @@ function bindActions() {
       }
     );
 
-
-  /* RESEND INVOICE */
 
   document
     .querySelectorAll(
@@ -2148,8 +2155,6 @@ function bindActions() {
     );
 
 
-  /* DETAILS */
-
   document
     .querySelectorAll(
       "[data-detail]"
@@ -2170,10 +2175,10 @@ function bindActions() {
 
 
 /* ==========================================
-   CUSTOMER DETAILS
+   DETAILS
 ========================================== */
 
-function openDetails(
+async function openDetails(
   id
 ) {
 
@@ -2194,6 +2199,11 @@ function openDetails(
     customer.id;
 
 
+  currentAgents = [];
+
+  currentIntegrations = [];
+
+
   const paymentStatus =
     customer.payment_status ||
     "UNPAID";
@@ -2210,41 +2220,31 @@ function openDetails(
         <div>
           <small>Ime</small>
           <br>
-          <b>
-            ${esc(customer.name)}
-          </b>
+          <b>${esc(customer.name)}</b>
         </div>
 
         <div>
           <small>Firma</small>
           <br>
-          <b>
-            ${esc(customer.company || "—")}
-          </b>
+          <b>${esc(customer.company || "—")}</b>
         </div>
 
         <div>
           <small>Email</small>
           <br>
-          <b>
-            ${esc(customer.email)}
-          </b>
+          <b>${esc(customer.email)}</b>
         </div>
 
         <div>
           <small>Telefon</small>
           <br>
-          <b>
-            ${esc(customer.phone || "—")}
-          </b>
+          <b>${esc(customer.phone || "—")}</b>
         </div>
 
         <div>
           <small>Paket</small>
           <br>
-          <b>
-            ${esc(customer.plan)}
-          </b>
+          <b>${esc(customer.plan)}</b>
         </div>
 
         <div>
@@ -2266,56 +2266,17 @@ function openDetails(
         </div>
 
         <div>
-          <small>Način plaćanja</small>
-          <br>
-          <b>
-            ${esc(
-              customer.payment_method ||
-              "Bank transfer / IBAN"
-            )}
-          </b>
-        </div>
-
-        <div>
           <small>Status plaćanja</small>
           <br>
-          <b
-            class="${paymentClass(paymentStatus)}"
-          >
+          <b class="${paymentClass(paymentStatus)}">
             ${esc(paymentStatus)}
-          </b>
-        </div>
-
-        <div>
-          <small>IBAN mušterije</small>
-          <br>
-          <b>
-            ${esc(customer.iban || "—")}
-          </b>
-        </div>
-
-        <div>
-          <small>Banka mušterije</small>
-          <br>
-          <b>
-            ${esc(customer.bank_name || "—")}
           </b>
         </div>
 
         <div>
           <small>Datum registracije</small>
           <br>
-          <b>
-            ${formatDate(customer.created_at)}
-          </b>
-        </div>
-
-        <div>
-          <small>ID</small>
-          <br>
-          <b style="font-size:10px">
-            ${esc(customer.id)}
-          </b>
+          <b>${formatDate(customer.created_at)}</b>
         </div>
 
       </div>
@@ -2363,47 +2324,37 @@ function openDetails(
 
           Status plaćanja
 
-          <select
-            id="detailPaymentStatus"
-          >
+          <select id="detailPaymentStatus">
 
-            <option
-              ${
-                paymentStatus === "UNPAID"
-                  ? "selected"
-                  : ""
-              }
-            >
+            <option ${
+              paymentStatus === "UNPAID"
+                ? "selected"
+                : ""
+            }>
               UNPAID
             </option>
 
-            <option
-              ${
-                paymentStatus === "PENDING"
-                  ? "selected"
-                  : ""
-              }
-            >
+            <option ${
+              paymentStatus === "PENDING"
+                ? "selected"
+                : ""
+            }>
               PENDING
             </option>
 
-            <option
-              ${
-                paymentStatus === "PAID"
-                  ? "selected"
-                  : ""
-              }
-            >
+            <option ${
+              paymentStatus === "PAID"
+                ? "selected"
+                : ""
+            }>
               PAID
             </option>
 
-            <option
-              ${
-                paymentStatus === "OVERDUE"
-                  ? "selected"
-                  : ""
-              }
-            >
+            <option ${
+              paymentStatus === "OVERDUE"
+                ? "selected"
+                : ""
+            }>
               OVERDUE
             </option>
 
@@ -2421,6 +2372,42 @@ function openDetails(
             Sačuvaj podatke
           </button>
 
+        </div>
+
+      </div>
+
+
+      <div class="controlSection">
+
+        <h3>
+          AI zaposleni
+        </h3>
+
+        <div
+          id="adminAgentGrid"
+          class="controlGrid"
+        >
+          <div class="loadingMini">
+            Učitavanje AI zaposlenih...
+          </div>
+        </div>
+
+      </div>
+
+
+      <div class="controlSection">
+
+        <h3>
+          Integracije
+        </h3>
+
+        <div
+          id="adminIntegrationGrid"
+          class="controlGrid"
+        >
+          <div class="loadingMini">
+            Učitavanje integracija...
+          </div>
         </div>
 
       </div>
@@ -2444,12 +2431,24 @@ function openDetails(
     )
     .onclick =
       saveCustomerDetails;
+
+
+  await Promise.all([
+    loadAdminAgents(),
+    loadAdminIntegrations()
+  ]);
 }
 
 
+/* ==========================================
+   SAVE CUSTOMER
+========================================== */
+
 async function saveCustomerDetails() {
 
-  if (!currentCustomerId) {
+  if (
+    !currentCustomerId
+  ) {
     return;
   }
 
@@ -2499,16 +2498,6 @@ async function saveCustomerDetails() {
     );
 
 
-    document
-      .getElementById(
-        "detailModal"
-      )
-      .classList
-      .remove(
-        "show"
-      );
-
-
     toast(
       "Podaci mušterije su sačuvani."
     );
@@ -2524,6 +2513,390 @@ async function saveCustomerDetails() {
       "err"
     );
   }
+}
+
+
+/* ==========================================
+   ADMIN AI AGENTS
+========================================== */
+
+async function loadAdminAgents() {
+
+  if (
+    !currentCustomerId
+  ) {
+    return;
+  }
+
+
+  try {
+
+    const result =
+      await api(
+        `/api/admin/customers/${currentCustomerId}/agents`
+      );
+
+
+    currentAgents =
+      result.agents ||
+      [];
+
+
+    renderAdminAgents();
+
+
+  } catch (error) {
+
+    document
+      .getElementById(
+        "adminAgentGrid"
+      )
+      .innerHTML =
+        `
+          <div class="loadingMini">
+            Greška: ${esc(error.message)}
+          </div>
+        `;
+  }
+}
+
+
+function renderAdminAgents() {
+
+  const grid =
+    document.getElementById(
+      "adminAgentGrid"
+    );
+
+
+  if (
+    !currentAgents.length
+  ) {
+
+    grid.innerHTML =
+      `
+        <div class="loadingMini">
+          Nema AI zaposlenih.
+        </div>
+      `;
+
+    return;
+  }
+
+
+  grid.innerHTML =
+    currentAgents
+      .map(
+        agent => {
+
+          const active =
+            agent.status ===
+            "ACTIVE";
+
+
+          return `
+
+            <div class="controlCard">
+
+              <strong>
+                ${esc(agent.name)}
+              </strong>
+
+              <div
+                class="controlStatus ${
+                  active
+                    ? "activeBadge"
+                    : "inactiveBadge"
+                }"
+              >
+                ${
+                  active
+                    ? "ACTIVE"
+                    : "INACTIVE"
+                }
+              </div>
+
+              <button
+                class="btn ${
+                  active
+                    ? "danger"
+                    : "success"
+                } adminAgentToggle"
+                data-agent="${encodeURIComponent(agent.agent_type)}"
+                data-status="${
+                  active
+                    ? "ACTIVE"
+                    : "INACTIVE"
+                }"
+              >
+                ${
+                  active
+                    ? "Deaktiviraj"
+                    : "Aktiviraj"
+                }
+              </button>
+
+            </div>
+
+          `;
+        }
+      )
+      .join("");
+
+
+  document
+    .querySelectorAll(
+      ".adminAgentToggle"
+    )
+    .forEach(
+      button => {
+
+        button.onclick =
+          async () => {
+
+            const next =
+              button.dataset.status ===
+              "ACTIVE"
+                ? "INACTIVE"
+                : "ACTIVE";
+
+
+            button.disabled =
+              true;
+
+
+            try {
+
+              await api(
+                `/api/admin/customers/${currentCustomerId}/agents/${button.dataset.agent}`,
+                {
+                  method:"PATCH",
+
+                  body:
+                    JSON.stringify({
+                      status:
+                        next
+                    })
+                }
+              );
+
+
+              toast(
+                next === "ACTIVE"
+                  ? "AI zaposleni je aktiviran."
+                  : "AI zaposleni je deaktiviran."
+              );
+
+
+              await loadAdminAgents();
+
+
+            } catch (error) {
+
+              toast(
+                error.message,
+                "err"
+              );
+
+
+              button.disabled =
+                false;
+            }
+          };
+      }
+    );
+}
+
+
+/* ==========================================
+   ADMIN INTEGRATIONS
+========================================== */
+
+async function loadAdminIntegrations() {
+
+  if (
+    !currentCustomerId
+  ) {
+    return;
+  }
+
+
+  try {
+
+    const result =
+      await api(
+        `/api/admin/customers/${currentCustomerId}/integrations`
+      );
+
+
+    currentIntegrations =
+      result.integrations ||
+      [];
+
+
+    renderAdminIntegrations();
+
+
+  } catch (error) {
+
+    document
+      .getElementById(
+        "adminIntegrationGrid"
+      )
+      .innerHTML =
+        `
+          <div class="loadingMini">
+            Greška: ${esc(error.message)}
+          </div>
+        `;
+  }
+}
+
+
+function renderAdminIntegrations() {
+
+  const grid =
+    document.getElementById(
+      "adminIntegrationGrid"
+    );
+
+
+  if (
+    !currentIntegrations.length
+  ) {
+
+    grid.innerHTML =
+      `
+        <div class="loadingMini">
+          Nema integracija.
+        </div>
+      `;
+
+    return;
+  }
+
+
+  grid.innerHTML =
+    currentIntegrations
+      .map(
+        integration => {
+
+          const connected =
+            integration.status ===
+            "CONNECTED";
+
+
+          return `
+
+            <div class="controlCard">
+
+              <strong>
+                ${esc(integration.channel)}
+              </strong>
+
+              <div
+                class="controlStatus ${
+                  connected
+                    ? "activeBadge"
+                    : "inactiveBadge"
+                }"
+              >
+                ${
+                  connected
+                    ? "CONNECTED"
+                    : "NOT CONNECTED"
+                }
+              </div>
+
+              <button
+                class="btn ${
+                  connected
+                    ? "danger"
+                    : "success"
+                } adminIntegrationToggle"
+                data-channel="${encodeURIComponent(integration.channel)}"
+                data-status="${
+                  connected
+                    ? "CONNECTED"
+                    : "NOT_CONNECTED"
+                }"
+              >
+                ${
+                  connected
+                    ? "Disconnect"
+                    : "Connect"
+                }
+              </button>
+
+            </div>
+
+          `;
+        }
+      )
+      .join("");
+
+
+  document
+    .querySelectorAll(
+      ".adminIntegrationToggle"
+    )
+    .forEach(
+      button => {
+
+        button.onclick =
+          async () => {
+
+            const next =
+              button.dataset.status ===
+              "CONNECTED"
+                ? "NOT_CONNECTED"
+                : "CONNECTED";
+
+
+            button.disabled =
+              true;
+
+
+            try {
+
+              await api(
+                `/api/admin/customers/${currentCustomerId}/integrations/${button.dataset.channel}`,
+                {
+                  method:"PATCH",
+
+                  body:
+                    JSON.stringify({
+                      status:
+                        next
+                    })
+                }
+              );
+
+
+              toast(
+                next === "CONNECTED"
+                  ? "Integracija je povezana."
+                  : "Integracija je isključena."
+              );
+
+
+              await loadAdminIntegrations();
+
+
+            } catch (error) {
+
+              toast(
+                error.message,
+                "err"
+              );
+
+
+              button.disabled =
+                false;
+            }
+          };
+      }
+    );
 }
 
 
@@ -2547,7 +2920,8 @@ document
             )
             .forEach(
               section =>
-                section.classList
+                section
+                  .classList
                   .remove(
                     "active"
                   )
@@ -2570,14 +2944,16 @@ document
             )
             .forEach(
               item =>
-                item.classList
+                item
+                  .classList
                   .remove(
                     "active"
                   )
             );
 
 
-          button.classList
+          button
+            .classList
             .add(
               "active"
             );
@@ -2588,7 +2964,9 @@ document
               "title"
             )
             .textContent =
-              button.textContent.trim();
+              button
+                .textContent
+                .trim();
         };
     }
   );
@@ -2669,7 +3047,7 @@ document
 
 
 /* ==========================================
-   EXPORT CSV
+   CSV
 ========================================== */
 
 document
