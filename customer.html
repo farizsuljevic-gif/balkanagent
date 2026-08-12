@@ -203,6 +203,10 @@ main{
   padding:14px;
 }
 
+.item h3{
+  margin:8px 0;
+}
+
 .btn{
   border:1px solid #2a4064;
   background:#0a1627;
@@ -243,14 +247,6 @@ main{
 
 .dangerText{
   color:#ff7c8d;
-}
-
-.statusBox{
-  display:inline-block;
-  padding:6px 10px;
-  border-radius:8px;
-  background:#0c1a31;
-  border:1px solid #344d70;
 }
 
 .formGrid{
@@ -324,19 +320,25 @@ main{
   text-align:center;
 }
 
-.coming{
-  border:1px dashed #344d70;
-  border-radius:12px;
-  padding:25px;
-  color:#8ea0b5;
-  text-align:center;
+.channelIcon,
+.agentIcon{
+  width:42px;
+  height:42px;
+  border-radius:11px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#101d34;
+  border:1px solid #29405f;
+  font-size:19px;
+  margin-bottom:10px;
 }
 
-.coming strong{
-  display:block;
-  color:#fff;
-  font-size:16px;
-  margin-bottom:7px;
+.statusLine{
+  font-weight:800;
+  font-size:11px;
+  letter-spacing:.4px;
+  margin:7px 0 12px;
 }
 
 .loading{
@@ -446,22 +448,16 @@ main{
   }
 }
 </style>
+
 </head>
 
 <body>
 
-<div
-  id="loading"
-  class="loading"
->
+<div id="loading" class="loading">
   Učitavanje Customer panela...
 </div>
 
-<div
-  id="toast"
-  class="toast"
-></div>
-
+<div id="toast" class="toast"></div>
 
 <div class="shell">
 
@@ -474,7 +470,6 @@ main{
   <div class="tag">
     CUSTOMER PORTAL
   </div>
-
 
   <nav>
 
@@ -538,14 +533,11 @@ main{
       <small
         id="customerEmail"
         style="color:#8ea0b5"
-      >
-      </small>
+      ></small>
 
     </div>
 
-    <div
-      class="customerName"
-    >
+    <div class="customerName">
 
       <b id="topCustomerName">
         Customer
@@ -554,8 +546,7 @@ main{
       <div
         id="topCompany"
         style="font-size:11px"
-      >
-      </div>
+      ></div>
 
     </div>
 
@@ -640,9 +631,7 @@ main{
         Dobrodošli u Balkan Agent
       </h2>
 
-      <div
-        class="infoBox"
-      >
+      <div class="infoBox">
 
         <b id="welcomeName">
           Customer
@@ -655,9 +644,8 @@ main{
           "
         >
           Ovdje možete pregledati svoj paket,
-          profil, status plaćanja i račune.
-          AI zaposleni i integracije biće dostupni
-          kroz ovaj isti portal.
+          profil, račune, AI zaposlene i integracije
+          povezane sa vašim Balkan Agent nalogom.
         </p>
 
       </div>
@@ -667,9 +655,7 @@ main{
 
         <div class="item">
 
-          <small
-            style="color:#8496ad"
-          >
+          <small style="color:#8496ad">
             AKTIVNI PAKET
           </small>
 
@@ -689,9 +675,7 @@ main{
 
         <div class="item">
 
-          <small
-            style="color:#8496ad"
-          >
+          <small style="color:#8496ad">
             STATUS PLAĆANJA
           </small>
 
@@ -699,9 +683,7 @@ main{
             —
           </h3>
 
-          <div
-            style="color:#8ea0b5"
-          >
+          <div style="color:#8ea0b5">
             Bank transfer / IBAN
           </div>
 
@@ -710,9 +692,7 @@ main{
 
         <div class="item">
 
-          <small
-            style="color:#8496ad"
-          >
+          <small style="color:#8496ad">
             POSLJEDNJI RAČUN
           </small>
 
@@ -723,8 +703,66 @@ main{
           <div
             id="lastInvoiceInfo"
             style="color:#8ea0b5"
-          >
-          </div>
+          ></div>
+
+        </div>
+
+      </div>
+
+
+      <div
+        class="metrics"
+        style="margin-top:14px;margin-bottom:0"
+      >
+
+        <div class="metric">
+
+          <small>
+            AI ZAPOSLENI
+          </small>
+
+          <b id="mAgents">
+            0
+          </b>
+
+        </div>
+
+
+        <div class="metric">
+
+          <small>
+            AKTIVNI AI
+          </small>
+
+          <b id="mActiveAgents">
+            0
+          </b>
+
+        </div>
+
+
+        <div class="metric">
+
+          <small>
+            INTEGRACIJE
+          </small>
+
+          <b id="mIntegrations">
+            0
+          </b>
+
+        </div>
+
+
+        <div class="metric">
+
+          <small>
+            POVEZANO
+          </small>
+
+          <b id="mConnected">
+            0
+          </b>
 
         </div>
 
@@ -764,9 +802,7 @@ main{
 
           Ime i prezime
 
-          <input
-            id="profileName"
-          >
+          <input id="profileName">
 
         </label>
 
@@ -775,9 +811,7 @@ main{
 
           Firma
 
-          <input
-            id="profileCompany"
-          >
+          <input id="profileCompany">
 
         </label>
 
@@ -798,9 +832,7 @@ main{
 
           Broj telefona
 
-          <input
-            id="profilePhone"
-          >
+          <input id="profilePhone">
 
         </label>
 
@@ -921,16 +953,24 @@ main{
         AI zaposleni
       </h2>
 
+      <p
+        style="
+          color:#8ea0b5;
+          margin-top:-5px
+        "
+      >
+        AI zaposleni povezani sa vašim nalogom.
+        Status se čuva direktno u Balkan Agent D1 bazi.
+      </p>
 
-      <div class="coming">
+      <div
+        class="grid"
+        id="agentGrid"
+      >
 
-        <strong>
-          AI zaposleni
-        </strong>
-
-        Ova funkcija će biti povezana sa
-        vašim stvarnim Balkan Agent AI agentima
-        u sljedećem koraku.
+        <div class="empty">
+          Učitavanje AI zaposlenih...
+        </div>
 
       </div>
 
@@ -952,102 +992,38 @@ main{
         Integracije
       </h2>
 
+      <p
+        style="
+          color:#8ea0b5;
+          margin-top:-5px
+        "
+      >
+        Pregled komunikacionih kanala povezanih
+        sa vašim Balkan Agent nalogom.
+      </p>
 
-      <div class="grid">
+      <div
+        class="grid"
+        id="integrationGrid"
+      >
 
-        <div class="item">
-
-          <b>
-            WhatsApp
-          </b>
-
-          <div class="warn">
-            NIJE POVEZANO
-          </div>
-
-        </div>
-
-
-        <div class="item">
-
-          <b>
-            Instagram
-          </b>
-
-          <div class="warn">
-            NIJE POVEZANO
-          </div>
-
-        </div>
-
-
-        <div class="item">
-
-          <b>
-            Website
-          </b>
-
-          <div class="warn">
-            NIJE POVEZANO
-          </div>
-
-        </div>
-
-
-        <div class="item">
-
-          <b>
-            Viber
-          </b>
-
-          <div class="warn">
-            NIJE POVEZANO
-          </div>
-
-        </div>
-
-
-        <div class="item">
-
-          <b>
-            Email
-          </b>
-
-          <div class="warn">
-            NIJE POVEZANO
-          </div>
-
-        </div>
-
-
-        <div class="item">
-
-          <b>
-            Telegram
-          </b>
-
-          <div class="warn">
-            NIJE POVEZANO
-          </div>
-
+        <div class="empty">
+          Učitavanje integracija...
         </div>
 
       </div>
 
-
       <div
-        class="coming"
+        class="infoBox"
         style="margin-top:15px"
       >
+        <b>Napomena</b>
 
-        <strong>
-          Integracije po mušteriji
-        </strong>
+        <br>
 
-        U sljedećem koraku povezaćemo ove kanale
-        sa D1 bazom tako da svaka mušterija ima
-        svoje zasebne konfiguracije.
-
+        Status integracije se čuva u vašem nalogu.
+        Pravo API povezivanje WhatsAppa, Instagrama,
+        Vibera i drugih servisa podešava Balkan Agent.
       </div>
 
     </div>
@@ -1073,9 +1049,7 @@ main{
 
         <div class="item">
 
-          <small
-            style="color:#8496ad"
-          >
+          <small style="color:#8496ad">
             TRENUTNI PAKET
           </small>
 
@@ -1088,9 +1062,7 @@ main{
 
         <div class="item">
 
-          <small
-            style="color:#8496ad"
-          >
+          <small style="color:#8496ad">
             STATUS NALOGA
           </small>
 
@@ -1103,9 +1075,7 @@ main{
 
         <div class="item">
 
-          <small
-            style="color:#8496ad"
-          >
+          <small style="color:#8496ad">
             STATUS PLAĆANJA
           </small>
 
@@ -1123,7 +1093,7 @@ main{
         style="margin-top:15px"
       >
 
-        Promjenu paketa trenutno potvrđuje
+        Promjenu paketa potvrđuje
         Balkan Agent administrator.
 
         <br><br>
@@ -1154,6 +1124,10 @@ main{
 let customer = null;
 
 let invoices = [];
+
+let agents = [];
+
+let integrations = [];
 
 
 /* ==========================================
@@ -1283,103 +1257,84 @@ function toast(
 }
 
 
-/* ==========================================
-   LOAD CUSTOMER
-========================================== */
+function integrationIcon(
+  channel
+) {
 
-async function loadCustomer() {
-
-  try {
-
-    const me =
-      await api(
-        "/api/auth/me"
-      );
-
-
-    if (
-      me.role !==
-      "customer"
-    ) {
-
-      location.href =
-        "login.html";
-
-      return;
-    }
+  const icons = {
+    Website:"🌐",
+    WhatsApp:"💬",
+    Instagram:"📷",
+    Facebook:"📘",
+    Viber:"📞",
+    Telegram:"✈️",
+    Email:"✉️",
+    SMS:"💬"
+  };
 
 
-    customer =
-      me.user;
+  return icons[channel] ||
+    "🔗";
+}
 
 
-    if (
-      !customer ||
-      !customer.active
-    ) {
+function agentIcon(
+  type
+) {
 
-      location.href =
-        "login.html";
-
-      return;
-    }
-
-
-    renderCustomer();
+  const icons = {
+    receptionist:"🎧",
+    sales:"📈",
+    support:"🛠️"
+  };
 
 
-    await loadInvoices();
-
-
-    document
-      .getElementById(
-        "loading"
-      )
-      .classList
-      .add(
-        "hidden"
-      );
-
-
-  } catch (error) {
-
-    console.error(
-      error
-    );
-
-
-    document
-      .getElementById(
-        "loading"
-      )
-      .classList
-      .add(
-        "hidden"
-      );
-
-
-    toast(
-      error.message,
-      "err"
-    );
-
-
-    setTimeout(
-      () => {
-
-        location.href =
-          "login.html";
-
-      },
-      800
-    );
-  }
+  return icons[type] ||
+    "🤖";
 }
 
 
 /* ==========================================
-   CUSTOMER DATA
+   CUSTOMER
 ========================================== */
+
+async function loadCustomer() {
+
+  const me =
+    await api(
+      "/api/auth/me"
+    );
+
+
+  if (
+    me.role !==
+    "customer"
+  ) {
+
+    throw new Error(
+      "Customer login required"
+    );
+  }
+
+
+  customer =
+    me.user;
+
+
+  if (
+    !customer ||
+    !customer.active
+  ) {
+
+    throw new Error(
+      "Account inactive"
+    );
+  }
+
+
+  renderCustomer();
+}
+
 
 function renderCustomer() {
 
@@ -1599,21 +1554,19 @@ async function loadInvoices() {
 
   } catch (error) {
 
-    document
-      .getElementById(
-        "invoiceList"
-      )
-      .innerHTML =
-        `
-          <div class="empty">
-            Računi trenutno nijesu dostupni.
-          </div>
-        `;
-
-
     console.error(
       error
     );
+
+
+    document.getElementById(
+      "invoiceList"
+    ).innerHTML =
+      `
+        <div class="empty">
+          Računi trenutno nijesu dostupni.
+        </div>
+      `;
   }
 }
 
@@ -1754,6 +1707,455 @@ function renderInvoices() {
 
 
 /* ==========================================
+   AI AGENTS
+========================================== */
+
+async function loadAgents() {
+
+  try {
+
+    const result =
+      await api(
+        "/api/agents"
+      );
+
+
+    agents =
+      result.agents ||
+      [];
+
+
+    renderAgents();
+
+
+  } catch (error) {
+
+    console.error(
+      error
+    );
+
+
+    document.getElementById(
+      "agentGrid"
+    ).innerHTML =
+      `
+        <div class="empty">
+          AI zaposleni trenutno nijesu dostupni.
+        </div>
+      `;
+  }
+}
+
+
+function renderAgents() {
+
+  const grid =
+    document.getElementById(
+      "agentGrid"
+    );
+
+
+  const activeCount =
+    agents.filter(
+      agent =>
+        agent.status ===
+        "ACTIVE"
+    ).length;
+
+
+  document.getElementById(
+    "mAgents"
+  ).textContent =
+    agents.length;
+
+
+  document.getElementById(
+    "mActiveAgents"
+  ).textContent =
+    activeCount;
+
+
+  if (!agents.length) {
+
+    grid.innerHTML =
+      `
+        <div class="empty">
+          Nema AI zaposlenih.
+        </div>
+      `;
+
+    return;
+  }
+
+
+  grid.innerHTML =
+    agents
+      .map(
+        agent => {
+
+          const active =
+            agent.status ===
+            "ACTIVE";
+
+
+          return `
+
+            <div class="item">
+
+              <div class="agentIcon">
+                ${agentIcon(agent.agent_type)}
+              </div>
+
+              <small style="color:#8496ad">
+                AI EMPLOYEE
+              </small>
+
+              <h3>
+                ${esc(agent.name)}
+              </h3>
+
+              <div
+                class="statusLine ${
+                  active
+                    ? "good"
+                    : "warn"
+                }"
+              >
+                ${
+                  active
+                    ? "ACTIVE"
+                    : "INACTIVE"
+                }
+              </div>
+
+              <button
+                class="btn ${
+                  active
+                    ? ""
+                    : "primary"
+                } agentToggle"
+                data-agent="${encodeURIComponent(agent.agent_type)}"
+                data-status="${
+                  active
+                    ? "ACTIVE"
+                    : "INACTIVE"
+                }"
+              >
+                ${
+                  active
+                    ? "Deaktiviraj"
+                    : "Aktiviraj"
+                }
+              </button>
+
+            </div>
+
+          `;
+        }
+      )
+      .join("");
+
+
+  bindAgentButtons();
+}
+
+
+function bindAgentButtons() {
+
+  document
+    .querySelectorAll(
+      ".agentToggle"
+    )
+    .forEach(
+      button => {
+
+        button.onclick =
+          async () => {
+
+            const current =
+              button.dataset.status;
+
+
+            const next =
+              current === "ACTIVE"
+                ? "INACTIVE"
+                : "ACTIVE";
+
+
+            button.disabled =
+              true;
+
+
+            try {
+
+              await api(
+                `/api/agents/${button.dataset.agent}`,
+                {
+                  method:"PATCH",
+
+                  body:
+                    JSON.stringify({
+                      status:
+                        next
+                    })
+                }
+              );
+
+
+              toast(
+                next === "ACTIVE"
+                  ? "AI zaposleni je aktiviran."
+                  : "AI zaposleni je deaktiviran."
+              );
+
+
+              await loadAgents();
+
+
+            } catch (error) {
+
+              toast(
+                error.message,
+                "err"
+              );
+
+
+              button.disabled =
+                false;
+            }
+          };
+      }
+    );
+}
+
+
+/* ==========================================
+   INTEGRATIONS
+========================================== */
+
+async function loadIntegrations() {
+
+  try {
+
+    const result =
+      await api(
+        "/api/integrations"
+      );
+
+
+    integrations =
+      result.integrations ||
+      [];
+
+
+    renderIntegrations();
+
+
+  } catch (error) {
+
+    console.error(
+      error
+    );
+
+
+    document.getElementById(
+      "integrationGrid"
+    ).innerHTML =
+      `
+        <div class="empty">
+          Integracije trenutno nijesu dostupne.
+        </div>
+      `;
+  }
+}
+
+
+function renderIntegrations() {
+
+  const grid =
+    document.getElementById(
+      "integrationGrid"
+    );
+
+
+  const connectedCount =
+    integrations.filter(
+      integration =>
+        integration.status ===
+        "CONNECTED"
+    ).length;
+
+
+  document.getElementById(
+    "mIntegrations"
+  ).textContent =
+    integrations.length;
+
+
+  document.getElementById(
+    "mConnected"
+  ).textContent =
+    connectedCount;
+
+
+  if (
+    !integrations.length
+  ) {
+
+    grid.innerHTML =
+      `
+        <div class="empty">
+          Nema integracija.
+        </div>
+      `;
+
+    return;
+  }
+
+
+  grid.innerHTML =
+    integrations
+      .map(
+        integration => {
+
+          const connected =
+            integration.status ===
+            "CONNECTED";
+
+
+          return `
+
+            <div class="item">
+
+              <div class="channelIcon">
+                ${integrationIcon(integration.channel)}
+              </div>
+
+              <small style="color:#8496ad">
+                CHANNEL
+              </small>
+
+              <h3>
+                ${esc(integration.channel)}
+              </h3>
+
+              <div
+                class="statusLine ${
+                  connected
+                    ? "good"
+                    : "warn"
+                }"
+              >
+                ${
+                  connected
+                    ? "CONNECTED"
+                    : "NOT CONNECTED"
+                }
+              </div>
+
+              <button
+                class="btn ${
+                  connected
+                    ? ""
+                    : "primary"
+                } integrationToggle"
+                data-channel="${encodeURIComponent(integration.channel)}"
+                data-status="${
+                  connected
+                    ? "CONNECTED"
+                    : "NOT_CONNECTED"
+                }"
+              >
+                ${
+                  connected
+                    ? "Disconnect"
+                    : "Connect"
+                }
+              </button>
+
+            </div>
+
+          `;
+        }
+      )
+      .join("");
+
+
+  bindIntegrationButtons();
+}
+
+
+function bindIntegrationButtons() {
+
+  document
+    .querySelectorAll(
+      ".integrationToggle"
+    )
+    .forEach(
+      button => {
+
+        button.onclick =
+          async () => {
+
+            const current =
+              button.dataset.status;
+
+
+            const next =
+              current ===
+              "CONNECTED"
+                ? "NOT_CONNECTED"
+                : "CONNECTED";
+
+
+            button.disabled =
+              true;
+
+
+            try {
+
+              await api(
+                `/api/integrations/${button.dataset.channel}`,
+                {
+                  method:"PATCH",
+
+                  body:
+                    JSON.stringify({
+                      status:
+                        next
+                    })
+                }
+              );
+
+
+              toast(
+                next === "CONNECTED"
+                  ? "Integracija je označena kao povezana."
+                  : "Integracija je označena kao nepovezana."
+              );
+
+
+              await loadIntegrations();
+
+
+            } catch (error) {
+
+              toast(
+                error.message,
+                "err"
+              );
+
+
+              button.disabled =
+                false;
+            }
+          };
+      }
+    );
+}
+
+
+/* ==========================================
    SAVE PROFILE
 ========================================== */
 
@@ -1848,6 +2250,7 @@ document
           "err"
         );
 
+
       } finally {
 
         button.disabled =
@@ -1920,7 +2323,9 @@ document
               "title"
             )
             .textContent =
-              button.textContent.trim();
+              button
+                .textContent
+                .trim();
 
 
           if (
@@ -1929,6 +2334,24 @@ document
           ) {
 
             loadInvoices();
+          }
+
+
+          if (
+            button.dataset.tab ===
+            "agents"
+          ) {
+
+            loadAgents();
+          }
+
+
+          if (
+            button.dataset.tab ===
+            "channels"
+          ) {
+
+            loadIntegrations();
           }
         };
     }
@@ -1970,10 +2393,70 @@ document
 
 
 /* ==========================================
-   START
+   START CUSTOMER PORTAL
 ========================================== */
 
-loadCustomer();
+async function startCustomerPortal() {
+
+  try {
+
+    await loadCustomer();
+
+
+    await Promise.all([
+      loadInvoices(),
+      loadAgents(),
+      loadIntegrations()
+    ]);
+
+
+    document
+      .getElementById(
+        "loading"
+      )
+      .classList
+      .add(
+        "hidden"
+      );
+
+
+  } catch (error) {
+
+    console.error(
+      error
+    );
+
+
+    document
+      .getElementById(
+        "loading"
+      )
+      .classList
+      .add(
+        "hidden"
+      );
+
+
+    toast(
+      error.message,
+      "err"
+    );
+
+
+    setTimeout(
+      () => {
+
+        location.href =
+          "login.html";
+
+      },
+      900
+    );
+  }
+}
+
+
+startCustomerPortal();
 
 </script>
 
