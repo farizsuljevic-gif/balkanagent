@@ -12,41 +12,64 @@ function json(data, status = 200, headers = {}) {
 }
 
 function bad(message, status = 400) {
-  return json({ ok: false, error: message }, status);
+  return json(
+    {
+      ok: false,
+      error: message,
+    },
+    status
+  );
 }
 
-function base64url(bytes) {
+function parseBody(request) {
+  return request
+    .json()
+    .catch(() => ({}));
+}
+
+function b64url(bytes) {
   let s = "";
-  bytes.forEach((b) => (s += String.fromCharCode(b)));
+
+  for (const b of bytes) {
+    s += String.fromCharCode(b);
+  }
+
   return btoa(s)
     .replace(/\+/g, "-")
     .replace(/\//g, "_")
     .replace(/=+$/g, "");
 }
 
-function fromBase64url(s) {
-  s = s.replace(/-/g, "+").replace(/_/g, "/");
-  while (s.length % 4) s += "=";
+function fromB64url(s) {
+  s = s
+    .replace(/-/g, "+")
+    .replace(/_/g, "/");
 
-  const bin = atob(s);
+  while (s.length % 4) {
+    s += "=";
+  }
 
   return Uint8Array.from(
-    bin,
-    (c) => c.charCodeAt(0)
+    atob(s),
+    c => c.charCodeAt(0)
   );
 }
 
-async function hmac(secret, message) {
-  const key = await crypto.subtle.importKey(
-    "raw",
-    enc.encode(secret),
-    {
-      name: "HMAC",
-      hash: "SHA-256",
-    },
-    false,
-    ["sign", "verify"]
-  );
+async function hmac(
+  secret,
+  message
+) {
+  const key =
+    await crypto.subtle.importKey(
+      "raw",
+      enc.encode(secret),
+      {
+        name: "HMAC",
+        hash: "SHA-256",
+      },
+      false,
+      ["sign"]
+    );
 
   return new Uint8Array(
     await crypto.subtle.sign(
@@ -57,58 +80,82 @@ async function hmac(secret, message) {
   );
 }
 
-async function makeSession(env, payload) {
-  const body = base64url(
-    enc.encode(JSON.stringify(payload))
-  );
-
-  const sig = base64url(
-    await hmac(
-      env.SESSION_SECRET,
-      body
-    )
-  );
-
-  return `${body}.${sig}`;
-}
-
-async function readSession(request, env) {
-  const cookie =
-    request.headers.get("cookie") || "";
-
-  const m =
-    cookie.match(
-      /(?:^|;\s*)ba_session=([^;]+)/
+async function makeSession(
+  env,
+  payload
+) {
+  const body =
+    b64url(
+      enc.encode(
+        JSON.stringify(payload)
+      )
     );
 
-  if (!m) return null;
-
-  const [body, sig] =
-    m[1].split(".");
-
-  if (!body || !sig) return null;
-
-  const expected =
-    base64url(
+  const sig =
+    b64url(
       await hmac(
         env.SESSION_SECRET,
         body
       )
     );
 
-  if (expected !== sig) return null;
+  return `${body}.${sig}`;
+}
+
+async function readSession(
+  request,
+  env
+) {
+  const cookie =
+    request.headers.get(
+      "cookie"
+    ) || "";
+
+  const match =
+    cookie.match(
+      /(?:^|;\s*)ba_session=([^;]+)/
+    );
+
+  if (!match) {
+    return null;
+  }
+
+  const [body, sig] =
+    match[1].split(".");
+
+  if (
+    !body ||
+    !sig
+  ) {
+    return null;
+  }
+
+  const expected =
+    b64url(
+      await hmac(
+        env.SESSION_SECRET,
+        body
+      )
+    );
+
+  if (
+    expected !== sig
+  ) {
+    return null;
+  }
 
   try {
     const payload =
       JSON.parse(
         new TextDecoder().decode(
-          fromBase64url(body)
+          fromB64url(body)
         )
       );
 
     if (
       !payload.exp ||
-      Date.now() > payload.exp
+      Date.now() >
+      payload.exp
     ) {
       return null;
     }
@@ -120,7 +167,9 @@ async function readSession(request, env) {
   }
 }
 
-function sessionCookie(token) {
+function sessionCookie(
+  token
+) {
   return (
     `ba_session=${token}; ` +
     `Path=/; ` +
@@ -142,116 +191,17 @@ function clearCookie() {
   );
 }
 
-function randomHex(n = 16) {
-  const b =
-    new Uint8Array(n);
-
-  crypto.getRandomValues(b);
-
-  return [...b]
-    .map(
-      (x) =>
-        x.toString(16)
-          .padStart(2, "0")
-    )
-    .join("");
-}
-
-async function hashPassword(
-  password,
-  saltHex
-) {
-  const pairs =
-    saltHex.match(/../g);
-
-  if (!pairs) {
-    throw new Error(
-      "Invalid password salt"
-    );
-  }
-
-  const salt =
-    Uint8Array.from(
-      pairs.map(
-        (h) => parseInt(h, 16)
-      )
-    );
-
-  const key =
-    await crypto.subtle.importKey(
-      "raw",
-      enc.encode(password),
-      "PBKDF2",
-      false,
-      ["deriveBits"]
-    );
-
-  const bits =
-    await crypto.subtle.deriveBits(
-      {
-        name: "PBKDF2",
-        hash: "SHA-256",
-        salt,
-        iterations: 100000,
-      },
-      key,
-      256
-    );
-
-  return [
-    ...new Uint8Array(bits),
-  ]
-    .map(
-      (x) =>
-        x.toString(16)
-          .padStart(2, "0")
-    )
-    .join("");
-}
-
-function safeUser(row) {
-  if (!row) return null;
-
-  return {
-    id: row.id,
-    email: row.email,
-    name: row.name,
-    company:
-      row.company || "",
-    phone:
-      row.phone || "",
-    plan:
-      row.plan || "Starter",
-    active:
-      !!row.active,
-    role:
-      row.role || "customer",
-    payment_method:
-      row.payment_method ||
-      "Bank transfer / IBAN",
-    iban:
-      row.iban || "",
-    bank_name:
-      row.bank_name || "",
-    payment_status:
-      row.payment_status ||
-      "UNPAID",
-    created_at:
-      row.created_at,
-  };
-}
-
 async function requireSession(
   request,
   env
 ) {
-  const s =
+  const session =
     await readSession(
       request,
       env
     );
 
-  if (!s) {
+  if (!session) {
     return {
       error:
         bad(
@@ -262,7 +212,7 @@ async function requireSession(
   }
 
   return {
-    session: s,
+    session,
   };
 }
 
@@ -296,12 +246,132 @@ async function requireAdmin(
   return r;
 }
 
-async function parseBody(request) {
-  try {
-    return await request.json();
-  } catch {
-    return {};
+function randomHex(
+  n = 16
+) {
+  const bytes =
+    new Uint8Array(n);
+
+  crypto.getRandomValues(
+    bytes
+  );
+
+  return [...bytes]
+    .map(
+      x =>
+        x.toString(16)
+          .padStart(2, "0")
+    )
+    .join("");
+}
+
+async function hashPassword(
+  password,
+  saltHex
+) {
+  const pairs =
+    saltHex.match(/../g);
+
+  if (!pairs) {
+    throw new Error(
+      "Invalid password salt"
+    );
   }
+
+  const salt =
+    Uint8Array.from(
+      pairs.map(
+        x =>
+          parseInt(
+            x,
+            16
+          )
+      )
+    );
+
+  const key =
+    await crypto.subtle.importKey(
+      "raw",
+      enc.encode(password),
+      "PBKDF2",
+      false,
+      ["deriveBits"]
+    );
+
+  const bits =
+    await crypto.subtle.deriveBits(
+      {
+        name: "PBKDF2",
+        hash: "SHA-256",
+        salt,
+        iterations: 100000,
+      },
+      key,
+      256
+    );
+
+  return [
+    ...new Uint8Array(
+      bits
+    ),
+  ]
+    .map(
+      x =>
+        x.toString(16)
+          .padStart(2, "0")
+    )
+    .join("");
+}
+
+function safeUser(row) {
+  if (!row) {
+    return null;
+  }
+
+  return {
+    id:
+      row.id,
+
+    email:
+      row.email,
+
+    name:
+      row.name,
+
+    company:
+      row.company || "",
+
+    phone:
+      row.phone || "",
+
+    plan:
+      row.plan ||
+      "Starter",
+
+    active:
+      !!row.active,
+
+    role:
+      row.role ||
+      "customer",
+
+    payment_method:
+      row.payment_method ||
+      "Bank transfer / IBAN",
+
+    iban:
+      row.iban || "",
+
+    bank_name:
+      row.bank_name || "",
+
+    payment_status:
+      row.payment_status ||
+      "UNPAID",
+
+    created_at:
+      row.created_at,
+  };
 }
 
 const PLAN_PRICES = {
@@ -310,7 +380,39 @@ const PLAN_PRICES = {
   Pro: 19900,
 };
 
-async function ensureInvoiceSchema(
+const DEFAULT_AGENTS = [
+  {
+    agent_type:
+      "receptionist",
+    name:
+      "AI Receptionist",
+  },
+  {
+    agent_type:
+      "sales",
+    name:
+      "AI Sales",
+  },
+  {
+    agent_type:
+      "support",
+    name:
+      "AI Support",
+  },
+];
+
+const CHANNELS = [
+  "Website",
+  "WhatsApp",
+  "Instagram",
+  "Facebook",
+  "Viber",
+  "Telegram",
+  "Email",
+  "SMS",
+];
+
+async function ensureSchemas(
   env
 ) {
   await env.DB.prepare(`
@@ -335,6 +437,126 @@ async function ensureInvoiceSchema(
     CREATE INDEX IF NOT EXISTS idx_invoices_customer
     ON invoices(customer_id)
   `).run();
+
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS customer_agents (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      customer_id TEXT NOT NULL,
+      agent_type TEXT NOT NULL,
+      name TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'INACTIVE',
+      config_json TEXT DEFAULT '{}',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(customer_id, agent_type)
+    )
+  `).run();
+
+  await env.DB.prepare(`
+    CREATE INDEX IF NOT EXISTS idx_customer_agents_customer
+    ON customer_agents(customer_id)
+  `).run();
+
+  await env.DB.prepare(`
+    CREATE TABLE IF NOT EXISTS customer_integrations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      customer_id TEXT NOT NULL,
+      channel TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'NOT_CONNECTED',
+      config_json TEXT DEFAULT '{}',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(customer_id, channel)
+    )
+  `).run();
+
+  await env.DB.prepare(`
+    CREATE INDEX IF NOT EXISTS idx_customer_integrations_customer
+    ON customer_integrations(customer_id)
+  `).run();
+}
+
+async function seedAgents(
+  env,
+  customerId
+) {
+  for (
+    const agent
+    of DEFAULT_AGENTS
+  ) {
+    await env.DB.prepare(`
+      INSERT OR IGNORE
+      INTO customer_agents (
+        customer_id,
+        agent_type,
+        name,
+        status,
+        config_json
+      )
+      VALUES (
+        ?,
+        ?,
+        ?,
+        'INACTIVE',
+        '{}'
+      )
+    `)
+      .bind(
+        customerId,
+        agent.agent_type,
+        agent.name
+      )
+      .run();
+  }
+}
+
+async function seedIntegrations(
+  env,
+  customerId
+) {
+  for (
+    const channel
+    of CHANNELS
+  ) {
+    await env.DB.prepare(`
+      INSERT OR IGNORE
+      INTO customer_integrations (
+        customer_id,
+        channel,
+        status,
+        config_json
+      )
+      VALUES (
+        ?,
+        ?,
+        'NOT_CONNECTED',
+        '{}'
+      )
+    `)
+      .bind(
+        customerId,
+        channel
+      )
+      .run();
+  }
+}
+
+async function customerExists(
+  env,
+  id
+) {
+  const customer =
+    await env.DB.prepare(`
+      SELECT id
+      FROM users
+      WHERE
+        id=?
+        AND role='customer'
+    `)
+      .bind(id)
+      .first();
+
+  return !!customer;
 }
 
 function planAmountCents(
@@ -345,25 +567,62 @@ function planAmountCents(
     PLAN_PRICES[plan] !==
     undefined
   ) {
-    return PLAN_PRICES[plan];
+    return PLAN_PRICES[
+      plan
+    ];
   }
 
-  const custom =
+  const enterprise =
     Number(
       env.INVOICE_ENTERPRISE_PRICE_CENTS ||
       0
     );
 
   return (
-    Number.isFinite(custom) &&
-    custom > 0
+    Number.isFinite(
+      enterprise
+    ) &&
+    enterprise > 0
   )
-    ? Math.round(custom)
+    ? Math.round(
+        enterprise
+      )
     : 0;
 }
 
-function ascii(s = "") {
-  return String(s)
+function money(
+  cents,
+  currency = "EUR"
+) {
+  return (
+    `${(
+      Number(
+        cents || 0
+      ) / 100
+    ).toFixed(2)} ${currency}`
+  );
+}
+
+function dueDate(
+  days = 7
+) {
+  const date =
+    new Date();
+
+  date.setUTCDate(
+    date.getUTCDate() +
+    days
+  );
+
+  return date
+    .toISOString()
+    .slice(0, 10);
+}
+
+function ascii(
+  value = ""
+) {
+  return String(value)
     .normalize("NFD")
     .replace(
       /[\u0300-\u036f]/g,
@@ -375,41 +634,23 @@ function ascii(s = "") {
     );
 }
 
-function pdfEsc(s = "") {
-  return ascii(s)
-    .replace(/\\/g, "\\\\")
-    .replace(/\(/g, "\\(")
-    .replace(/\)/g, "\\)");
-}
-
-function money(
-  cents,
-  currency = "EUR"
+function pdfEsc(
+  value = ""
 ) {
-  return (
-    `${(
-      Number(cents || 0) /
-      100
-    ).toFixed(2)} ${currency}`
-  );
+  return ascii(value)
+    .replace(
+      /\\/g,
+      "\\\\"
+    )
+    .replace(
+      /\(/g,
+      "\\("
+    )
+    .replace(
+      /\)/g,
+      "\\)"
+    );
 }
-
-function dueDate(days = 7) {
-  const d = new Date();
-
-  d.setUTCDate(
-    d.getUTCDate() + days
-  );
-
-  return d
-    .toISOString()
-    .slice(0, 10);
-}
-
-
-// ==========================================
-// PREMIUM BALKAN AGENT INVOICE PDF
-// ==========================================
 
 function makeInvoicePdf(
   invoice,
@@ -459,23 +700,135 @@ function makeInvoicePdf(
     );
 
   const lines = [
-    ["B", "BALKAN AGENT", 48, 794, 19, "navy"],
-    ["R", "AI SOLUTIONS & AUTOMATION", 48, 777, 8, "gold"],
-    ["R", "Made in Montenegro", 48, 763, 7, "muted"],
 
-    ["B", "INVOICE", 430, 794, 21, "navy"],
-    ["R", `Invoice No: ${invoice.invoice_number}`, 430, 771, 8, "normal"],
-    ["R", `Issue date: ${invoice.issue_date}`, 430, 758, 8, "normal"],
-    ["R", `Due date: ${invoice.due_date}`, 430, 745, 8, "normal"],
+    [
+      "B",
+      "BALKAN AGENT",
+      48,
+      794,
+      19,
+      "navy"
+    ],
 
-    ["B", "FROM", 48, 705, 8, "gold"],
-    ["B", company, 48, 687, 10, "navy"],
-    ["R", address, 48, 673, 8, "normal"],
-    ["R", tax ? `Tax ID: ${tax}` : "", 48, 660, 8, "normal"],
-    ["R", `Phone: ${phone}`, 48, 647, 8, "normal"],
-    ["R", `Email: ${email}`, 48, 634, 8, "normal"],
+    [
+      "R",
+      "AI SOLUTIONS & AUTOMATION",
+      48,
+      777,
+      8,
+      "gold"
+    ],
 
-    ["B", "BILL TO", 315, 705, 8, "gold"],
+    [
+      "R",
+      "Made in Montenegro",
+      48,
+      763,
+      7,
+      "muted"
+    ],
+
+    [
+      "B",
+      "INVOICE",
+      430,
+      794,
+      21,
+      "navy"
+    ],
+
+    [
+      "R",
+      `Invoice No: ${invoice.invoice_number}`,
+      430,
+      771,
+      8,
+      "normal"
+    ],
+
+    [
+      "R",
+      `Issue date: ${invoice.issue_date}`,
+      430,
+      758,
+      8,
+      "normal"
+    ],
+
+    [
+      "R",
+      `Due date: ${invoice.due_date}`,
+      430,
+      745,
+      8,
+      "normal"
+    ],
+
+    [
+      "B",
+      "FROM",
+      48,
+      705,
+      8,
+      "gold"
+    ],
+
+    [
+      "B",
+      company,
+      48,
+      687,
+      10,
+      "navy"
+    ],
+
+    [
+      "R",
+      address,
+      48,
+      673,
+      8,
+      "normal"
+    ],
+
+    [
+      "R",
+      tax
+        ? `Tax ID: ${tax}`
+        : "",
+      48,
+      660,
+      8,
+      "normal"
+    ],
+
+    [
+      "R",
+      `Phone: ${phone}`,
+      48,
+      647,
+      8,
+      "normal"
+    ],
+
+    [
+      "R",
+      `Email: ${email}`,
+      48,
+      634,
+      8,
+      "normal"
+    ],
+
+    [
+      "B",
+      "BILL TO",
+      315,
+      705,
+      8,
+      "gold"
+    ],
+
     [
       "B",
       customer.company ||
@@ -486,6 +839,7 @@ function makeInvoicePdf(
       10,
       "navy"
     ],
+
     [
       "R",
       customer.company
@@ -496,11 +850,42 @@ function makeInvoicePdf(
       8,
       "normal"
     ],
-    ["R", customer.email || "", 315, 660, 8, "normal"],
-    ["R", customer.phone || "", 315, 647, 8, "normal"],
 
-    ["B", "DESCRIPTION / SERVICE", 48, 586, 8, "white"],
-    ["B", "AMOUNT", 455, 586, 8, "white"],
+    [
+      "R",
+      customer.email || "",
+      315,
+      660,
+      8,
+      "normal"
+    ],
+
+    [
+      "R",
+      customer.phone || "",
+      315,
+      647,
+      8,
+      "normal"
+    ],
+
+    [
+      "B",
+      "DESCRIPTION / SERVICE",
+      48,
+      586,
+      8,
+      "white"
+    ],
+
+    [
+      "B",
+      "AMOUNT",
+      455,
+      586,
+      8,
+      "white"
+    ],
 
     [
       "R",
@@ -512,18 +897,100 @@ function makeInvoicePdf(
       "normal"
     ],
 
-    ["B", total, 455, 552, 9, "navy"],
-    ["B", "TOTAL", 392, 500, 10, "navy"],
-    ["B", total, 455, 500, 11, "gold"],
+    [
+      "B",
+      total,
+      455,
+      552,
+      9,
+      "navy"
+    ],
 
-    ["B", "PAYMENT DETAILS", 48, 451, 9, "gold"],
-    ["R", `Account holder: ${accountHolder}`, 48, 431, 8, "normal"],
-    ["R", bank ? `Bank: ${bank}` : "", 48, 416, 8, "normal"],
-    ["R", `IBAN: ${iban}`, 48, 401, 8, "normal"],
-    ["R", swift ? `SWIFT / BIC: ${swift}` : "", 48, 386, 8, "normal"],
-    ["R", `Payment reference: ${invoice.invoice_number}`, 48, 371, 8, "normal"],
+    [
+      "B",
+      "TOTAL",
+      392,
+      500,
+      10,
+      "navy"
+    ],
 
-    ["B", "IMPORTANT", 48, 328, 8, "gold"],
+    [
+      "B",
+      total,
+      455,
+      500,
+      11,
+      "gold"
+    ],
+
+    [
+      "B",
+      "PAYMENT DETAILS",
+      48,
+      451,
+      9,
+      "gold"
+    ],
+
+    [
+      "R",
+      `Account holder: ${accountHolder}`,
+      48,
+      431,
+      8,
+      "normal"
+    ],
+
+    [
+      "R",
+      bank
+        ? `Bank: ${bank}`
+        : "",
+      48,
+      416,
+      8,
+      "normal"
+    ],
+
+    [
+      "R",
+      `IBAN: ${iban}`,
+      48,
+      401,
+      8,
+      "normal"
+    ],
+
+    [
+      "R",
+      swift
+        ? `SWIFT / BIC: ${swift}`
+        : "",
+      48,
+      386,
+      8,
+      "normal"
+    ],
+
+    [
+      "R",
+      `Payment reference: ${invoice.invoice_number}`,
+      48,
+      371,
+      8,
+      "normal"
+    ],
+
+    [
+      "B",
+      "IMPORTANT",
+      48,
+      328,
+      8,
+      "gold"
+    ],
+
     [
       "R",
       `Please include ${invoice.invoice_number} as the payment reference.`,
@@ -533,7 +1000,15 @@ function makeInvoicePdf(
       "normal"
     ],
 
-    ["B", "BALKAN AGENT", 48, 115, 9, "navy"],
+    [
+      "B",
+      "BALKAN AGENT",
+      48,
+      115,
+      9,
+      "navy"
+    ],
+
     [
       "R",
       "Smart automation. Real results. Built for modern business.",
@@ -542,20 +1017,68 @@ function makeInvoicePdf(
       8,
       "normal"
     ],
+
     [
       "R",
-      `${email}  |  ${phone}  |  balkanagent.com`,
+      `${email} | ${phone} | balkanagent.com`,
       48,
       83,
       7,
       "muted"
     ],
 
-    ["B", "Thank you for your business.", 380, 104, 9, "gold"],
-    ["R", "Fariz Suljevic", 430, 83, 8, "normal"],
+    [
+      "B",
+      "Thank you for your business.",
+      380,
+      104,
+      9,
+      "gold"
+    ],
+
+    [
+      "R",
+      "Fariz Suljevic",
+      430,
+      83,
+      8,
+      "normal"
+    ],
+
   ].filter(
-    (x) => x[1]
+    item =>
+      item[1]
   );
+
+  function color(
+    type
+  ) {
+    if (
+      type === "gold"
+    ) {
+      return "0.62 0.47 0.16";
+    }
+
+    if (
+      type === "navy"
+    ) {
+      return "0.04 0.09 0.20";
+    }
+
+    if (
+      type === "muted"
+    ) {
+      return "0.42 0.46 0.52";
+    }
+
+    if (
+      type === "white"
+    ) {
+      return "1 1 1";
+    }
+
+    return "0.20 0.24 0.30";
+  }
 
   let stream = "";
 
@@ -598,26 +1121,6 @@ function makeInvoicePdf(
   stream +=
     "0.78 0.63 0.29 rg 0 16 595 3 re f\n";
 
-  function colorFor(type) {
-    if (type === "gold") {
-      return "0.62 0.47 0.16";
-    }
-
-    if (type === "navy") {
-      return "0.04 0.09 0.20";
-    }
-
-    if (type === "muted") {
-      return "0.42 0.46 0.52";
-    }
-
-    if (type === "white") {
-      return "1 1 1";
-    }
-
-    return "0.20 0.24 0.30";
-  }
-
   for (
     const [
       font,
@@ -625,55 +1128,58 @@ function makeInvoicePdf(
       x,
       y,
       size,
-      color
-    ] of lines
+      type
+    ]
+    of lines
   ) {
     stream +=
       `BT /F${font === "B" ? 2 : 1} ${size} Tf ` +
-      `${colorFor(color)} rg ` +
-      `${x} ${y} Td (${pdfEsc(text)}) Tj ET\n`;
+      `${color(type)} rg ` +
+      `${x} ${y} Td ` +
+      `(${pdfEsc(text)}) Tj ET\n`;
   }
 
-  const objs = [];
+  const objects = [];
 
-  objs[1] =
+  objects[1] =
     "<< /Type /Catalog /Pages 2 0 R >>";
 
-  objs[2] =
+  objects[2] =
     "<< /Type /Pages /Kids [3 0 R] /Count 1 >>";
 
-  objs[3] =
+  objects[3] =
     "<< /Type /Page /Parent 2 0 R " +
     "/MediaBox [0 0 595 842] " +
     "/Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> " +
     "/Contents 6 0 R >>";
 
-  objs[4] =
+  objects[4] =
     "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>";
 
-  objs[5] =
+  objects[5] =
     "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>";
 
-  objs[6] =
+  objects[6] =
     `<< /Length ${stream.length} >>\n` +
     `stream\n${stream}endstream`;
 
   let pdf =
     "%PDF-1.4\n";
 
-  const offs = [0];
+  const offsets =
+    [0];
 
   for (
     let i = 1;
     i <= 6;
     i++
   ) {
-    offs[i] =
+    offsets[i] =
       pdf.length;
 
     pdf +=
       `${i} 0 obj\n` +
-      `${objs[i]}\n` +
+      `${objects[i]}\n` +
       `endobj\n`;
   }
 
@@ -681,8 +1187,7 @@ function makeInvoicePdf(
     pdf.length;
 
   pdf +=
-    "xref\n" +
-    "0 7\n" +
+    "xref\n0 7\n" +
     "0000000000 65535 f \n";
 
   for (
@@ -691,38 +1196,42 @@ function makeInvoicePdf(
     i++
   ) {
     pdf +=
-      String(offs[i])
-        .padStart(10, "0") +
+      String(
+        offsets[i]
+      )
+        .padStart(
+          10,
+          "0"
+        ) +
       " 00000 n \n";
   }
 
   pdf +=
     `trailer\n` +
     `<< /Size 7 /Root 1 0 R >>\n` +
-    `startxref\n` +
-    `${xref}\n` +
+    `startxref\n${xref}\n` +
     `%%EOF`;
 
-  return enc.encode(pdf);
+  return enc.encode(
+    pdf
+  );
 }
 
-
-function bytesToBase64(bytes) {
+function bytesToBase64(
+  bytes
+) {
   let out = "";
-
-  const chunk =
-    0x8000;
 
   for (
     let i = 0;
     i < bytes.length;
-    i += chunk
+    i += 0x8000
   ) {
     out +=
       String.fromCharCode(
         ...bytes.subarray(
           i,
-          i + chunk
+          i + 0x8000
         )
       );
   }
@@ -730,21 +1239,18 @@ function bytesToBase64(bytes) {
   return btoa(out);
 }
 
-
 async function sendInvoiceEmail(
   env,
   invoice,
   customer
 ) {
-  if (!env.RESEND_API_KEY) {
+  if (
+    !env.RESEND_API_KEY
+  ) {
     throw new Error(
       "RESEND_API_KEY is not configured"
     );
   }
-
-  const from =
-    env.INVOICE_FROM_EMAIL ||
-    "Balkan Agent <info@balkanagent.com>";
 
   const pdf =
     makeInvoicePdf(
@@ -772,159 +1278,87 @@ async function sendInvoiceEmail(
 
   const html = `
     <div style="
-      margin:0;
-      padding:0;
-      background:#f5f7fa;
-      font-family:Arial,Helvetica,sans-serif;
+      font-family:Arial,sans-serif;
       color:#0a1733;
+      max-width:640px;
+      margin:auto
     ">
 
       <div style="
-        max-width:640px;
-        margin:0 auto;
-        background:#ffffff;
-        border-top:6px solid #0a1733;
+        border-top:7px solid #0a1733;
+        padding:24px 0 12px;
+        border-bottom:2px solid #c7a24a
       ">
 
-        <div style="
-          padding:30px 34px 24px;
-          border-bottom:2px solid #c7a24a;
-        ">
+        <h1 style="margin:0">
+          BALKAN AGENT
+        </h1>
 
-          <div style="
-            font-size:24px;
-            font-weight:700;
-            letter-spacing:.5px;
-          ">
-            BALKAN AGENT
-          </div>
-
-          <div style="
-            margin-top:5px;
-            color:#a17c2c;
-            font-size:12px;
-            letter-spacing:1.2px;
-          ">
-            AI SOLUTIONS & AUTOMATION
-          </div>
-
+        <div style="color:#a17c2c">
+          AI SOLUTIONS & AUTOMATION
         </div>
-
-        <div style="
-          padding:32px 34px;
-        ">
-
-          <div style="
-            color:#667085;
-            font-size:13px;
-          ">
-            Invoice ${invoice.invoice_number}
-          </div>
-
-          <h2 style="
-            margin:8px 0 20px;
-            font-size:24px;
-            color:#0a1733;
-          ">
-            Your Balkan Agent invoice
-          </h2>
-
-          <p style="
-            font-size:15px;
-            line-height:1.7;
-          ">
-            Hello ${safeName},
-          </p>
-
-          <p style="
-            font-size:15px;
-            line-height:1.7;
-          ">
-            Your Balkan Agent account has been activated.
-            Your invoice is attached to this email as a PDF.
-          </p>
-
-          <div style="
-            margin:25px 0;
-            padding:20px;
-            background:#f7f8fa;
-            border-left:4px solid #c7a24a;
-          ">
-
-            <div style="
-              margin-bottom:8px;
-            ">
-              <strong>Plan:</strong>
-              ${invoice.plan || ""}
-            </div>
-
-            <div style="
-              margin-bottom:8px;
-            ">
-              <strong>Total:</strong>
-              ${total}
-            </div>
-
-            <div>
-              <strong>Due date:</strong>
-              ${invoice.due_date}
-            </div>
-
-          </div>
-
-          <p style="
-            font-size:14px;
-            line-height:1.7;
-            color:#475467;
-          ">
-            Please use
-            <strong>${invoice.invoice_number}</strong>
-            as the payment reference when making
-            your bank transfer.
-          </p>
-
-          <p style="
-            margin-top:30px;
-            font-size:14px;
-          ">
-            Thank you for choosing Balkan Agent.
-          </p>
-
-        </div>
-
-        <div style="
-          padding:20px 34px;
-          background:#0a1733;
-          color:#ffffff;
-          font-size:12px;
-          line-height:1.7;
-        ">
-
-          <strong>Balkan Agent</strong><br>
-
-          AI Solutions & Automation<br>
-
-          +382 68 400 509 ·
-          info@balkanagent.com ·
-          balkanagent.com
-
-        </div>
-
-        <div style="
-          height:4px;
-          background:#c7a24a;
-        "></div>
 
       </div>
+
+      <h2>
+        Your Balkan Agent invoice
+      </h2>
+
+      <p>
+        Hello ${safeName},
+      </p>
+
+      <p>
+        Your Balkan Agent account has been activated.
+        Your PDF invoice is attached.
+      </p>
+
+      <div style="
+        padding:18px;
+        background:#f7f8fa;
+        border-left:4px solid #c7a24a
+      ">
+
+        <b>Plan:</b>
+        ${invoice.plan || ""}
+
+        <br>
+
+        <b>Total:</b>
+        ${total}
+
+        <br>
+
+        <b>Due date:</b>
+        ${invoice.due_date}
+
+      </div>
+
+      <p>
+        Please use
+        <b>${invoice.invoice_number}</b>
+        as the payment reference.
+      </p>
+
+      <p style="
+        color:#667085;
+        font-size:12px
+      ">
+        Balkan Agent ·
+        +382 68 400 509 ·
+        info@balkanagent.com ·
+        balkanagent.com
+      </p>
 
     </div>
   `;
 
-  const r =
+  const response =
     await fetch(
       "https://api.resend.com/emails",
       {
-        method: "POST",
+        method:
+          "POST",
 
         headers: {
           authorization:
@@ -936,7 +1370,10 @@ async function sendInvoiceEmail(
 
         body:
           JSON.stringify({
-            from,
+
+            from:
+              env.INVOICE_FROM_EMAIL ||
+              "Balkan Agent <info@balkanagent.com>",
 
             to: [
               customer.email,
@@ -956,51 +1393,53 @@ async function sendInvoiceEmail(
                   `${invoice.invoice_number}.pdf`,
 
                 content:
-                  bytesToBase64(pdf),
+                  bytesToBase64(
+                    pdf
+                  ),
               },
             ],
           }),
       }
     );
 
-  const j =
-    await r
+  const result =
+    await response
       .json()
       .catch(
         () => ({})
       );
 
-  if (!r.ok) {
+  if (
+    !response.ok
+  ) {
     throw new Error(
-      j.message ||
-      j.error ||
-      `Resend error ${r.status}`
+      result.message ||
+      result.error ||
+      `Resend error ${response.status}`
     );
   }
 
-  return j.id || "";
+  return result.id || "";
 }
-
 
 async function createActivationInvoice(
   env,
   customer
 ) {
-  await ensureInvoiceSchema(env);
-
   const amount =
     planAmountCents(
       customer.plan,
       env
     );
 
-  const tmp =
-    `TMP-${crypto.randomUUID()}`;
-
   const description =
-    customer.plan === "Enterprise"
+    customer.plan ===
+    "Enterprise"
       ? "Balkan Agent Enterprise - agreed monthly service"
       : `Balkan Agent ${customer.plan} plan - monthly service`;
+
+  const temporary =
+    `TMP-${crypto.randomUUID()}`;
 
   const result =
     await env.DB.prepare(`
@@ -1029,7 +1468,7 @@ async function createActivationInvoice(
     `)
       .bind(
         customer.id,
-        tmp,
+        temporary,
         customer.plan,
         description,
         amount,
@@ -1054,18 +1493,23 @@ async function createActivationInvoice(
     );
   }
 
-  const year =
-    new Date()
-      .getUTCFullYear();
-
-  const number =
-    `BA-${year}-${String(id).padStart(6, "0")}`;
+  const invoiceNumber =
+    `BA-${
+      new Date()
+        .getUTCFullYear()
+    }-${
+      String(id)
+        .padStart(
+          6,
+          "0"
+        )
+    }`;
 
   await env.DB.prepare(
     "UPDATE invoices SET invoice_number=? WHERE id=?"
   )
     .bind(
-      number,
+      invoiceNumber,
       id
     )
     .run();
@@ -1107,23 +1551,26 @@ async function createActivationInvoice(
 
     return {
       invoice,
-      email_sent: true,
+      email_sent:
+        true,
     };
 
-  } catch (e) {
+  } catch (error) {
     return {
       invoice,
-      email_sent: false,
+      email_sent:
+        false,
+
       email_error:
-        e && e.message
-          ? e.message
-          : String(e),
+        error?.message ||
+        String(error),
     };
   }
 }
 
-
-export async function onRequest(context) {
+export async function onRequest(
+  context
+) {
   const {
     request,
     env
@@ -1144,7 +1591,6 @@ export async function onRequest(context) {
     request.method
       .toUpperCase();
 
-
   if (!env.DB) {
     return bad(
       "D1 binding DB is not configured",
@@ -1152,203 +1598,178 @@ export async function onRequest(context) {
     );
   }
 
-  if (!env.SESSION_SECRET) {
+  if (
+    !env.SESSION_SECRET
+  ) {
     return bad(
       "SESSION_SECRET is not configured",
       500
     );
   }
 
-  if (!env.ADMIN_PASSWORD) {
+  if (
+    !env.ADMIN_PASSWORD
+  ) {
     return bad(
       "ADMIN_PASSWORD is not configured",
       500
     );
   }
 
+  await ensureSchemas(
+    env
+  );
+
+
+  // ==========================================
+  // REGISTER
+  // ==========================================
 
   if (
-    path === "auth/register" &&
-    method === "POST"
+    path ===
+    "auth/register" &&
+    method ===
+    "POST"
   ) {
+    const body =
+      await parseBody(
+        request
+      );
+
+    const name =
+      String(
+        body.name || ""
+      ).trim();
+
+    const company =
+      String(
+        body.company || ""
+      ).trim();
+
+    const email =
+      String(
+        body.email || ""
+      )
+        .trim()
+        .toLowerCase();
+
+    const phone =
+      String(
+        body.phone || ""
+      ).trim();
+
+    const password =
+      String(
+        body.password || ""
+      );
+
+    if (
+      !name ||
+      !email ||
+      password.length < 8
+    ) {
+      return bad(
+        "Name, email and password of at least 8 characters are required.",
+        400
+      );
+    }
+
+    if (
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        .test(email)
+    ) {
+      return bad(
+        "Invalid email.",
+        400
+      );
+    }
+
+    const exists =
+      await env.DB.prepare(
+        "SELECT id FROM users WHERE email=?"
+      )
+        .bind(email)
+        .first();
+
+    if (exists) {
+      return bad(
+        "Account already exists.",
+        409
+      );
+    }
+
+    const salt =
+      randomHex(16);
+
+    const passwordHash =
+      await hashPassword(
+        password,
+        salt
+      );
+
+    const id =
+      crypto.randomUUID();
+
     try {
-      const b =
-        await parseBody(
-          request
-        );
-
-      const name =
-        String(
-          b.name || ""
+      await env.DB.prepare(`
+        INSERT INTO users (
+          id,
+          email,
+          password_hash,
+          password_salt,
+          name,
+          company,
+          phone,
+          plan,
+          active,
+          role,
+          payment_method,
+          payment_status,
+          created_at
         )
-          .trim();
-
-      const company =
-        String(
-          b.company || ""
+        VALUES (
+          ?,
+          ?,
+          ?,
+          ?,
+          ?,
+          ?,
+          ?,
+          'Starter',
+          0,
+          'customer',
+          'Bank transfer / IBAN',
+          'UNPAID',
+          datetime('now')
         )
-          .trim();
-
-      const email =
-        String(
-          b.email || ""
+      `)
+        .bind(
+          id,
+          email,
+          passwordHash,
+          salt,
+          name,
+          company,
+          phone
         )
-          .trim()
-          .toLowerCase();
-
-      const phone =
-        String(
-          b.phone || ""
-        )
-          .trim();
-
-      const password =
-        String(
-          b.password || ""
-        );
-
-
-      if (
-        !name ||
-        !email ||
-        password.length < 8
-      ) {
-        return bad(
-          "Name, email and password of at least 8 characters are required.",
-          400
-        );
-      }
-
-
-      if (
-        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/
-          .test(email)
-      ) {
-        return bad(
-          "Invalid email.",
-          400
-        );
-      }
-
-
-      const exists =
-        await env.DB.prepare(
-          "SELECT id FROM users WHERE email=?"
-        )
-          .bind(email)
-          .first();
-
-
-      if (exists) {
-        return bad(
-          "Account already exists.",
-          409
-        );
-      }
-
-
-      const salt =
-        randomHex(16);
-
-      let password_hash;
-
-
-      try {
-        password_hash =
-          await hashPassword(
-            password,
-            salt
-          );
-
-      } catch (e) {
-        return bad(
-          `Password hashing error: ${
-            e && e.message
-              ? e.message
-              : String(e)
-          }`,
-          500
-        );
-      }
-
-
-      const id =
-        crypto.randomUUID();
-
-
-      try {
-        await env.DB.prepare(`
-          INSERT INTO users (
-            id,
-            email,
-            password_hash,
-            password_salt,
-            name,
-            company,
-            phone,
-            plan,
-            active,
-            role,
-            payment_method,
-            payment_status,
-            created_at
-          )
-          VALUES (
-            ?,
-            ?,
-            ?,
-            ?,
-            ?,
-            ?,
-            ?,
-            ?,
-            0,
-            'customer',
-            'Bank transfer / IBAN',
-            'UNPAID',
-            datetime('now')
-          )
-        `)
-          .bind(
-            id,
-            email,
-            password_hash,
-            salt,
-            name,
-            company,
-            phone,
-            "Starter"
-          )
-          .run();
-
-      } catch (e) {
-        return bad(
-          `Database error: ${
-            e && e.message
-              ? e.message
-              : String(e)
-          }`,
-          500
-        );
-      }
-
+        .run();
 
       return json(
         {
           ok: true,
-          status: "pending",
+          status:
+            "pending",
           message:
             "Account created. Admin activation is required.",
         },
         201
       );
 
-    } catch (e) {
+    } catch (error) {
       return bad(
-        `Registration backend error: ${
-          e && e.message
-            ? e.message
-            : String(e)
+        `Database error: ${
+          error?.message ||
+          String(error)
         }`,
         500
       );
@@ -1356,27 +1777,32 @@ export async function onRequest(context) {
   }
 
 
+  // ==========================================
+  // LOGIN
+  // ==========================================
+
   if (
-    path === "auth/login" &&
-    method === "POST"
+    path ===
+    "auth/login" &&
+    method ===
+    "POST"
   ) {
-    const b =
+    const body =
       await parseBody(
         request
       );
 
     const email =
       String(
-        b.email || ""
+        body.email || ""
       )
         .trim()
         .toLowerCase();
 
     const password =
       String(
-        b.password || ""
+        body.password || ""
       );
-
 
     if (
       email ===
@@ -1392,29 +1818,29 @@ export async function onRequest(context) {
         );
       }
 
-
       const token =
         await makeSession(
           env,
           {
-            sub: "admin",
-            role: "admin",
+            sub:
+              "admin",
+
+            role:
+              "admin",
+
             email,
+
             exp:
               Date.now() +
-              7 *
-              24 *
-              60 *
-              60 *
-              1000,
+              604800000,
           }
         );
-
 
       return json(
         {
           ok: true,
-          role: "admin",
+          role:
+            "admin",
         },
         200,
         {
@@ -1425,7 +1851,6 @@ export async function onRequest(context) {
         }
       );
     }
-
 
     const user =
       await env.DB.prepare(`
@@ -1438,24 +1863,23 @@ export async function onRequest(context) {
         .bind(email)
         .first();
 
-
-    if (!user) {
+    if (
+      !user
+    ) {
       return bad(
         "Wrong email or password.",
         401
       );
     }
 
-
-    const test =
+    const passwordCheck =
       await hashPassword(
         password,
         user.password_salt
       );
 
-
     if (
-      test !==
+      passwordCheck !==
       user.password_hash
     ) {
       return bad(
@@ -1464,14 +1888,14 @@ export async function onRequest(context) {
       );
     }
 
-
-    if (!user.active) {
+    if (
+      !user.active
+    ) {
       return bad(
         "Account is waiting for admin activation.",
         403
       );
     }
-
 
     const token =
       await makeSession(
@@ -1488,19 +1912,15 @@ export async function onRequest(context) {
 
           exp:
             Date.now() +
-            7 *
-            24 *
-            60 *
-            60 *
-            1000,
+            604800000,
         }
       );
-
 
     return json(
       {
         ok: true,
-        role: "customer",
+        role:
+          "customer",
         user:
           safeUser(user),
       },
@@ -1515,9 +1935,15 @@ export async function onRequest(context) {
   }
 
 
+  // ==========================================
+  // LOGOUT
+  // ==========================================
+
   if (
-    path === "auth/logout" &&
-    method === "POST"
+    path ===
+    "auth/logout" &&
+    method ===
+    "POST"
   ) {
     return json(
       {
@@ -1532,9 +1958,15 @@ export async function onRequest(context) {
   }
 
 
+  // ==========================================
+  // SESSION
+  // ==========================================
+
   if (
-    path === "auth/me" &&
-    method === "GET"
+    path ===
+    "auth/me" &&
+    method ===
+    "GET"
   ) {
     const r =
       await requireSession(
@@ -1542,11 +1974,11 @@ export async function onRequest(context) {
         env
       );
 
-
-    if (r.error) {
+    if (
+      r.error
+    ) {
       return r.error;
     }
-
 
     if (
       r.session.role ===
@@ -1554,12 +1986,12 @@ export async function onRequest(context) {
     ) {
       return json({
         ok: true,
-        role: "admin",
+        role:
+          "admin",
         email:
           r.session.email,
       });
     }
-
 
     const user =
       await env.DB.prepare(
@@ -1569,7 +2001,6 @@ export async function onRequest(context) {
           r.session.sub
         )
         .first();
-
 
     if (
       !user ||
@@ -1581,19 +2012,25 @@ export async function onRequest(context) {
       );
     }
 
-
     return json({
       ok: true,
-      role: "customer",
+      role:
+        "customer",
       user:
         safeUser(user),
     });
   }
 
 
+  // ==========================================
+  // CUSTOMER PROFILE
+  // ==========================================
+
   if (
-    path === "profile" &&
-    method === "GET"
+    path ===
+    "profile" &&
+    method ===
+    "GET"
   ) {
     const r =
       await requireSession(
@@ -1601,11 +2038,11 @@ export async function onRequest(context) {
         env
       );
 
-
-    if (r.error) {
+    if (
+      r.error
+    ) {
       return r.error;
     }
-
 
     if (
       r.session.role !==
@@ -1616,7 +2053,6 @@ export async function onRequest(context) {
         403
       );
     }
-
 
     const user =
       await env.DB.prepare(
@@ -1627,7 +2063,6 @@ export async function onRequest(context) {
         )
         .first();
 
-
     return json({
       ok: true,
       user:
@@ -1635,10 +2070,11 @@ export async function onRequest(context) {
     });
   }
 
-
   if (
-    path === "profile" &&
-    method === "PATCH"
+    path ===
+    "profile" &&
+    method ===
+    "PATCH"
   ) {
     const r =
       await requireSession(
@@ -1646,11 +2082,11 @@ export async function onRequest(context) {
         env
       );
 
-
-    if (r.error) {
+    if (
+      r.error
+    ) {
       return r.error;
     }
-
 
     if (
       r.session.role !==
@@ -1662,51 +2098,24 @@ export async function onRequest(context) {
       );
     }
 
-
-    const b =
+    const body =
       await parseBody(
         request
       );
 
-
     const name =
       String(
-        b.name || ""
-      )
-        .trim();
+        body.name || ""
+      ).trim();
 
-    const company =
-      String(
-        b.company || ""
-      )
-        .trim();
-
-    const phone =
-      String(
-        b.phone || ""
-      )
-        .trim();
-
-    const iban =
-      String(
-        b.iban || ""
-      )
-        .trim();
-
-    const bank =
-      String(
-        b.bank_name || ""
-      )
-        .trim();
-
-
-    if (!name) {
+    if (
+      !name
+    ) {
       return bad(
         "Name is required",
         400
       );
     }
-
 
     await env.DB.prepare(`
       UPDATE users
@@ -1721,14 +2130,21 @@ export async function onRequest(context) {
     `)
       .bind(
         name,
-        company,
-        phone,
-        iban,
-        bank,
+        String(
+          body.company || ""
+        ).trim(),
+        String(
+          body.phone || ""
+        ).trim(),
+        String(
+          body.iban || ""
+        ).trim(),
+        String(
+          body.bank_name || ""
+        ).trim(),
         r.session.sub
       )
       .run();
-
 
     const user =
       await env.DB.prepare(
@@ -1739,7 +2155,6 @@ export async function onRequest(context) {
         )
         .first();
 
-
     return json({
       ok: true,
       user:
@@ -1748,9 +2163,15 @@ export async function onRequest(context) {
   }
 
 
+  // ==========================================
+  // ADMIN CUSTOMERS
+  // ==========================================
+
   if (
-    path === "admin/customers" &&
-    method === "GET"
+    path ===
+    "admin/customers" &&
+    method ===
+    "GET"
   ) {
     const r =
       await requireAdmin(
@@ -1758,11 +2179,11 @@ export async function onRequest(context) {
         env
       );
 
-
-    if (r.error) {
+    if (
+      r.error
+    ) {
       return r.error;
     }
-
 
     const rows =
       await env.DB.prepare(`
@@ -1773,7 +2194,6 @@ export async function onRequest(context) {
       `)
         .all();
 
-
     return json({
       ok: true,
 
@@ -1781,23 +2201,21 @@ export async function onRequest(context) {
         (
           rows.results ||
           []
-        )
-          .map(
-            safeUser
-          ),
+        ).map(
+          safeUser
+        ),
     });
   }
-
 
   const customerMatch =
     path.match(
       /^admin\/customers\/([^/]+)$/
     );
 
-
   if (
     customerMatch &&
-    method === "PATCH"
+    method ===
+    "PATCH"
   ) {
     const r =
       await requireAdmin(
@@ -1805,21 +2223,21 @@ export async function onRequest(context) {
         env
       );
 
-
-    if (r.error) {
+    if (
+      r.error
+    ) {
       return r.error;
     }
 
-
     const id =
-      customerMatch[1];
+      decodeURIComponent(
+        customerMatch[1]
+      );
 
-
-    const b =
+    const body =
       await parseBody(
         request
       );
-
 
     const current =
       await env.DB.prepare(`
@@ -1832,60 +2250,65 @@ export async function onRequest(context) {
         .bind(id)
         .first();
 
-
-    if (!current) {
+    if (
+      !current
+    ) {
       return bad(
         "Customer not found",
         404
       );
     }
 
-
     const active =
-      b.active === undefined
+      body.active ===
+      undefined
         ? current.active
-        : b.active
+        : body.active
           ? 1
           : 0;
 
-
     const plan =
-      b.plan === undefined
+      body.plan ===
+      undefined
         ? current.plan
-        : String(b.plan);
-
+        : String(
+            body.plan
+          );
 
     const phone =
-      b.phone === undefined
+      body.phone ===
+      undefined
         ? current.phone
         : String(
-            b.phone || ""
+            body.phone ||
+            ""
           );
-
 
     const iban =
-      b.iban === undefined
+      body.iban ===
+      undefined
         ? current.iban
         : String(
-            b.iban || ""
+            body.iban ||
+            ""
           );
-
 
     const bank =
-      b.bank_name === undefined
+      body.bank_name ===
+      undefined
         ? current.bank_name
         : String(
-            b.bank_name || ""
+            body.bank_name ||
+            ""
           );
-
 
     const paymentStatus =
-      b.payment_status === undefined
+      body.payment_status ===
+      undefined
         ? current.payment_status
         : String(
-            b.payment_status
+            body.payment_status
           );
-
 
     await env.DB.prepare(`
       UPDATE users
@@ -1912,7 +2335,6 @@ export async function onRequest(context) {
       )
       .run();
 
-
     const updated =
       await env.DB.prepare(
         "SELECT * FROM users WHERE id=?"
@@ -1920,38 +2342,34 @@ export async function onRequest(context) {
         .bind(id)
         .first();
 
-
-    let invoiceResult =
+    let invoice =
       null;
-
 
     if (
       !current.active &&
       active
     ) {
-      invoiceResult =
+      invoice =
         await createActivationInvoice(
           env,
           updated
         );
     }
 
-
     return json({
       ok: true,
-
       customer:
-        safeUser(updated),
-
-      invoice:
-        invoiceResult,
+        safeUser(
+          updated
+        ),
+      invoice,
     });
   }
 
-
   if (
     customerMatch &&
-    method === "DELETE"
+    method ===
+    "DELETE"
   ) {
     const r =
       await requireAdmin(
@@ -1959,11 +2377,34 @@ export async function onRequest(context) {
         env
       );
 
-
-    if (r.error) {
+    if (
+      r.error
+    ) {
       return r.error;
     }
 
+    const id =
+      decodeURIComponent(
+        customerMatch[1]
+      );
+
+    await env.DB.prepare(
+      "DELETE FROM customer_agents WHERE customer_id=?"
+    )
+      .bind(id)
+      .run();
+
+    await env.DB.prepare(
+      "DELETE FROM customer_integrations WHERE customer_id=?"
+    )
+      .bind(id)
+      .run();
+
+    await env.DB.prepare(
+      "DELETE FROM invoices WHERE customer_id=?"
+    )
+      .bind(id)
+      .run();
 
     await env.DB.prepare(`
       DELETE FROM users
@@ -1971,11 +2412,8 @@ export async function onRequest(context) {
         id=?
         AND role='customer'
     `)
-      .bind(
-        customerMatch[1]
-      )
+      .bind(id)
       .run();
-
 
     return json({
       ok: true,
@@ -1983,15 +2421,19 @@ export async function onRequest(context) {
   }
 
 
-  const customerInvoicesMatch =
+  // ==========================================
+  // ADMIN - AI AGENTS OF CUSTOMER
+  // ==========================================
+
+  const adminAgents =
     path.match(
-      /^admin\/customers\/([^/]+)\/invoices$/
+      /^admin\/customers\/([^/]+)\/agents$/
     );
 
-
   if (
-    customerInvoicesMatch &&
-    method === "GET"
+    adminAgents &&
+    method ===
+    "GET"
   ) {
     const r =
       await requireAdmin(
@@ -1999,16 +2441,460 @@ export async function onRequest(context) {
         env
       );
 
-
-    if (r.error) {
+    if (
+      r.error
+    ) {
       return r.error;
     }
 
+    const id =
+      decodeURIComponent(
+        adminAgents[1]
+      );
 
-    await ensureInvoiceSchema(
-      env
+    if (
+      !await customerExists(
+        env,
+        id
+      )
+    ) {
+      return bad(
+        "Customer not found",
+        404
+      );
+    }
+
+    await seedAgents(
+      env,
+      id
     );
 
+    const rows =
+      await env.DB.prepare(`
+        SELECT
+          id,
+          agent_type,
+          name,
+          status,
+          config_json,
+          created_at,
+          updated_at
+        FROM customer_agents
+        WHERE customer_id=?
+        ORDER BY id ASC
+      `)
+        .bind(id)
+        .all();
+
+    return json({
+      ok: true,
+      agents:
+        rows.results ||
+        [],
+    });
+  }
+
+  const adminAgent =
+    path.match(
+      /^admin\/customers\/([^/]+)\/agents\/([^/]+)$/
+    );
+
+  if (
+    adminAgent &&
+    method ===
+    "PATCH"
+  ) {
+    const r =
+      await requireAdmin(
+        request,
+        env
+      );
+
+    if (
+      r.error
+    ) {
+      return r.error;
+    }
+
+    const id =
+      decodeURIComponent(
+        adminAgent[1]
+      );
+
+    const type =
+      decodeURIComponent(
+        adminAgent[2]
+      );
+
+    if (
+      !await customerExists(
+        env,
+        id
+      )
+    ) {
+      return bad(
+        "Customer not found",
+        404
+      );
+    }
+
+    const definition =
+      DEFAULT_AGENTS.find(
+        item =>
+          item.agent_type ===
+          type
+      );
+
+    if (
+      !definition
+    ) {
+      return bad(
+        "Invalid agent type",
+        400
+      );
+    }
+
+    const body =
+      await parseBody(
+        request
+      );
+
+    const status =
+      String(
+        body.status ||
+        ""
+      )
+        .toUpperCase();
+
+    if (
+      ![
+        "ACTIVE",
+        "INACTIVE",
+      ].includes(
+        status
+      )
+    ) {
+      return bad(
+        "Invalid agent status",
+        400
+      );
+    }
+
+    await env.DB.prepare(`
+      INSERT OR IGNORE
+      INTO customer_agents (
+        customer_id,
+        agent_type,
+        name,
+        status,
+        config_json
+      )
+      VALUES (
+        ?,
+        ?,
+        ?,
+        'INACTIVE',
+        '{}'
+      )
+    `)
+      .bind(
+        id,
+        type,
+        definition.name
+      )
+      .run();
+
+    await env.DB.prepare(`
+      UPDATE customer_agents
+      SET
+        status=?,
+        updated_at=datetime('now')
+      WHERE
+        customer_id=?
+        AND agent_type=?
+    `)
+      .bind(
+        status,
+        id,
+        type
+      )
+      .run();
+
+    const agent =
+      await env.DB.prepare(`
+        SELECT
+          id,
+          agent_type,
+          name,
+          status,
+          config_json,
+          created_at,
+          updated_at
+        FROM customer_agents
+        WHERE
+          customer_id=?
+          AND agent_type=?
+      `)
+        .bind(
+          id,
+          type
+        )
+        .first();
+
+    return json({
+      ok: true,
+      agent,
+    });
+  }
+
+
+  // ==========================================
+  // ADMIN - INTEGRATIONS OF CUSTOMER
+  // ==========================================
+
+  const adminIntegrations =
+    path.match(
+      /^admin\/customers\/([^/]+)\/integrations$/
+    );
+
+  if (
+    adminIntegrations &&
+    method ===
+    "GET"
+  ) {
+    const r =
+      await requireAdmin(
+        request,
+        env
+      );
+
+    if (
+      r.error
+    ) {
+      return r.error;
+    }
+
+    const id =
+      decodeURIComponent(
+        adminIntegrations[1]
+      );
+
+    if (
+      !await customerExists(
+        env,
+        id
+      )
+    ) {
+      return bad(
+        "Customer not found",
+        404
+      );
+    }
+
+    await seedIntegrations(
+      env,
+      id
+    );
+
+    const rows =
+      await env.DB.prepare(`
+        SELECT
+          id,
+          channel,
+          status,
+          config_json,
+          created_at,
+          updated_at
+        FROM customer_integrations
+        WHERE customer_id=?
+        ORDER BY id ASC
+      `)
+        .bind(id)
+        .all();
+
+    return json({
+      ok: true,
+      integrations:
+        rows.results ||
+        [],
+    });
+  }
+
+  const adminIntegration =
+    path.match(
+      /^admin\/customers\/([^/]+)\/integrations\/([^/]+)$/
+    );
+
+  if (
+    adminIntegration &&
+    method ===
+    "PATCH"
+  ) {
+    const r =
+      await requireAdmin(
+        request,
+        env
+      );
+
+    if (
+      r.error
+    ) {
+      return r.error;
+    }
+
+    const id =
+      decodeURIComponent(
+        adminIntegration[1]
+      );
+
+    const channel =
+      decodeURIComponent(
+        adminIntegration[2]
+      );
+
+    if (
+      !await customerExists(
+        env,
+        id
+      )
+    ) {
+      return bad(
+        "Customer not found",
+        404
+      );
+    }
+
+    if (
+      !CHANNELS.includes(
+        channel
+      )
+    ) {
+      return bad(
+        "Invalid integration channel",
+        400
+      );
+    }
+
+    const body =
+      await parseBody(
+        request
+      );
+
+    const status =
+      String(
+        body.status ||
+        ""
+      )
+        .toUpperCase();
+
+    if (
+      ![
+        "CONNECTED",
+        "NOT_CONNECTED",
+      ].includes(
+        status
+      )
+    ) {
+      return bad(
+        "Invalid integration status",
+        400
+      );
+    }
+
+    await env.DB.prepare(`
+      INSERT OR IGNORE
+      INTO customer_integrations (
+        customer_id,
+        channel,
+        status,
+        config_json
+      )
+      VALUES (
+        ?,
+        ?,
+        'NOT_CONNECTED',
+        '{}'
+      )
+    `)
+      .bind(
+        id,
+        channel
+      )
+      .run();
+
+    await env.DB.prepare(`
+      UPDATE customer_integrations
+      SET
+        status=?,
+        updated_at=datetime('now')
+      WHERE
+        customer_id=?
+        AND channel=?
+    `)
+      .bind(
+        status,
+        id,
+        channel
+      )
+      .run();
+
+    const integration =
+      await env.DB.prepare(`
+        SELECT
+          id,
+          channel,
+          status,
+          config_json,
+          created_at,
+          updated_at
+        FROM customer_integrations
+        WHERE
+          customer_id=?
+          AND channel=?
+      `)
+        .bind(
+          id,
+          channel
+        )
+        .first();
+
+    return json({
+      ok: true,
+      integration,
+    });
+  }
+
+
+  // ==========================================
+  // ADMIN INVOICES
+  // ==========================================
+
+  const adminInvoices =
+    path.match(
+      /^admin\/customers\/([^/]+)\/invoices$/
+    );
+
+  if (
+    adminInvoices &&
+    method ===
+    "GET"
+  ) {
+    const r =
+      await requireAdmin(
+        request,
+        env
+      );
+
+    if (
+      r.error
+    ) {
+      return r.error;
+    }
+
+    const id =
+      decodeURIComponent(
+        adminInvoices[1]
+      );
 
     const rows =
       await env.DB.prepare(`
@@ -2017,31 +2903,26 @@ export async function onRequest(context) {
         WHERE customer_id=?
         ORDER BY id DESC
       `)
-        .bind(
-          customerInvoicesMatch[1]
-        )
+        .bind(id)
         .all();
-
 
     return json({
       ok: true,
-
       invoices:
         rows.results ||
         [],
     });
   }
 
-
-  const resendMatch =
+  const resend =
     path.match(
       /^admin\/customers\/([^/]+)\/invoices\/resend$/
     );
 
-
   if (
-    resendMatch &&
-    method === "POST"
+    resend &&
+    method ===
+    "POST"
   ) {
     const r =
       await requireAdmin(
@@ -2049,16 +2930,16 @@ export async function onRequest(context) {
         env
       );
 
-
-    if (r.error) {
+    if (
+      r.error
+    ) {
       return r.error;
     }
 
-
-    await ensureInvoiceSchema(
-      env
-    );
-
+    const id =
+      decodeURIComponent(
+        resend[1]
+      );
 
     const customer =
       await env.DB.prepare(`
@@ -2068,19 +2949,17 @@ export async function onRequest(context) {
           id=?
           AND role='customer'
       `)
-        .bind(
-          resendMatch[1]
-        )
+        .bind(id)
         .first();
 
-
-    if (!customer) {
+    if (
+      !customer
+    ) {
       return bad(
         "Customer not found",
         404
       );
     }
-
 
     const invoice =
       await env.DB.prepare(`
@@ -2090,19 +2969,17 @@ export async function onRequest(context) {
         ORDER BY id DESC
         LIMIT 1
       `)
-        .bind(
-          customer.id
-        )
+        .bind(id)
         .first();
 
-
-    if (!invoice) {
+    if (
+      !invoice
+    ) {
       return bad(
         "No invoice exists for this customer yet.",
         404
       );
     }
-
 
     try {
       const providerId =
@@ -2111,7 +2988,6 @@ export async function onRequest(context) {
           invoice,
           customer
         );
-
 
       await env.DB.prepare(`
         UPDATE invoices
@@ -2126,7 +3002,6 @@ export async function onRequest(context) {
         )
         .run();
 
-
       return json({
         ok: true,
         message:
@@ -2135,26 +3010,24 @@ export async function onRequest(context) {
           invoice.invoice_number,
       });
 
-    } catch (e) {
+    } catch (error) {
       return bad(
-        e && e.message
-          ? e.message
-          : String(e),
+        error?.message ||
+        String(error),
         502
       );
     }
   }
 
-
-  const adminPdfMatch =
+  const adminPdf =
     path.match(
       /^admin\/invoices\/(\d+)\/pdf$/
     );
 
-
   if (
-    adminPdfMatch &&
-    method === "GET"
+    adminPdf &&
+    method ===
+    "GET"
   ) {
     const r =
       await requireAdmin(
@@ -2162,16 +3035,11 @@ export async function onRequest(context) {
         env
       );
 
-
-    if (r.error) {
+    if (
+      r.error
+    ) {
       return r.error;
     }
-
-
-    await ensureInvoiceSchema(
-      env
-    );
-
 
     const invoice =
       await env.DB.prepare(
@@ -2179,19 +3047,19 @@ export async function onRequest(context) {
       )
         .bind(
           Number(
-            adminPdfMatch[1]
+            adminPdf[1]
           )
         )
         .first();
 
-
-    if (!invoice) {
+    if (
+      !invoice
+    ) {
       return bad(
         "Invoice not found",
         404
       );
     }
-
 
     const customer =
       await env.DB.prepare(
@@ -2202,7 +3070,6 @@ export async function onRequest(context) {
         )
         .first();
 
-
     const pdf =
       makeInvoicePdf(
         invoice,
@@ -2210,12 +3077,10 @@ export async function onRequest(context) {
         env
       );
 
-
     return new Response(
       pdf,
       {
         headers: {
-
           "content-type":
             "application/pdf",
 
@@ -2230,9 +3095,15 @@ export async function onRequest(context) {
   }
 
 
+  // ==========================================
+  // CUSTOMER INVOICES
+  // ==========================================
+
   if (
-    path === "invoices" &&
-    method === "GET"
+    path ===
+    "invoices" &&
+    method ===
+    "GET"
   ) {
     const r =
       await requireSession(
@@ -2240,11 +3111,11 @@ export async function onRequest(context) {
         env
       );
 
-
-    if (r.error) {
+    if (
+      r.error
+    ) {
       return r.error;
     }
-
 
     if (
       r.session.role !==
@@ -2255,12 +3126,6 @@ export async function onRequest(context) {
         403
       );
     }
-
-
-    await ensureInvoiceSchema(
-      env
-    );
-
 
     const rows =
       await env.DB.prepare(`
@@ -2283,26 +3148,23 @@ export async function onRequest(context) {
         )
         .all();
 
-
     return json({
       ok: true,
-
       invoices:
         rows.results ||
         [],
     });
   }
 
-
-  const customerPdfMatch =
+  const customerPdf =
     path.match(
       /^invoices\/(\d+)\/pdf$/
     );
 
-
   if (
-    customerPdfMatch &&
-    method === "GET"
+    customerPdf &&
+    method ===
+    "GET"
   ) {
     const r =
       await requireSession(
@@ -2310,11 +3172,11 @@ export async function onRequest(context) {
         env
       );
 
-
-    if (r.error) {
+    if (
+      r.error
+    ) {
       return r.error;
     }
-
 
     if (
       r.session.role !==
@@ -2326,12 +3188,6 @@ export async function onRequest(context) {
       );
     }
 
-
-    await ensureInvoiceSchema(
-      env
-    );
-
-
     const invoice =
       await env.DB.prepare(`
         SELECT *
@@ -2342,20 +3198,20 @@ export async function onRequest(context) {
       `)
         .bind(
           Number(
-            customerPdfMatch[1]
+            customerPdf[1]
           ),
           r.session.sub
         )
         .first();
 
-
-    if (!invoice) {
+    if (
+      !invoice
+    ) {
       return bad(
         "Invoice not found",
         404
       );
     }
-
 
     const customer =
       await env.DB.prepare(
@@ -2366,7 +3222,6 @@ export async function onRequest(context) {
         )
         .first();
 
-
     const pdf =
       makeInvoicePdf(
         invoice,
@@ -2374,12 +3229,10 @@ export async function onRequest(context) {
         env
       );
 
-
     return new Response(
       pdf,
       {
         headers: {
-
           "content-type":
             "application/pdf",
 
@@ -2393,13 +3246,16 @@ export async function onRequest(context) {
     );
   }
 
+
   // ==========================================
-  // CUSTOMER - AI AGENTS
+  // CUSTOMER AI AGENTS
   // ==========================================
 
   if (
-    path === "agents" &&
-    method === "GET"
+    path ===
+    "agents" &&
+    method ===
+    "GET"
   ) {
     const r =
       await requireSession(
@@ -2407,7 +3263,9 @@ export async function onRequest(context) {
         env
       );
 
-    if (r.error) {
+    if (
+      r.error
+    ) {
       return r.error;
     }
 
@@ -2421,47 +3279,10 @@ export async function onRequest(context) {
       );
     }
 
-    const defaults = [
-      {
-        agent_type: "receptionist",
-        name: "AI Receptionist"
-      },
-      {
-        agent_type: "sales",
-        name: "AI Sales"
-      },
-      {
-        agent_type: "support",
-        name: "AI Support"
-      }
-    ];
-
-    for (
-      const agent of defaults
-    ) {
-      await env.DB.prepare(`
-        INSERT OR IGNORE INTO customer_agents (
-          customer_id,
-          agent_type,
-          name,
-          status,
-          config_json
-        )
-        VALUES (
-          ?,
-          ?,
-          ?,
-          'INACTIVE',
-          '{}'
-        )
-      `)
-        .bind(
-          r.session.sub,
-          agent.agent_type,
-          agent.name
-        )
-        .run();
-    }
+    await seedAgents(
+      env,
+      r.session.sub
+    );
 
     const rows =
       await env.DB.prepare(`
@@ -2485,19 +3306,20 @@ export async function onRequest(context) {
     return json({
       ok: true,
       agents:
-        rows.results || []
+        rows.results ||
+        [],
     });
   }
 
-
-  const customerAgentMatch =
+  const agentMatch =
     path.match(
       /^agents\/([^/]+)$/
     );
 
   if (
-    customerAgentMatch &&
-    method === "PATCH"
+    agentMatch &&
+    method ===
+    "PATCH"
   ) {
     const r =
       await requireSession(
@@ -2505,7 +3327,9 @@ export async function onRequest(context) {
         env
       );
 
-    if (r.error) {
+    if (
+      r.error
+    ) {
       return r.error;
     }
 
@@ -2519,28 +3343,43 @@ export async function onRequest(context) {
       );
     }
 
-    const agentType =
+    const type =
       decodeURIComponent(
-        customerAgentMatch[1]
+        agentMatch[1]
       );
 
-    const b =
+    const definition =
+      DEFAULT_AGENTS.find(
+        item =>
+          item.agent_type ===
+          type
+      );
+
+    if (
+      !definition
+    ) {
+      return bad(
+        "Invalid agent type",
+        400
+      );
+    }
+
+    const body =
       await parseBody(
         request
       );
 
-    const allowedStatus = [
-      "ACTIVE",
-      "INACTIVE"
-    ];
-
     const status =
       String(
-        b.status || ""
+        body.status ||
+        ""
       ).toUpperCase();
 
     if (
-      !allowedStatus.includes(
+      ![
+        "ACTIVE",
+        "INACTIVE",
+      ].includes(
         status
       )
     ) {
@@ -2550,26 +3389,10 @@ export async function onRequest(context) {
       );
     }
 
-    const existing =
-      await env.DB.prepare(`
-        SELECT *
-        FROM customer_agents
-        WHERE
-          customer_id=?
-          AND agent_type=?
-      `)
-        .bind(
-          r.session.sub,
-          agentType
-        )
-        .first();
-
-    if (!existing) {
-      return bad(
-        "Agent not found",
-        404
-      );
-    }
+    await seedAgents(
+      env,
+      r.session.sub
+    );
 
     await env.DB.prepare(`
       UPDATE customer_agents
@@ -2583,11 +3406,11 @@ export async function onRequest(context) {
       .bind(
         status,
         r.session.sub,
-        agentType
+        type
       )
       .run();
 
-    const updated =
+    const agent =
       await env.DB.prepare(`
         SELECT
           id,
@@ -2604,24 +3427,26 @@ export async function onRequest(context) {
       `)
         .bind(
           r.session.sub,
-          agentType
+          type
         )
         .first();
 
     return json({
       ok: true,
-      agent: updated
+      agent,
     });
   }
 
 
   // ==========================================
-  // CUSTOMER - INTEGRATIONS
+  // CUSTOMER INTEGRATIONS
   // ==========================================
 
   if (
-    path === "integrations" &&
-    method === "GET"
+    path ===
+    "integrations" &&
+    method ===
+    "GET"
   ) {
     const r =
       await requireSession(
@@ -2629,7 +3454,9 @@ export async function onRequest(context) {
         env
       );
 
-    if (r.error) {
+    if (
+      r.error
+    ) {
       return r.error;
     }
 
@@ -2643,40 +3470,10 @@ export async function onRequest(context) {
       );
     }
 
-    const channels = [
-      "Website",
-      "WhatsApp",
-      "Instagram",
-      "Facebook",
-      "Viber",
-      "Telegram",
-      "Email",
-      "SMS"
-    ];
-
-    for (
-      const channel of channels
-    ) {
-      await env.DB.prepare(`
-        INSERT OR IGNORE INTO customer_integrations (
-          customer_id,
-          channel,
-          status,
-          config_json
-        )
-        VALUES (
-          ?,
-          ?,
-          'NOT_CONNECTED',
-          '{}'
-        )
-      `)
-        .bind(
-          r.session.sub,
-          channel
-        )
-        .run();
-    }
+    await seedIntegrations(
+      env,
+      r.session.sub
+    );
 
     const rows =
       await env.DB.prepare(`
@@ -2699,10 +3496,10 @@ export async function onRequest(context) {
     return json({
       ok: true,
       integrations:
-        rows.results || []
+        rows.results ||
+        [],
     });
   }
-
 
   const integrationMatch =
     path.match(
@@ -2711,7 +3508,8 @@ export async function onRequest(context) {
 
   if (
     integrationMatch &&
-    method === "PATCH"
+    method ===
+    "PATCH"
   ) {
     const r =
       await requireSession(
@@ -2719,7 +3517,9 @@ export async function onRequest(context) {
         env
       );
 
-    if (r.error) {
+    if (
+      r.error
+    ) {
       return r.error;
     }
 
@@ -2738,23 +3538,33 @@ export async function onRequest(context) {
         integrationMatch[1]
       );
 
-    const b =
+    if (
+      !CHANNELS.includes(
+        channel
+      )
+    ) {
+      return bad(
+        "Invalid integration channel",
+        400
+      );
+    }
+
+    const body =
       await parseBody(
         request
       );
 
-    const allowedStatus = [
-      "CONNECTED",
-      "NOT_CONNECTED"
-    ];
-
     const status =
       String(
-        b.status || ""
+        body.status ||
+        ""
       ).toUpperCase();
 
     if (
-      !allowedStatus.includes(
+      ![
+        "CONNECTED",
+        "NOT_CONNECTED",
+      ].includes(
         status
       )
     ) {
@@ -2764,26 +3574,10 @@ export async function onRequest(context) {
       );
     }
 
-    const existing =
-      await env.DB.prepare(`
-        SELECT *
-        FROM customer_integrations
-        WHERE
-          customer_id=?
-          AND channel=?
-      `)
-        .bind(
-          r.session.sub,
-          channel
-        )
-        .first();
-
-    if (!existing) {
-      return bad(
-        "Integration not found",
-        404
-      );
-    }
+    await seedIntegrations(
+      env,
+      r.session.sub
+    );
 
     await env.DB.prepare(`
       UPDATE customer_integrations
@@ -2801,7 +3595,7 @@ export async function onRequest(context) {
       )
       .run();
 
-    const updated =
+    const integration =
       await env.DB.prepare(`
         SELECT
           id,
@@ -2823,9 +3617,11 @@ export async function onRequest(context) {
 
     return json({
       ok: true,
-      integration: updated
+      integration,
     });
   }
+
+
   return bad(
     "Not found",
     404
