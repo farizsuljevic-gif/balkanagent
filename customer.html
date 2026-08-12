@@ -1,195 +1,1981 @@
-<!doctype html><html lang="me"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Balkan Agent Customer</title>
+<!doctype html>
+<html lang="me">
+
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Balkan Agent — Customer Portal</title>
+
 <style>
-:root{--bg:#030814;--side:#06101f;--panel:#091426;--line:#1d304d;--text:#f7f9fd;--muted:#96a7bd;--violet:#7544ff;--gold:#d8a94c;--green:#30dc85}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 70% 0,#17204b,#030814 70%);color:var(--text);font:14px/1.5 system-ui}a{color:inherit;text-decoration:none}button,input,select{font:inherit}.shell{display:grid;grid-template-columns:250px 1fr;min-height:100vh}aside{background:#06101f;border-right:1px solid #172842;padding:22px;position:sticky;top:0;height:100vh}.brand{font-weight:900;font-size:20px;margin-bottom:25px}.brand span{color:#6e90ff}.tag{font-size:9px;color:var(--gold)}nav button,nav a{width:100%;display:block;text-align:left;padding:11px 12px;margin:5px 0;background:transparent;border:0;border-radius:9px;color:#9dacbf;cursor:pointer}nav .active{background:#21174d;color:#fff;border-left:3px solid var(--violet)}main{padding:25px 28px}.notice{border:1px solid #453a1d;background:#171407;color:#d8c78e;border-radius:10px;padding:11px 13px;margin-bottom:14px}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}.metric,.panel{background:#091426;border:1px solid #1d304d;border-radius:13px}.metric{padding:15px}.metric small{color:#8496ad}.metric b{display:block;font-size:27px;margin-top:5px}.panel{padding:16px}.section{display:none}.section.active{display:block}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.item{background:#0c1a31;border:1px solid #1e3250;border-radius:11px;padding:14px}.item button{margin-top:10px}.btn{border:1px solid #2a4064;background:#0a1627;color:#fff;border-radius:9px;padding:9px 12px;cursor:pointer}.primary{background:#6f42ee}.good{color:#30dc85}.warn{color:#d8a94c}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}select{background:#07101e;border:1px solid #263b5d;color:#fff;border-radius:8px;padding:9px}@media(max-width:900px){.shell{grid-template-columns:1fr}aside{position:relative;height:auto}nav{display:flex;overflow:auto}nav button,nav a{white-space:nowrap;width:auto}.metrics{grid-template-columns:repeat(2,1fr)}}@media(max-width:600px){main{padding:16px}.metrics,.grid{grid-template-columns:1fr}}
-</style></head><body><script>
-(function(){
-  try{
-    const logged=JSON.parse(localStorage.getItem('ba_logged_customer')||'null');
-    if(!logged){document.body.innerHTML='<div style="font-family:system-ui;background:#030814;color:#fff;min-height:100vh;display:grid;place-items:center"><div><h2>Customer login required</h2><a style="color:#8fa6ff" href="login.html">Open Login</a></div></div>';return}
-    const all=JSON.parse(localStorage.getItem('ba_customers_v3')||'[]');
-    const live=all.find(x=>String(x.id)===String(logged.id));
-    if(!live||!live.active){localStorage.removeItem('ba_logged_customer');document.body.innerHTML='<div style="font-family:system-ui;background:#030814;color:#fff;min-height:100vh;display:grid;place-items:center"><div><h2>Account inactive</h2><p>Admin must activate this account.</p><a style="color:#8fa6ff" href="login.html">Back to Login</a></div></div>';return}
-    localStorage.setItem('ba_logged_customer',JSON.stringify(live));
-  }catch(e){}
-})();
-</script>
-<div class="shell"><aside><div class="brand">BALKAN<span>AGENT</span><div class="tag">CUSTOMER PORTAL</div></div><select id="lang" class="btn" style="width:100%;margin-bottom:12px"><option value="Crnogorski">Crnogorski</option><option value="English">English</option><option value="Deutsch">Deutsch</option><option value="Русский">Русский</option><option value="Shqip">Shqip</option><option value="Slovenščina">Slovenščina</option><option value="Македонски">Македонски</option><option value="Български">Български</option><option value="Ελληνικά">Ελληνικά</option><option value="Română">Română</option><option value="Türkçe">Türkçe</option></select><nav>
-<button class="active" data-tab="dashboard" data-t="overview">Pregled</button><button data-tab="agents" data-t="agents">AI zaposleni</button><button data-tab="leads" data-t="leads">Leadovi</button><button data-tab="channels" data-t="channels">Kanali</button><button data-tab="subscription" data-t="subscription">Pretplata</button><button data-tab="billing">Plaćanje i profil</button><button data-tab="settings" data-t="settings">Podešavanja</button><a href="index.html" data-t="back">Nazad na sajt</a>
-<a href="#" id="logoutCustomer">Logout</a></nav></aside><main>
-<div class="notice">LOCAL PREVIEW MODE — podešavanja, kanali i plan rade u ovom browseru. Pravi cloud podaci dolaze nakon D1/login integracije.</div>
-<div class="top"><h1 id="title">Pregled</h1><div>Balkan Agent Customer</div></div>
-<section id="dashboard" class="section active"><div class="metrics"><div class="metric"><small>AI EMPLOYEES</small><b id="mAgents">0</b></div><div class="metric"><small>CONNECTED CHANNELS</small><b id="mChannels">0</b></div><div class="metric"><small>LEADS</small><b id="mLeads">0</b></div><div class="metric"><small>PLAN</small><b id="mPlan" style="font-size:20px">Starter</b></div></div></section>
-<section id="agents" class="section"><div class="panel"><h2>AI zaposleni</h2><div class="grid" id="agentGrid"></div></div></section>
-<section id="leads" class="section"><div class="panel"><h2>Leadovi</h2><p style="color:#8ea0b5">U ovoj statičkoj verziji leadovi se čitaju iz lokalnog pregleda. Cloudflare D1 će ih kasnije učiniti stvarnim i zajedničkim na svim uređajima.</p><div id="leadList"></div></div></section>
-<section id="channels" class="section"><div class="panel"><h2>Kanali</h2><div class="grid" id="channelGrid"></div></div></section>
-<section id="subscription" class="section"><div class="panel"><h2>Pretplata</h2><label>Plan<select id="plan"><option>Starter</option><option>Business</option><option>Pro</option><option>Enterprise</option></select></label><br><br><button id="savePlan" class="btn primary" data-t="manage">Upravljaj paketom</button><span id="planMsg" class="good" style="margin-left:10px"></span></div></section>
-
-<section id="billing" class="section">
-  <div class="panel">
-    <h2>Plaćanje i profil</h2>
-    <div class="formrow">
-      <label>Ime i prezime<input id="profileName"></label>
-      <label>Firma<input id="profileCompany"></label>
-      <label>Email<input id="profileEmail" disabled></label>
-      <label>Broj telefona<input id="profilePhone" value="+38268400509"></label>
-      <label>Način plaćanja
-        <select id="profilePaymentMethod">
-          <option>Bank transfer / IBAN</option>
-        </select>
-      </label>
-      <label>IBAN<input id="profileIban" placeholder="ME..."></label>
-      <label>Naziv banke<input id="profileBank"></label>
-      <label>Status plaćanja<input id="profilePaymentStatus" disabled></label>
-    </div>
-    <br>
-    <button id="saveProfileBilling" class="btn primary">Sačuvaj podatke</button>
-    <div style="margin-top:24px;border-top:1px solid #1d304d;padding-top:18px">
-      <h3>Moji računi</h3>
-      <div id="invoiceList" style="color:#9dacbf">Učitavanje računa...</div>
-    </div>
-    <span id="billingMsg" class="good" style="margin-left:10px"></span>
-  </div>
-</section>
-
-<section id="settings" class="section"><div class="panel"><h2>Podešavanja</h2><label>Language<select id="settingLang"><option value="Crnogorski">Crnogorski</option><option value="English">English</option><option value="Deutsch">Deutsch</option><option value="Русский">Русский</option><option value="Shqip">Shqip</option><option value="Slovenščina">Slovenščina</option><option value="Македонски">Македонски</option><option value="Български">Български</option><option value="Ελληνικά">Ελληνικά</option><option value="Română">Română</option><option value="Türkçe">Türkçe</option></select></label><br><br><button id="saveSettings" class="btn primary" data-t="save">Sačuvaj</button><span id="settingsMsg" class="good" style="margin-left:10px"></span></div></section>
-</main></div>
-<script>
-const TR={"Crnogorski": {"home": "Početna", "services": "Usluge", "how": "Kako funkcioniše", "pricing": "Cijene", "contact": "Kontakt", "login": "Prijava", "admin": "Admin panel", "customer": "Customer panel", "overview": "Pregled", "applications": "Prijave", "customers": "Mušterije", "sales": "Prodajni proces", "analytics": "Analitika", "settings": "Podešavanja", "agents": "AI zaposleni", "leads": "Leadovi", "channels": "Kanali", "subscription": "Pretplata", "back": "Nazad na sajt", "export": "Izvezi CSV", "search": "Pretraga", "save": "Sačuvaj", "manage": "Upravljaj paketom"}, "English": {"home": "Home", "services": "Services", "how": "How it works", "pricing": "Pricing", "contact": "Contact", "login": "Login", "admin": "Admin Panel", "customer": "Customer Panel", "overview": "Overview", "applications": "Applications", "customers": "Customers", "sales": "Sales Pipeline", "analytics": "Analytics", "settings": "Settings", "agents": "AI Employees", "leads": "Leads", "channels": "Channels", "subscription": "Subscription", "back": "Back to website", "export": "Export CSV", "search": "Search", "save": "Save", "manage": "Manage plan"}, "Deutsch": {"home": "Start", "services": "Leistungen", "how": "So funktioniert es", "pricing": "Preise", "contact": "Kontakt", "login": "Anmelden", "admin": "Admin-Bereich", "customer": "Kundenbereich", "overview": "Übersicht", "applications": "Anfragen", "customers": "Kunden", "sales": "Vertrieb", "analytics": "Analysen", "settings": "Einstellungen", "agents": "KI-Mitarbeiter", "leads": "Leads", "channels": "Kanäle", "subscription": "Abonnement", "back": "Zur Website", "export": "CSV exportieren", "search": "Suchen", "save": "Speichern", "manage": "Paket verwalten"}, "Русский": {"home": "Главная", "services": "Услуги", "how": "Как работает", "pricing": "Цены", "contact": "Контакты", "login": "Войти", "admin": "Админ", "customer": "Кабинет клиента", "overview": "Обзор", "applications": "Заявки", "customers": "Клиенты", "sales": "Продажи", "analytics": "Аналитика", "settings": "Настройки", "agents": "AI сотрудники", "leads": "Лиды", "channels": "Каналы", "subscription": "Подписка", "back": "На сайт", "export": "Экспорт CSV", "search": "Поиск", "save": "Сохранить", "manage": "Управлять пакетом"}, "Shqip": {"home": "Kryefaqja", "services": "Shërbimet", "how": "Si funksionon", "pricing": "Çmimet", "contact": "Kontakt", "login": "Hyrje", "admin": "Paneli Admin", "customer": "Paneli i Klientit", "overview": "Përmbledhje", "applications": "Aplikimet", "customers": "Klientët", "sales": "Procesi i shitjes", "analytics": "Analitika", "settings": "Cilësimet", "agents": "Punonjësit AI", "leads": "Leads", "channels": "Kanalet", "subscription": "Abonimi", "back": "Kthehu te faqja", "export": "Eksporto CSV", "search": "Kërko", "save": "Ruaj", "manage": "Menaxho planin"}, "Slovenščina": {"home": "Domov", "services": "Storitve", "how": "Kako deluje", "pricing": "Cene", "contact": "Kontakt", "login": "Prijava", "admin": "Admin panel", "customer": "Portal za stranke", "overview": "Pregled", "applications": "Prijave", "customers": "Stranke", "sales": "Prodajni proces", "analytics": "Analitika", "settings": "Nastavitve", "agents": "AI zaposleni", "leads": "Leadi", "channels": "Kanali", "subscription": "Naročnina", "back": "Nazaj na stran", "export": "Izvozi CSV", "search": "Iskanje", "save": "Shrani", "manage": "Upravljaj paket"}, "Македонски": {"home": "Почетна", "services": "Услуги", "how": "Како работи", "pricing": "Цени", "contact": "Контакт", "login": "Најава", "admin": "Админ панел", "customer": "Кориснички панел", "overview": "Преглед", "applications": "Пријави", "customers": "Клиенти", "sales": "Продажен процес", "analytics": "Аналитика", "settings": "Поставки", "agents": "AI вработени", "leads": "Лидови", "channels": "Канали", "subscription": "Претплата", "back": "Назад на сајт", "export": "Извоз CSV", "search": "Пребарај", "save": "Зачувај", "manage": "Управувај пакет"}, "Български": {"home": "Начало", "services": "Услуги", "how": "Как работи", "pricing": "Цени", "contact": "Контакт", "login": "Вход", "admin": "Админ панел", "customer": "Клиентски панел", "overview": "Преглед", "applications": "Заявки", "customers": "Клиенти", "sales": "Продажби", "analytics": "Анализи", "settings": "Настройки", "agents": "AI служители", "leads": "Лийдове", "channels": "Канали", "subscription": "Абонамент", "back": "Към сайта", "export": "Експорт CSV", "search": "Търсене", "save": "Запази", "manage": "Управление на план"}, "Ελληνικά": {"home": "Αρχική", "services": "Υπηρεσίες", "how": "Πώς λειτουργεί", "pricing": "Τιμές", "contact": "Επικοινωνία", "login": "Σύνδεση", "admin": "Πίνακας Admin", "customer": "Πίνακας Πελάτη", "overview": "Επισκόπηση", "applications": "Αιτήσεις", "customers": "Πελάτες", "sales": "Πωλήσεις", "analytics": "Αναλύσεις", "settings": "Ρυθμίσεις", "agents": "AI εργαζόμενοι", "leads": "Leads", "channels": "Κανάλια", "subscription": "Συνδρομή", "back": "Πίσω στον ιστότοπο", "export": "Εξαγωγή CSV", "search": "Αναζήτηση", "save": "Αποθήκευση", "manage": "Διαχείριση πακέτου"}, "Română": {"home": "Acasă", "services": "Servicii", "how": "Cum funcționează", "pricing": "Prețuri", "contact": "Contact", "login": "Autentificare", "admin": "Panou Admin", "customer": "Panou Client", "overview": "Prezentare", "applications": "Cereri", "customers": "Clienți", "sales": "Vânzări", "analytics": "Analiză", "settings": "Setări", "agents": "Angajați AI", "leads": "Lead-uri", "channels": "Canale", "subscription": "Abonament", "back": "Înapoi la site", "export": "Export CSV", "search": "Căutare", "save": "Salvează", "manage": "Gestionează planul"}, "Türkçe": {"home": "Ana Sayfa", "services": "Hizmetler", "how": "Nasıl çalışır", "pricing": "Fiyatlar", "contact": "İletişim", "login": "Giriş", "admin": "Admin Paneli", "customer": "Müşteri Paneli", "overview": "Genel Bakış", "applications": "Başvurular", "customers": "Müşteriler", "sales": "Satış Süreci", "analytics": "Analitik", "settings": "Ayarlar", "agents": "AI Çalışanları", "leads": "Leadler", "channels": "Kanallar", "subscription": "Abonelik", "back": "Siteye dön", "export": "CSV dışa aktar", "search": "Ara", "save": "Kaydet", "manage": "Paketi yönet"}};
-let state=JSON.parse(localStorage.getItem('ba_customer_state_v2')||'null')||{plan:'Starter',channels:{WhatsApp:false,Instagram:false,Website:false,Viber:false},agents:{'AI Receptionist':false,'AI Sales':false,'AI Support':false}};
-function save(){localStorage.setItem('ba_customer_state_v2',JSON.stringify(state));render()}
-function render(){
- document.getElementById('mAgents').textContent=Object.values(state.agents).filter(Boolean).length;
- document.getElementById('mChannels').textContent=Object.values(state.channels).filter(Boolean).length;
- let leads=JSON.parse(localStorage.getItem('ba_admin_leads_v2')||'[]');document.getElementById('mLeads').textContent=leads.length;document.getElementById('mPlan').textContent=state.plan;document.getElementById('plan').value=state.plan;
- document.getElementById('agentGrid').innerHTML=Object.entries(state.agents).map(([n,on])=>`<div class="item"><b>${n}</b><div class="${on?'good':'warn'}">${on?'ACTIVE':'INACTIVE'}</div><button class="btn agentToggle" data-name="${n}">${on?'Disable':'Enable'}</button></div>`).join('');
- document.getElementById('channelGrid').innerHTML=Object.entries(state.channels).map(([n,on])=>`<div class="item"><b>${n}</b><div class="${on?'good':'warn'}">${on?'CONNECTED':'NOT CONNECTED'}</div><button class="btn channelToggle" data-name="${n}">${on?'Disconnect':'Connect'}</button></div>`).join('');
- document.getElementById('leadList').innerHTML=leads.length?leads.slice(-5).reverse().map(x=>`<div class="item" style="margin:8px 0"><b>${x.name}</b> · ${x.company} · ${x.status}</div>`).join(''):'<div class="warn">No leads yet.</div>';
- document.querySelectorAll('.agentToggle').forEach(b=>b.onclick=()=>{state.agents[b.dataset.name]=!state.agents[b.dataset.name];save()});
- document.querySelectorAll('.channelToggle').forEach(b=>b.onclick=()=>{state.channels[b.dataset.name]=!state.channels[b.dataset.name];save()});
+:root{
+  --bg:#030814;
+  --side:#06101f;
+  --panel:#091426;
+  --panel2:#0c1a31;
+  --line:#1d304d;
+  --text:#f7f9fd;
+  --muted:#96a7bd;
+  --violet:#7544ff;
+  --blue:#4c7dff;
+  --gold:#d8a94c;
+  --green:#30dc85;
+  --red:#ff6478;
 }
-document.querySelectorAll('nav button[data-tab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById(b.dataset.tab).classList.add('active');document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById('title').textContent=b.textContent});
-document.getElementById('savePlan').onclick=()=>{state.plan=document.getElementById('plan').value;save();document.getElementById('planMsg').textContent='✓ Saved';setTimeout(()=>document.getElementById('planMsg').textContent='',1200)};
-let currentLang=localStorage.getItem('ba_customer_lang')||'Crnogorski';const L=document.getElementById('lang');L.value=currentLang;document.getElementById('settingLang').value=currentLang;
-function applyLang(l){currentLang=l;localStorage.setItem('ba_customer_lang',l);let t=TR[l]||TR.Crnogorski;document.querySelectorAll('[data-t]').forEach(e=>{let k=e.dataset.t;if(t[k])e.textContent=t[k]})}
-L.onchange=e=>{document.getElementById('settingLang').value=e.target.value;applyLang(e.target.value)};applyLang(currentLang);
-document.getElementById('saveSettings').onclick=()=>{let l=document.getElementById('settingLang').value;L.value=l;applyLang(l);document.getElementById('settingsMsg').textContent='✓ Saved';setTimeout(()=>document.getElementById('settingsMsg').textContent='',1200)};
-render();
-</script><script>
-(function(){
- const p=localStorage.getItem('ba_selected_plan');
- if(p){
-   try{
-     let s=JSON.parse(localStorage.getItem('ba_customer_state_v2')||'null');
-     if(s){s.plan=p;localStorage.setItem('ba_customer_state_v2',JSON.stringify(s));}
-   }catch(e){}
- }
-})();
-</script>
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  min-height:100vh;
+  background:
+    radial-gradient(
+      circle at 70% 0,
+      #17204b,
+      #030814 70%
+    );
+  color:var(--text);
+  font:14px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+
+a{
+  color:inherit;
+  text-decoration:none;
+}
+
+button,
+input,
+select{
+  font:inherit;
+}
+
+button:disabled{
+  opacity:.5;
+  cursor:not-allowed!important;
+}
+
+.shell{
+  display:grid;
+  grid-template-columns:250px 1fr;
+  min-height:100vh;
+}
+
+aside{
+  background:#06101f;
+  border-right:1px solid #172842;
+  padding:22px;
+  position:sticky;
+  top:0;
+  height:100vh;
+}
+
+.brand{
+  font-weight:900;
+  font-size:20px;
+  margin-bottom:4px;
+  letter-spacing:.3px;
+}
+
+.brand span{
+  color:#6e90ff;
+}
+
+.tag{
+  font-size:9px;
+  color:var(--gold);
+  letter-spacing:1.1px;
+  margin-bottom:25px;
+}
+
+nav button,
+nav a{
+  width:100%;
+  display:block;
+  text-align:left;
+  padding:11px 12px;
+  margin:5px 0;
+  background:transparent;
+  border:0;
+  border-radius:9px;
+  color:#9dacbf;
+  cursor:pointer;
+}
+
+nav button:hover,
+nav a:hover{
+  background:#0b1728;
+  color:#fff;
+}
+
+nav .active{
+  background:#21174d;
+  color:#fff;
+  border-left:3px solid var(--violet);
+}
+
+.navBottom{
+  margin-top:25px;
+  padding-top:15px;
+  border-top:1px solid #172842;
+}
+
+main{
+  padding:25px 28px;
+  min-width:0;
+}
+
+.top{
+  display:flex;
+  justify-content:space-between;
+  gap:15px;
+  align-items:center;
+  margin-bottom:18px;
+}
+
+.top h1{
+  margin:0;
+  font-size:27px;
+}
+
+.customerName{
+  color:#8ea0b5;
+  text-align:right;
+}
+
+.metrics{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  margin-bottom:14px;
+}
+
+.metric,
+.panel{
+  background:#091426;
+  border:1px solid #1d304d;
+  border-radius:13px;
+}
+
+.metric{
+  padding:15px;
+}
+
+.metric small{
+  color:#8496ad;
+  font-size:10px;
+  letter-spacing:.7px;
+}
+
+.metric b{
+  display:block;
+  font-size:27px;
+  margin-top:5px;
+}
+
+.panel{
+  padding:16px;
+}
+
+.panel h2{
+  margin-top:0;
+}
+
+.section{
+  display:none;
+}
+
+.section.active{
+  display:block;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+}
+
+.item{
+  background:#0c1a31;
+  border:1px solid #1e3250;
+  border-radius:11px;
+  padding:14px;
+}
+
+.btn{
+  border:1px solid #2a4064;
+  background:#0a1627;
+  color:#fff;
+  border-radius:9px;
+  padding:9px 12px;
+  cursor:pointer;
+}
+
+.btn:hover{
+  border-color:#41628e;
+}
+
+.primary{
+  background:#6f42ee;
+  border-color:#7952ef;
+}
+
+.gold{
+  border-color:#665126;
+  color:#e4c26e;
+  background:#1b1609;
+}
+
+.success{
+  border-color:#1e6747;
+  color:#72e6aa;
+  background:#0d261b;
+}
+
+.good{
+  color:#30dc85;
+}
+
+.warn{
+  color:#d8a94c;
+}
+
+.dangerText{
+  color:#ff7c8d;
+}
+
+.statusBox{
+  display:inline-block;
+  padding:6px 10px;
+  border-radius:8px;
+  background:#0c1a31;
+  border:1px solid #344d70;
+}
+
+.formGrid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+}
+
+.formGrid label{
+  color:#8ea0b5;
+  font-size:11px;
+}
+
+.formGrid input{
+  width:100%;
+  margin-top:5px;
+  background:#07101e;
+  border:1px solid #263b5d;
+  color:#fff;
+  border-radius:8px;
+  padding:10px;
+}
+
+.formGrid input:disabled{
+  opacity:.65;
+}
+
+.full{
+  grid-column:1/-1;
+}
+
+.invoiceItem{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:15px;
+  background:#0c1a31;
+  border:1px solid #1e3250;
+  border-radius:11px;
+  padding:14px;
+  margin:9px 0;
+}
+
+.invoiceMeta{
+  color:#899ab0;
+  font-size:11px;
+  margin-top:4px;
+}
+
+.invoiceAmount{
+  font-size:18px;
+  color:#e4c26e;
+  font-weight:700;
+}
+
+.infoBox{
+  border:1px solid #253c5d;
+  background:#081526;
+  border-radius:11px;
+  padding:14px;
+  margin-bottom:14px;
+}
+
+.infoBox b{
+  color:#fff;
+}
+
+.empty{
+  color:#71839a;
+  padding:25px 5px;
+  text-align:center;
+}
+
+.coming{
+  border:1px dashed #344d70;
+  border-radius:12px;
+  padding:25px;
+  color:#8ea0b5;
+  text-align:center;
+}
+
+.coming strong{
+  display:block;
+  color:#fff;
+  font-size:16px;
+  margin-bottom:7px;
+}
+
+.loading{
+  position:fixed;
+  inset:0;
+  z-index:100;
+  background:#020611e8;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:15px;
+}
+
+.loading.hidden{
+  display:none;
+}
+
+.toast{
+  position:fixed;
+  right:20px;
+  bottom:20px;
+  z-index:120;
+  max-width:420px;
+  padding:13px 16px;
+  border-radius:10px;
+  background:#0b1728;
+  border:1px solid #294d73;
+  box-shadow:0 20px 60px #0009;
+  display:none;
+}
+
+.toast.show{
+  display:block;
+}
+
+.toast.ok{
+  border-color:#1e6747;
+  color:#72e6aa;
+}
+
+.toast.err{
+  border-color:#6c2934;
+  color:#ff9aa7;
+}
+
+@media(max-width:1000px){
+  .shell{
+    grid-template-columns:1fr;
+  }
+
+  aside{
+    height:auto;
+    position:relative;
+  }
+
+  nav{
+    display:flex;
+    gap:5px;
+    overflow:auto;
+  }
+
+  nav button,
+  nav a{
+    white-space:nowrap;
+    width:auto;
+  }
+
+  .navBottom{
+    display:flex;
+    margin:0;
+    padding:0;
+    border:0;
+  }
+
+  .metrics{
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+
+@media(max-width:700px){
+  main{
+    padding:16px;
+  }
+
+  .metrics,
+  .grid,
+  .formGrid{
+    grid-template-columns:1fr;
+  }
+
+  .full{
+    grid-column:auto;
+  }
+
+  .top{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .customerName{
+    text-align:left;
+  }
+
+  .invoiceItem{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div
+  id="loading"
+  class="loading"
+>
+  Učitavanje Customer panela...
+</div>
+
+<div
+  id="toast"
+  class="toast"
+></div>
+
+
+<div class="shell">
+
+<aside>
+
+  <div class="brand">
+    BALKAN<span>AGENT</span>
+  </div>
+
+  <div class="tag">
+    CUSTOMER PORTAL
+  </div>
+
+
+  <nav>
+
+    <button
+      class="active"
+      data-tab="dashboard"
+    >
+      Pregled
+    </button>
+
+    <button data-tab="profile">
+      Moj profil
+    </button>
+
+    <button data-tab="invoices">
+      Računi
+    </button>
+
+    <button data-tab="agents">
+      AI zaposleni
+    </button>
+
+    <button data-tab="channels">
+      Integracije
+    </button>
+
+    <button data-tab="subscription">
+      Pretplata
+    </button>
+
+    <div class="navBottom">
+
+      <a href="index.html">
+        ← Nazad na sajt
+      </a>
+
+      <a
+        href="#"
+        id="logoutCustomer"
+      >
+        Logout
+      </a>
+
+    </div>
+
+  </nav>
+
+</aside>
+
+
+<main>
+
+  <div class="top">
+
+    <div>
+
+      <h1 id="title">
+        Pregled
+      </h1>
+
+      <small
+        id="customerEmail"
+        style="color:#8ea0b5"
+      >
+      </small>
+
+    </div>
+
+    <div
+      class="customerName"
+    >
+
+      <b id="topCustomerName">
+        Customer
+      </b>
+
+      <div
+        id="topCompany"
+        style="font-size:11px"
+      >
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- DASHBOARD -->
+
+  <section
+    id="dashboard"
+    class="section active"
+  >
+
+    <div class="metrics">
+
+      <div class="metric">
+
+        <small>
+          PAKET
+        </small>
+
+        <b
+          id="mPlan"
+          style="font-size:20px"
+        >
+          —
+        </b>
+
+      </div>
+
+
+      <div class="metric">
+
+        <small>
+          STATUS NALOGA
+        </small>
+
+        <b
+          id="mAccount"
+          style="font-size:20px"
+        >
+          —
+        </b>
+
+      </div>
+
+
+      <div class="metric">
+
+        <small>
+          PLAĆANJE
+        </small>
+
+        <b
+          id="mPayment"
+          style="font-size:20px"
+        >
+          —
+        </b>
+
+      </div>
+
+
+      <div class="metric">
+
+        <small>
+          RAČUNI
+        </small>
+
+        <b id="mInvoices">
+          0
+        </b>
+
+      </div>
+
+    </div>
+
+
+    <div class="panel">
+
+      <h2>
+        Dobrodošli u Balkan Agent
+      </h2>
+
+      <div
+        class="infoBox"
+      >
+
+        <b id="welcomeName">
+          Customer
+        </b>
+
+        <p
+          style="
+            color:#8ea0b5;
+            margin-bottom:0
+          "
+        >
+          Ovdje možete pregledati svoj paket,
+          profil, status plaćanja i račune.
+          AI zaposleni i integracije biće dostupni
+          kroz ovaj isti portal.
+        </p>
+
+      </div>
+
+
+      <div class="grid">
+
+        <div class="item">
+
+          <small
+            style="color:#8496ad"
+          >
+            AKTIVNI PAKET
+          </small>
+
+          <h3 id="dashboardPlan">
+            —
+          </h3>
+
+          <div
+            class="good"
+            id="dashboardAccount"
+          >
+            —
+          </div>
+
+        </div>
+
+
+        <div class="item">
+
+          <small
+            style="color:#8496ad"
+          >
+            STATUS PLAĆANJA
+          </small>
+
+          <h3 id="dashboardPayment">
+            —
+          </h3>
+
+          <div
+            style="color:#8ea0b5"
+          >
+            Bank transfer / IBAN
+          </div>
+
+        </div>
+
+
+        <div class="item">
+
+          <small
+            style="color:#8496ad"
+          >
+            POSLJEDNJI RAČUN
+          </small>
+
+          <h3 id="lastInvoiceNumber">
+            Nema računa
+          </h3>
+
+          <div
+            id="lastInvoiceInfo"
+            style="color:#8ea0b5"
+          >
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- PROFILE -->
+
+  <section
+    id="profile"
+    class="section"
+  >
+
+    <div class="panel">
+
+      <h2>
+        Moj profil
+      </h2>
+
+      <p
+        style="
+          color:#8ea0b5;
+          margin-top:-5px
+        "
+      >
+        Podaci se čuvaju direktno u Balkan Agent bazi.
+      </p>
+
+
+      <div class="formGrid">
+
+        <label>
+
+          Ime i prezime
+
+          <input
+            id="profileName"
+          >
+
+        </label>
+
+
+        <label>
+
+          Firma
+
+          <input
+            id="profileCompany"
+          >
+
+        </label>
+
+
+        <label>
+
+          Email
+
+          <input
+            id="profileEmail"
+            disabled
+          >
+
+        </label>
+
+
+        <label>
+
+          Broj telefona
+
+          <input
+            id="profilePhone"
+          >
+
+        </label>
+
+
+        <label>
+
+          Način plaćanja
+
+          <input
+            id="profilePaymentMethod"
+            disabled
+          >
+
+        </label>
+
+
+        <label>
+
+          Status plaćanja
+
+          <input
+            id="profilePaymentStatus"
+            disabled
+          >
+
+        </label>
+
+
+        <label>
+
+          IBAN mušterije
+
+          <input
+            id="profileIban"
+            placeholder="Vaš IBAN — opcionalno"
+          >
+
+        </label>
+
+
+        <label>
+
+          Naziv banke
+
+          <input
+            id="profileBank"
+            placeholder="Naziv banke — opcionalno"
+          >
+
+        </label>
+
+
+        <div class="full">
+
+          <button
+            id="saveProfile"
+            class="btn primary"
+          >
+            Sačuvaj podatke
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- INVOICES -->
+
+  <section
+    id="invoices"
+    class="section"
+  >
+
+    <div class="panel">
+
+      <h2>
+        Moji računi
+      </h2>
+
+      <p
+        style="
+          color:#8ea0b5;
+          margin-top:-5px
+        "
+      >
+        Ovdje možete pregledati i preuzeti
+        sve račune povezane sa vašim nalogom.
+      </p>
+
+
+      <div id="invoiceList">
+
+        <div class="empty">
+          Učitavanje računa...
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- AI AGENTS -->
+
+  <section
+    id="agents"
+    class="section"
+  >
+
+    <div class="panel">
+
+      <h2>
+        AI zaposleni
+      </h2>
+
+
+      <div class="coming">
+
+        <strong>
+          AI zaposleni
+        </strong>
+
+        Ova funkcija će biti povezana sa
+        vašim stvarnim Balkan Agent AI agentima
+        u sljedećem koraku.
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- INTEGRATIONS -->
+
+  <section
+    id="channels"
+    class="section"
+  >
+
+    <div class="panel">
+
+      <h2>
+        Integracije
+      </h2>
+
+
+      <div class="grid">
+
+        <div class="item">
+
+          <b>
+            WhatsApp
+          </b>
+
+          <div class="warn">
+            NIJE POVEZANO
+          </div>
+
+        </div>
+
+
+        <div class="item">
+
+          <b>
+            Instagram
+          </b>
+
+          <div class="warn">
+            NIJE POVEZANO
+          </div>
+
+        </div>
+
+
+        <div class="item">
+
+          <b>
+            Website
+          </b>
+
+          <div class="warn">
+            NIJE POVEZANO
+          </div>
+
+        </div>
+
+
+        <div class="item">
+
+          <b>
+            Viber
+          </b>
+
+          <div class="warn">
+            NIJE POVEZANO
+          </div>
+
+        </div>
+
+
+        <div class="item">
+
+          <b>
+            Email
+          </b>
+
+          <div class="warn">
+            NIJE POVEZANO
+          </div>
+
+        </div>
+
+
+        <div class="item">
+
+          <b>
+            Telegram
+          </b>
+
+          <div class="warn">
+            NIJE POVEZANO
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div
+        class="coming"
+        style="margin-top:15px"
+      >
+
+        <strong>
+          Integracije po mušteriji
+        </strong>
+
+        U sljedećem koraku povezaćemo ove kanale
+        sa D1 bazom tako da svaka mušterija ima
+        svoje zasebne konfiguracije.
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- SUBSCRIPTION -->
+
+  <section
+    id="subscription"
+    class="section"
+  >
+
+    <div class="panel">
+
+      <h2>
+        Pretplata
+      </h2>
+
+
+      <div class="grid">
+
+        <div class="item">
+
+          <small
+            style="color:#8496ad"
+          >
+            TRENUTNI PAKET
+          </small>
+
+          <h2 id="subscriptionPlan">
+            —
+          </h2>
+
+        </div>
+
+
+        <div class="item">
+
+          <small
+            style="color:#8496ad"
+          >
+            STATUS NALOGA
+          </small>
+
+          <h2 id="subscriptionAccount">
+            —
+          </h2>
+
+        </div>
+
+
+        <div class="item">
+
+          <small
+            style="color:#8496ad"
+          >
+            STATUS PLAĆANJA
+          </small>
+
+          <h2 id="subscriptionPayment">
+            —
+          </h2>
+
+        </div>
+
+      </div>
+
+
+      <div
+        class="infoBox"
+        style="margin-top:15px"
+      >
+
+        Promjenu paketa trenutno potvrđuje
+        Balkan Agent administrator.
+
+        <br><br>
+
+        Za promjenu paketa kontaktirajte:
+
+        <b>
+          info@balkanagent.com
+        </b>
+
+      </div>
+
+    </div>
+
+  </section>
+
+</main>
+
+</div>
+
+
 <script>
-(function(){
-  try{
-    // Keep the existing customer design/functions, but ensure all public channels exist.
-    const allChannels=['Website','WhatsApp','Instagram','Facebook','Viber','Telegram','Email','SMS'];
-    if(typeof state!=='undefined'){
-      state.channels=state.channels||{};
-      allChannels.forEach(name=>{if(!(name in state.channels)) state.channels[name]=false;});
-      const publicCfg=JSON.parse(localStorage.getItem('ba_integrations')||'{}');
-      allChannels.forEach(name=>{if(publicCfg[name]&&publicCfg[name].configured) state.channels[name]=true;});
-      localStorage.setItem('ba_customer_state_v2',JSON.stringify(state));
-      if(typeof render==='function') render();
+
+/* ==========================================
+   STATE
+========================================== */
+
+let customer = null;
+
+let invoices = [];
+
+
+/* ==========================================
+   API
+========================================== */
+
+async function api(
+  path,
+  options = {}
+) {
+
+  const response =
+    await fetch(
+      path,
+      {
+        ...options,
+
+        headers:{
+          "content-type":
+            "application/json",
+
+          ...(options.headers || {})
+        }
+      }
+    );
+
+
+  const result =
+    await response
+      .json()
+      .catch(
+        () => ({})
+      );
+
+
+  if (!response.ok) {
+
+    throw new Error(
+      result.error ||
+      result.message ||
+      "Request failed"
+    );
+  }
+
+
+  return result;
+}
+
+
+/* ==========================================
+   HELPERS
+========================================== */
+
+function esc(value) {
+
+  return String(
+    value ?? ""
+  ).replace(
+    /[&<>"']/g,
+    char => ({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#39;"
+    }[char])
+  );
+}
+
+
+function money(
+  cents,
+  currency
+) {
+
+  return (
+    Number(
+      cents || 0
+    ) / 100
+  ).toFixed(2) +
+    " " +
+    (
+      currency ||
+      "EUR"
+    );
+}
+
+
+function toast(
+  message,
+  type = "ok"
+) {
+
+  const el =
+    document.getElementById(
+      "toast"
+    );
+
+
+  el.textContent =
+    message;
+
+
+  el.className =
+    `toast show ${
+      type === "err"
+        ? "err"
+        : "ok"
+    }`;
+
+
+  clearTimeout(
+    window.toastTimer
+  );
+
+
+  window.toastTimer =
+    setTimeout(
+      () => {
+
+        el.className =
+          "toast";
+
+      },
+      3500
+    );
+}
+
+
+/* ==========================================
+   LOAD CUSTOMER
+========================================== */
+
+async function loadCustomer() {
+
+  try {
+
+    const me =
+      await api(
+        "/api/auth/me"
+      );
+
+
+    if (
+      me.role !==
+      "customer"
+    ) {
+
+      location.href =
+        "login.html";
+
+      return;
     }
-  }catch(e){console.warn('Customer channel sync skipped',e);}
-})();
-</script>
-<script>
-(function(){
- const b=document.getElementById('logoutCustomer');
- if(b)b.onclick=(e)=>{e.preventDefault();localStorage.removeItem('ba_logged_customer');location.href='login.html';};
-})();
-</script>
-<script>
-(function(){
-  const customersKey='ba_customers_v3';
-  function loadCustomerBilling(){
-    let logged=null;
-    try{logged=JSON.parse(localStorage.getItem('ba_logged_customer')||'null')}catch(e){}
-    if(!logged)return;
-    const all=JSON.parse(localStorage.getItem(customersKey)||'[]');
-    const live=all.find(x=>String(x.id)===String(logged.id))||logged;
-    const byId=id=>document.getElementById(id);
-    if(byId('profileName')) byId('profileName').value=live.name||'';
-    if(byId('profileCompany')) byId('profileCompany').value=live.company||'';
-    if(byId('profileEmail')) byId('profileEmail').value=live.email||'';
-    if(byId('profilePhone')) byId('profilePhone').value=live.phone||'+38268400509';
-    if(byId('profilePaymentMethod')) byId('profilePaymentMethod').value=live.paymentMethod||'Bank transfer / IBAN';
-    if(byId('profileIban')) byId('profileIban').value=live.iban||'';
-    if(byId('profileBank')) byId('profileBank').value=live.bankName||'';
-    if(byId('profilePaymentStatus')) byId('profilePaymentStatus').value=live.paymentStatus||'UNPAID';
 
-    const btn=byId('saveProfileBilling');
-    if(btn) btn.onclick=()=>{
-      live.name=byId('profileName').value.trim();
-      live.company=byId('profileCompany').value.trim();
-      live.phone=byId('profilePhone').value.trim()||'+38268400509';
-      live.paymentMethod='Bank transfer / IBAN';
-      live.iban=byId('profileIban').value.trim();
-      live.bankName=byId('profileBank').value.trim();
-      if(!live.paymentStatus) live.paymentStatus='UNPAID';
 
-      const idx=all.findIndex(x=>String(x.id)===String(live.id));
-      if(idx>=0) all[idx]=live; else all.push(live);
+    customer =
+      me.user;
 
-      localStorage.setItem(customersKey,JSON.stringify(all));
-      localStorage.setItem('ba_logged_customer',JSON.stringify(live));
-      const m=byId('billingMsg');
-      if(m){m.textContent='✓ Sačuvano';setTimeout(()=>m.textContent='',1500);}
-    };
+
+    if (
+      !customer ||
+      !customer.active
+    ) {
+
+      location.href =
+        "login.html";
+
+      return;
+    }
+
+
+    renderCustomer();
+
+
+    await loadInvoices();
+
+
+    document
+      .getElementById(
+        "loading"
+      )
+      .classList
+      .add(
+        "hidden"
+      );
+
+
+  } catch (error) {
+
+    console.error(
+      error
+    );
+
+
+    document
+      .getElementById(
+        "loading"
+      )
+      .classList
+      .add(
+        "hidden"
+      );
+
+
+    toast(
+      error.message,
+      "err"
+    );
+
+
+    setTimeout(
+      () => {
+
+        location.href =
+          "login.html";
+
+      },
+      800
+    );
   }
-  document.addEventListener('DOMContentLoaded',loadCustomerBilling);
-})();
-</script>
+}
 
-<script>
-(async function(){
-  async function api(path,options={}){
-    const r=await fetch(path,{...options,headers:{'content-type':'application/json',...(options.headers||{})}});
-    const j=await r.json().catch(()=>({}));
-    if(!r.ok) throw new Error(j.error||'Request failed');
-    return j;
+
+/* ==========================================
+   CUSTOMER DATA
+========================================== */
+
+function renderCustomer() {
+
+  if (!customer) {
+    return;
   }
-  try{
-    const me=await api('/api/auth/me');
-    if(me.role!=='customer'){location.href='login.html';return;}
-    const u=me.user;
-    const set=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v??''};
-    set('profileName',u.name);set('profileCompany',u.company);set('profileEmail',u.email);
-    set('profilePhone',u.phone);set('profilePaymentMethod',u.payment_method||'Bank transfer / IBAN');
-    set('profileIban',u.iban);set('profileBank',u.bank_name);set('profilePaymentStatus',u.payment_status||'UNPAID');
-    const btn=document.getElementById('saveProfileBilling');
-    if(btn)btn.onclick=async()=>{
-      const j=await api('/api/profile',{method:'PATCH',body:JSON.stringify({
-        name:document.getElementById('profileName').value.trim(),
-        company:document.getElementById('profileCompany').value.trim(),
-        phone:document.getElementById('profilePhone').value.trim(),
-        iban:document.getElementById('profileIban').value.trim(),
-        bank_name:document.getElementById('profileBank').value.trim()
-      })});
-      const m=document.getElementById('billingMsg');if(m){m.textContent='✓ Sačuvano';setTimeout(()=>m.textContent='',1500);}
+
+
+  const paymentStatus =
+    customer.payment_status ||
+    "UNPAID";
+
+
+  document.getElementById(
+    "customerEmail"
+  ).textContent =
+    customer.email || "";
+
+
+  document.getElementById(
+    "topCustomerName"
+  ).textContent =
+    customer.name ||
+    "Customer";
+
+
+  document.getElementById(
+    "topCompany"
+  ).textContent =
+    customer.company ||
+    "";
+
+
+  document.getElementById(
+    "welcomeName"
+  ).textContent =
+    customer.name ||
+    "Customer";
+
+
+  document.getElementById(
+    "mPlan"
+  ).textContent =
+    customer.plan ||
+    "Starter";
+
+
+  document.getElementById(
+    "mAccount"
+  ).textContent =
+    customer.active
+      ? "ACTIVE"
+      : "INACTIVE";
+
+
+  document.getElementById(
+    "mAccount"
+  ).className =
+    customer.active
+      ? "good"
+      : "dangerText";
+
+
+  document.getElementById(
+    "mPayment"
+  ).textContent =
+    paymentStatus;
+
+
+  document.getElementById(
+    "mPayment"
+  ).className =
+    paymentStatus === "PAID"
+      ? "good"
+      : paymentStatus === "OVERDUE"
+        ? "dangerText"
+        : "warn";
+
+
+  document.getElementById(
+    "dashboardPlan"
+  ).textContent =
+    customer.plan ||
+    "Starter";
+
+
+  document.getElementById(
+    "dashboardAccount"
+  ).textContent =
+    customer.active
+      ? "NALOG AKTIVAN"
+      : "NALOG NEAKTIVAN";
+
+
+  document.getElementById(
+    "dashboardPayment"
+  ).textContent =
+    paymentStatus;
+
+
+  document.getElementById(
+    "subscriptionPlan"
+  ).textContent =
+    customer.plan ||
+    "Starter";
+
+
+  document.getElementById(
+    "subscriptionAccount"
+  ).textContent =
+    customer.active
+      ? "ACTIVE"
+      : "INACTIVE";
+
+
+  document.getElementById(
+    "subscriptionAccount"
+  ).className =
+    customer.active
+      ? "good"
+      : "dangerText";
+
+
+  document.getElementById(
+    "subscriptionPayment"
+  ).textContent =
+    paymentStatus;
+
+
+  document.getElementById(
+    "subscriptionPayment"
+  ).className =
+    paymentStatus === "PAID"
+      ? "good"
+      : paymentStatus === "OVERDUE"
+        ? "dangerText"
+        : "warn";
+
+
+  document.getElementById(
+    "profileName"
+  ).value =
+    customer.name ||
+    "";
+
+
+  document.getElementById(
+    "profileCompany"
+  ).value =
+    customer.company ||
+    "";
+
+
+  document.getElementById(
+    "profileEmail"
+  ).value =
+    customer.email ||
+    "";
+
+
+  document.getElementById(
+    "profilePhone"
+  ).value =
+    customer.phone ||
+    "";
+
+
+  document.getElementById(
+    "profilePaymentMethod"
+  ).value =
+    customer.payment_method ||
+    "Bank transfer / IBAN";
+
+
+  document.getElementById(
+    "profilePaymentStatus"
+  ).value =
+    paymentStatus;
+
+
+  document.getElementById(
+    "profileIban"
+  ).value =
+    customer.iban ||
+    "";
+
+
+  document.getElementById(
+    "profileBank"
+  ).value =
+    customer.bank_name ||
+    "";
+}
+
+
+/* ==========================================
+   INVOICES
+========================================== */
+
+async function loadInvoices() {
+
+  try {
+
+    const result =
+      await api(
+        "/api/invoices"
+      );
+
+
+    invoices =
+      result.invoices ||
+      [];
+
+
+    renderInvoices();
+
+
+  } catch (error) {
+
+    document
+      .getElementById(
+        "invoiceList"
+      )
+      .innerHTML =
+        `
+          <div class="empty">
+            Računi trenutno nijesu dostupni.
+          </div>
+        `;
+
+
+    console.error(
+      error
+    );
+  }
+}
+
+
+function renderInvoices() {
+
+  document.getElementById(
+    "mInvoices"
+  ).textContent =
+    invoices.length;
+
+
+  if (
+    invoices.length
+  ) {
+
+    const last =
+      invoices[0];
+
+
+    document.getElementById(
+      "lastInvoiceNumber"
+    ).textContent =
+      last.invoice_number;
+
+
+    document.getElementById(
+      "lastInvoiceInfo"
+    ).textContent =
+      `${last.issue_date} · ${money(
+        last.amount_cents,
+        last.currency
+      )}`;
+
+  } else {
+
+    document.getElementById(
+      "lastInvoiceNumber"
+    ).textContent =
+      "Nema računa";
+
+
+    document.getElementById(
+      "lastInvoiceInfo"
+    ).textContent =
+      "";
+  }
+
+
+  const box =
+    document.getElementById(
+      "invoiceList"
+    );
+
+
+  if (
+    !invoices.length
+  ) {
+
+    box.innerHTML =
+      `
+        <div class="empty">
+          Još nema izdatih računa.
+        </div>
+      `;
+
+    return;
+  }
+
+
+  box.innerHTML =
+    invoices
+      .map(
+        invoice =>
+          `
+
+            <div class="invoiceItem">
+
+              <div>
+
+                <b>
+                  ${esc(invoice.invoice_number)}
+                </b>
+
+                <div class="invoiceMeta">
+
+                  ${esc(invoice.issue_date)}
+
+                  ·
+
+                  ${esc(invoice.plan)}
+
+                  ·
+
+                  Rok:
+                  ${esc(invoice.due_date)}
+
+                </div>
+
+              </div>
+
+
+              <div
+                style="
+                  display:flex;
+                  gap:12px;
+                  align-items:center;
+                  flex-wrap:wrap
+                "
+              >
+
+                <div class="invoiceAmount">
+
+                  ${money(
+                    invoice.amount_cents,
+                    invoice.currency
+                  )}
+
+                </div>
+
+
+                <a
+                  class="btn gold"
+                  href="/api/invoices/${encodeURIComponent(invoice.id)}/pdf"
+                  target="_blank"
+                >
+                  Preuzmi PDF
+                </a>
+
+              </div>
+
+            </div>
+
+          `
+      )
+      .join("");
+}
+
+
+/* ==========================================
+   SAVE PROFILE
+========================================== */
+
+document
+  .getElementById(
+    "saveProfile"
+  )
+  .onclick =
+    async () => {
+
+      const button =
+        document.getElementById(
+          "saveProfile"
+        );
+
+
+      button.disabled =
+        true;
+
+
+      try {
+
+        const result =
+          await api(
+            "/api/profile",
+            {
+              method:"PATCH",
+
+              body:
+                JSON.stringify({
+
+                  name:
+                    document
+                      .getElementById(
+                        "profileName"
+                      )
+                      .value
+                      .trim(),
+
+                  company:
+                    document
+                      .getElementById(
+                        "profileCompany"
+                      )
+                      .value
+                      .trim(),
+
+                  phone:
+                    document
+                      .getElementById(
+                        "profilePhone"
+                      )
+                      .value
+                      .trim(),
+
+                  iban:
+                    document
+                      .getElementById(
+                        "profileIban"
+                      )
+                      .value
+                      .trim(),
+
+                  bank_name:
+                    document
+                      .getElementById(
+                        "profileBank"
+                      )
+                      .value
+                      .trim()
+                })
+            }
+          );
+
+
+        customer =
+          result.user;
+
+
+        renderCustomer();
+
+
+        toast(
+          "Profil je uspješno sačuvan."
+        );
+
+
+      } catch (error) {
+
+        toast(
+          error.message,
+          "err"
+        );
+
+      } finally {
+
+        button.disabled =
+          false;
+      }
     };
-  }catch(e){location.href='login.html'}
-})();
+
+
+/* ==========================================
+   NAVIGATION
+========================================== */
+
+document
+  .querySelectorAll(
+    "nav button[data-tab]"
+  )
+  .forEach(
+    button => {
+
+      button.onclick =
+        () => {
+
+          document
+            .querySelectorAll(
+              ".section"
+            )
+            .forEach(
+              section =>
+                section
+                  .classList
+                  .remove(
+                    "active"
+                  )
+            );
+
+
+          document
+            .getElementById(
+              button.dataset.tab
+            )
+            .classList
+            .add(
+              "active"
+            );
+
+
+          document
+            .querySelectorAll(
+              "nav button[data-tab]"
+            )
+            .forEach(
+              navButton =>
+                navButton
+                  .classList
+                  .remove(
+                    "active"
+                  )
+            );
+
+
+          button
+            .classList
+            .add(
+              "active"
+            );
+
+
+          document
+            .getElementById(
+              "title"
+            )
+            .textContent =
+              button.textContent.trim();
+
+
+          if (
+            button.dataset.tab ===
+            "invoices"
+          ) {
+
+            loadInvoices();
+          }
+        };
+    }
+  );
+
+
+/* ==========================================
+   LOGOUT
+========================================== */
+
+document
+  .getElementById(
+    "logoutCustomer"
+  )
+  .onclick =
+    async event => {
+
+      event.preventDefault();
+
+
+      try {
+
+        await api(
+          "/api/auth/logout",
+          {
+            method:"POST",
+            body:"{}"
+          }
+        );
+
+      } catch {
+
+      }
+
+
+      location.href =
+        "login.html";
+    };
+
+
+/* ==========================================
+   START
+========================================== */
+
+loadCustomer();
+
 </script>
 
-<script>
-(async function(){
-  const box=document.getElementById('invoiceList'); if(!box)return;
-  try{
-    const r=await fetch('/api/invoices',{headers:{'content-type':'application/json'}});
-    const j=await r.json(); if(!r.ok)throw new Error(j.error||'Request failed');
-    if(!j.invoices.length){box.textContent='Još nema izdatih računa.';return;}
-    box.innerHTML=j.invoices.map(i=>`<div class="item" style="margin:8px 0;display:flex;justify-content:space-between;gap:10px;align-items:center"><div><b>${i.invoice_number}</b><br><small>${i.issue_date} · ${i.plan} · ${(i.amount_cents/100).toFixed(2)} ${i.currency}</small></div><a class="btn" href="/api/invoices/${i.id}/pdf">Preuzmi PDF</a></div>`).join('');
-  }catch(e){box.textContent='Računi trenutno nijesu dostupni.'}
-})();
-</script>
-</body></html>
+</body>
+</html>
