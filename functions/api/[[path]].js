@@ -18,112 +18,194 @@ function bad(message, status = 400) {
 function base64url(bytes) {
   let s = "";
   bytes.forEach((b) => (s += String.fromCharCode(b)));
-  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+  return btoa(s)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
 }
 
 function fromBase64url(s) {
   s = s.replace(/-/g, "+").replace(/_/g, "/");
   while (s.length % 4) s += "=";
+
   const bin = atob(s);
-  return Uint8Array.from(bin, (c) => c.charCodeAt(0));
+
+  return Uint8Array.from(
+    bin,
+    (c) => c.charCodeAt(0)
+  );
 }
 
 async function hmac(secret, message) {
   const key = await crypto.subtle.importKey(
     "raw",
     enc.encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
+    {
+      name: "HMAC",
+      hash: "SHA-256",
+    },
     false,
     ["sign", "verify"]
   );
 
   return new Uint8Array(
-    await crypto.subtle.sign("HMAC", key, enc.encode(message))
+    await crypto.subtle.sign(
+      "HMAC",
+      key,
+      enc.encode(message)
+    )
   );
 }
 
 async function makeSession(env, payload) {
-  const body = base64url(enc.encode(JSON.stringify(payload)));
-  const sig = base64url(await hmac(env.SESSION_SECRET, body));
+  const body = base64url(
+    enc.encode(JSON.stringify(payload))
+  );
+
+  const sig = base64url(
+    await hmac(
+      env.SESSION_SECRET,
+      body
+    )
+  );
+
   return `${body}.${sig}`;
 }
 
 async function readSession(request, env) {
-  const cookie = request.headers.get("cookie") || "";
-  const m = cookie.match(/(?:^|;\s*)ba_session=([^;]+)/);
+  const cookie =
+    request.headers.get("cookie") || "";
+
+  const m =
+    cookie.match(
+      /(?:^|;\s*)ba_session=([^;]+)/
+    );
 
   if (!m) return null;
 
-  const [body, sig] = m[1].split(".");
+  const [body, sig] =
+    m[1].split(".");
+
   if (!body || !sig) return null;
 
-  const expected = base64url(await hmac(env.SESSION_SECRET, body));
+  const expected =
+    base64url(
+      await hmac(
+        env.SESSION_SECRET,
+        body
+      )
+    );
+
   if (expected !== sig) return null;
 
   try {
-    const payload = JSON.parse(
-      new TextDecoder().decode(fromBase64url(body))
-    );
+    const payload =
+      JSON.parse(
+        new TextDecoder().decode(
+          fromBase64url(body)
+        )
+      );
 
-    if (!payload.exp || Date.now() > payload.exp) {
+    if (
+      !payload.exp ||
+      Date.now() > payload.exp
+    ) {
       return null;
     }
 
     return payload;
+
   } catch {
     return null;
   }
 }
 
 function sessionCookie(token) {
-  return `ba_session=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800`;
+  return (
+    `ba_session=${token}; ` +
+    `Path=/; ` +
+    `HttpOnly; ` +
+    `Secure; ` +
+    `SameSite=Lax; ` +
+    `Max-Age=604800`
+  );
 }
 
 function clearCookie() {
-  return "ba_session=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0";
+  return (
+    "ba_session=; " +
+    "Path=/; " +
+    "HttpOnly; " +
+    "Secure; " +
+    "SameSite=Lax; " +
+    "Max-Age=0"
+  );
 }
 
 function randomHex(n = 16) {
-  const b = new Uint8Array(n);
+  const b =
+    new Uint8Array(n);
+
   crypto.getRandomValues(b);
 
   return [...b]
-    .map((x) => x.toString(16).padStart(2, "0"))
+    .map(
+      (x) =>
+        x.toString(16)
+          .padStart(2, "0")
+    )
     .join("");
 }
 
-async function hashPassword(password, saltHex) {
-  const pairs = saltHex.match(/../g);
+async function hashPassword(
+  password,
+  saltHex
+) {
+  const pairs =
+    saltHex.match(/../g);
 
   if (!pairs) {
-    throw new Error("Invalid password salt");
+    throw new Error(
+      "Invalid password salt"
+    );
   }
 
-  const salt = Uint8Array.from(
-    pairs.map((h) => parseInt(h, 16))
-  );
+  const salt =
+    Uint8Array.from(
+      pairs.map(
+        (h) => parseInt(h, 16)
+      )
+    );
 
-  const key = await crypto.subtle.importKey(
-    "raw",
-    enc.encode(password),
-    "PBKDF2",
-    false,
-    ["deriveBits"]
-  );
+  const key =
+    await crypto.subtle.importKey(
+      "raw",
+      enc.encode(password),
+      "PBKDF2",
+      false,
+      ["deriveBits"]
+    );
 
-  const bits = await crypto.subtle.deriveBits(
-    {
-      name: "PBKDF2",
-      hash: "SHA-256",
-      salt,
-      iterations: 100000,
-    },
-    key,
-    256
-  );
+  const bits =
+    await crypto.subtle.deriveBits(
+      {
+        name: "PBKDF2",
+        hash: "SHA-256",
+        salt,
+        iterations: 100000,
+      },
+      key,
+      256
+    );
 
-  return [...new Uint8Array(bits)]
-    .map((x) => x.toString(16).padStart(2, "0"))
+  return [
+    ...new Uint8Array(bits),
+  ]
+    .map(
+      (x) =>
+        x.toString(16)
+          .padStart(2, "0")
+    )
     .join("");
 }
 
@@ -134,41 +216,80 @@ function safeUser(row) {
     id: row.id,
     email: row.email,
     name: row.name,
-    company: row.company || "",
-    phone: row.phone || "",
-    plan: row.plan || "Starter",
-    active: !!row.active,
-    role: row.role || "customer",
+    company:
+      row.company || "",
+    phone:
+      row.phone || "",
+    plan:
+      row.plan || "Starter",
+    active:
+      !!row.active,
+    role:
+      row.role || "customer",
     payment_method:
-      row.payment_method || "Bank transfer / IBAN",
-    iban: row.iban || "",
-    bank_name: row.bank_name || "",
+      row.payment_method ||
+      "Bank transfer / IBAN",
+    iban:
+      row.iban || "",
+    bank_name:
+      row.bank_name || "",
     payment_status:
-      row.payment_status || "UNPAID",
-    created_at: row.created_at,
+      row.payment_status ||
+      "UNPAID",
+    created_at:
+      row.created_at,
   };
 }
 
-async function requireSession(request, env) {
-  const s = await readSession(request, env);
+async function requireSession(
+  request,
+  env
+) {
+  const s =
+    await readSession(
+      request,
+      env
+    );
 
   if (!s) {
     return {
-      error: bad("Not authenticated", 401),
+      error:
+        bad(
+          "Not authenticated",
+          401
+        ),
     };
   }
 
-  return { session: s };
+  return {
+    session: s,
+  };
 }
 
-async function requireAdmin(request, env) {
-  const r = await requireSession(request, env);
+async function requireAdmin(
+  request,
+  env
+) {
+  const r =
+    await requireSession(
+      request,
+      env
+    );
 
-  if (r.error) return r;
+  if (r.error) {
+    return r;
+  }
 
-  if (r.session.role !== "admin") {
+  if (
+    r.session.role !==
+    "admin"
+  ) {
     return {
-      error: bad("Admin required", 403),
+      error:
+        bad(
+          "Admin required",
+          403
+        ),
     };
   }
 
@@ -183,18 +304,15 @@ async function parseBody(request) {
   }
 }
 
-
-// ==========================================
-// BALKAN AGENT — INVOICE SYSTEM
-// ==========================================
-
 const PLAN_PRICES = {
   Starter: 4900,
   Business: 7900,
   Pro: 19900,
 };
 
-async function ensureInvoiceSchema(env) {
+async function ensureInvoiceSchema(
+  env
+) {
   await env.DB.prepare(`
     CREATE TABLE IF NOT EXISTS invoices (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -219,15 +337,27 @@ async function ensureInvoiceSchema(env) {
   `).run();
 }
 
-function planAmountCents(plan, env) {
-  if (PLAN_PRICES[plan] !== undefined) {
+function planAmountCents(
+  plan,
+  env
+) {
+  if (
+    PLAN_PRICES[plan] !==
+    undefined
+  ) {
     return PLAN_PRICES[plan];
   }
 
   const custom =
-    Number(env.INVOICE_ENTERPRISE_PRICE_CENTS || 0);
+    Number(
+      env.INVOICE_ENTERPRISE_PRICE_CENTS ||
+      0
+    );
 
-  return Number.isFinite(custom) && custom > 0
+  return (
+    Number.isFinite(custom) &&
+    custom > 0
+  )
     ? Math.round(custom)
     : 0;
 }
@@ -235,8 +365,14 @@ function planAmountCents(plan, env) {
 function ascii(s = "") {
   return String(s)
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^\x20-\x7E]/g, "?");
+    .replace(
+      /[\u0300-\u036f]/g,
+      ""
+    )
+    .replace(
+      /[^\x20-\x7E]/g,
+      "?"
+    );
 }
 
 function pdfEsc(s = "") {
@@ -246,8 +382,16 @@ function pdfEsc(s = "") {
     .replace(/\)/g, "\\)");
 }
 
-function money(cents, currency = "EUR") {
-  return `${(Number(cents || 0) / 100).toFixed(2)} ${currency}`;
+function money(
+  cents,
+  currency = "EUR"
+) {
+  return (
+    `${(
+      Number(cents || 0) /
+      100
+    ).toFixed(2)} ${currency}`
+  );
 }
 
 function dueDate(days = 7) {
@@ -257,100 +401,236 @@ function dueDate(days = 7) {
     d.getUTCDate() + days
   );
 
-  return d.toISOString().slice(0, 10);
+  return d
+    .toISOString()
+    .slice(0, 10);
 }
 
-function makeInvoicePdf(invoice, customer, env) {
+
+// ==========================================
+// PREMIUM BALKAN AGENT INVOICE PDF
+// ==========================================
+
+function makeInvoicePdf(
+  invoice,
+  customer,
+  env
+) {
   const company =
-    env.INVOICE_COMPANY_NAME || "Balkan Agent";
+    env.INVOICE_COMPANY_NAME ||
+    "Balkan Agent";
 
   const address =
-    env.INVOICE_COMPANY_ADDRESS || "";
+    env.INVOICE_COMPANY_ADDRESS ||
+    "Ulcinj, Montenegro";
 
   const tax =
-    env.INVOICE_TAX_ID || "";
+    env.INVOICE_TAX_ID ||
+    "";
 
   const iban =
-    env.INVOICE_IBAN || "";
+    env.INVOICE_IBAN ||
+    "DE40100110012345833417";
 
   const bank =
-    env.INVOICE_BANK_NAME || "";
+    env.INVOICE_BANK_NAME ||
+    "";
 
   const swift =
-    env.INVOICE_SWIFT || "";
+    env.INVOICE_SWIFT ||
+    "";
 
   const phone =
-    env.INVOICE_PHONE || "+382 68 400 509";
+    env.INVOICE_PHONE ||
+    "+382 68 400 509";
 
   const email =
     env.INVOICE_CONTACT_EMAIL ||
     "info@balkanagent.com";
 
+  const accountHolder =
+    env.INVOICE_ACCOUNT_HOLDER ||
+    "Fariz Suljevic";
+
+  const total =
+    money(
+      invoice.amount_cents,
+      invoice.currency
+    );
+
   const lines = [
-    ["B", "BALKAN AGENT", 48, 795, 18],
-    ["R", "AI Automation & Digital Solutions", 48, 778, 9],
+    ["B", "BALKAN AGENT", 48, 794, 19, "navy"],
+    ["R", "AI SOLUTIONS & AUTOMATION", 48, 777, 8, "gold"],
+    ["R", "Made in Montenegro", 48, 763, 7, "muted"],
 
-    ["B", "INVOICE", 430, 795, 22],
-    ["R", `Invoice No: ${invoice.invoice_number}`, 430, 773, 9],
-    ["R", `Issue date: ${invoice.issue_date}`, 430, 760, 9],
-    ["R", `Due date: ${invoice.due_date}`, 430, 747, 9],
+    ["B", "INVOICE", 430, 794, 21, "navy"],
+    ["R", `Invoice No: ${invoice.invoice_number}`, 430, 771, 8, "normal"],
+    ["R", `Issue date: ${invoice.issue_date}`, 430, 758, 8, "normal"],
+    ["R", `Due date: ${invoice.due_date}`, 430, 745, 8, "normal"],
 
-    ["B", "FROM", 48, 714, 9],
-    ["R", company, 48, 697, 10],
-    ["R", address, 48, 683, 8],
-    ["R", tax ? `Tax ID: ${tax}` : "", 48, 670, 8],
-    ["R", `Phone: ${phone}`, 48, 657, 8],
-    ["R", `Email: ${email}`, 48, 644, 8],
+    ["B", "FROM", 48, 705, 8, "gold"],
+    ["B", company, 48, 687, 10, "navy"],
+    ["R", address, 48, 673, 8, "normal"],
+    ["R", tax ? `Tax ID: ${tax}` : "", 48, 660, 8, "normal"],
+    ["R", `Phone: ${phone}`, 48, 647, 8, "normal"],
+    ["R", `Email: ${email}`, 48, 634, 8, "normal"],
 
-    ["B", "BILL TO", 315, 714, 9],
-    ["R", customer.company || customer.name, 315, 697, 10],
-    ["R", customer.name, 315, 683, 8],
-    ["R", customer.email, 315, 670, 8],
-    ["R", customer.phone || "", 315, 657, 8],
+    ["B", "BILL TO", 315, 705, 8, "gold"],
+    [
+      "B",
+      customer.company ||
+      customer.name ||
+      "",
+      315,
+      687,
+      10,
+      "navy"
+    ],
+    [
+      "R",
+      customer.company
+        ? customer.name || ""
+        : "",
+      315,
+      673,
+      8,
+      "normal"
+    ],
+    ["R", customer.email || "", 315, 660, 8, "normal"],
+    ["R", customer.phone || "", 315, 647, 8, "normal"],
 
-    ["B", "DESCRIPTION / SERVICE", 48, 604, 8],
-    ["B", "AMOUNT", 455, 604, 8],
-
-    ["R", invoice.description, 48, 578, 10],
-    ["R", money(invoice.amount_cents, invoice.currency), 455, 578, 10],
-
-    ["B", "TOTAL", 390, 520, 11],
-    ["B", money(invoice.amount_cents, invoice.currency), 455, 520, 11],
-
-    ["B", "PAYMENT DETAILS", 48, 465, 9],
-    ["R", `Account holder: ${company}`, 48, 447, 8],
-    ["R", `Bank: ${bank}`, 48, 433, 8],
-    ["R", `IBAN: ${iban}`, 48, 419, 8],
-    ["R", `SWIFT / BIC: ${swift}`, 48, 405, 8],
-    ["R", `Payment reference: ${invoice.invoice_number}`, 48, 391, 8],
+    ["B", "DESCRIPTION / SERVICE", 48, 586, 8, "white"],
+    ["B", "AMOUNT", 455, 586, 8, "white"],
 
     [
       "R",
-      "Thank you for choosing Balkan Agent - intelligent automation for modern business.",
+      invoice.description ||
+      `Balkan Agent ${invoice.plan || ""} plan - monthly service`,
       48,
-      92,
-      8,
+      552,
+      9,
+      "normal"
     ],
-  ].filter((x) => x[1]);
+
+    ["B", total, 455, 552, 9, "navy"],
+    ["B", "TOTAL", 392, 500, 10, "navy"],
+    ["B", total, 455, 500, 11, "gold"],
+
+    ["B", "PAYMENT DETAILS", 48, 451, 9, "gold"],
+    ["R", `Account holder: ${accountHolder}`, 48, 431, 8, "normal"],
+    ["R", bank ? `Bank: ${bank}` : "", 48, 416, 8, "normal"],
+    ["R", `IBAN: ${iban}`, 48, 401, 8, "normal"],
+    ["R", swift ? `SWIFT / BIC: ${swift}` : "", 48, 386, 8, "normal"],
+    ["R", `Payment reference: ${invoice.invoice_number}`, 48, 371, 8, "normal"],
+
+    ["B", "IMPORTANT", 48, 328, 8, "gold"],
+    [
+      "R",
+      `Please include ${invoice.invoice_number} as the payment reference.`,
+      48,
+      311,
+      8,
+      "normal"
+    ],
+
+    ["B", "BALKAN AGENT", 48, 115, 9, "navy"],
+    [
+      "R",
+      "Smart automation. Real results. Built for modern business.",
+      48,
+      99,
+      8,
+      "normal"
+    ],
+    [
+      "R",
+      `${email}  |  ${phone}  |  balkanagent.com`,
+      48,
+      83,
+      7,
+      "muted"
+    ],
+
+    ["B", "Thank you for your business.", 380, 104, 9, "gold"],
+    ["R", "Fariz Suljevic", 430, 83, 8, "normal"],
+  ].filter(
+    (x) => x[1]
+  );
 
   let stream = "";
 
   stream +=
-    "0.04 0.09 0.20 rg 0 812 595 30 re f\n";
+    "1 1 1 rg 0 0 595 842 re f\n";
 
   stream +=
-    "0.78 0.63 0.29 rg 0 0 595 8 re f\n";
+    "0.04 0.09 0.20 rg 0 832 595 10 re f\n";
 
   stream +=
-    "0.78 0.63 0.29 RG 1.5 w 48 728 m 547 728 l S\n";
+    "0.78 0.63 0.29 rg 0 824 595 3 re f\n";
 
   stream +=
-    "0.88 0.90 0.94 RG 0.6 w 48 592 m 547 592 l S 48 550 m 547 550 l S\n";
+    "0.78 0.63 0.29 RG 1.2 w 48 730 m 547 730 l S\n";
 
-  for (const [font, text, x, y, size] of lines) {
+  stream +=
+    "0.04 0.09 0.20 rg 48 570 499 30 re f\n";
+
+  stream +=
+    "0.97 0.98 0.99 rg 48 530 499 40 re f\n";
+
+  stream +=
+    "0.87 0.89 0.92 RG 0.6 w 48 530 m 547 530 l S\n";
+
+  stream +=
+    "0.78 0.63 0.29 RG 1.1 w 390 486 m 547 486 l S\n";
+
+  stream +=
+    "0.97 0.98 0.99 rg 48 355 499 82 re f\n";
+
+  stream +=
+    "0.78 0.63 0.29 rg 48 355 4 82 re f\n";
+
+  stream +=
+    "0.87 0.89 0.92 RG 0.6 w 48 140 m 547 140 l S\n";
+
+  stream +=
+    "0.04 0.09 0.20 rg 0 0 595 16 re f\n";
+
+  stream +=
+    "0.78 0.63 0.29 rg 0 16 595 3 re f\n";
+
+  function colorFor(type) {
+    if (type === "gold") {
+      return "0.62 0.47 0.16";
+    }
+
+    if (type === "navy") {
+      return "0.04 0.09 0.20";
+    }
+
+    if (type === "muted") {
+      return "0.42 0.46 0.52";
+    }
+
+    if (type === "white") {
+      return "1 1 1";
+    }
+
+    return "0.20 0.24 0.30";
+  }
+
+  for (
+    const [
+      font,
+      text,
+      x,
+      y,
+      size,
+      color
+    ] of lines
+  ) {
     stream +=
       `BT /F${font === "B" ? 2 : 1} ${size} Tf ` +
-      `${font === "B" ? "0.04 0.09 0.20" : "0.20 0.25 0.33"} rg ` +
+      `${colorFor(color)} rg ` +
       `${x} ${y} Td (${pdfEsc(text)}) Tj ET\n`;
   }
 
@@ -375,48 +655,81 @@ function makeInvoicePdf(invoice, customer, env) {
     "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>";
 
   objs[6] =
-    `<< /Length ${stream.length} >>\nstream\n${stream}endstream`;
+    `<< /Length ${stream.length} >>\n` +
+    `stream\n${stream}endstream`;
 
-  let pdf = "%PDF-1.4\n";
+  let pdf =
+    "%PDF-1.4\n";
+
   const offs = [0];
 
-  for (let i = 1; i <= 6; i++) {
-    offs[i] = pdf.length;
+  for (
+    let i = 1;
+    i <= 6;
+    i++
+  ) {
+    offs[i] =
+      pdf.length;
 
     pdf +=
-      `${i} 0 obj\n${objs[i]}\nendobj\n`;
+      `${i} 0 obj\n` +
+      `${objs[i]}\n` +
+      `endobj\n`;
   }
 
-  const xref = pdf.length;
+  const xref =
+    pdf.length;
 
   pdf +=
-    "xref\n0 7\n0000000000 65535 f \n";
+    "xref\n" +
+    "0 7\n" +
+    "0000000000 65535 f \n";
 
-  for (let i = 1; i <= 6; i++) {
+  for (
+    let i = 1;
+    i <= 6;
+    i++
+  ) {
     pdf +=
-      String(offs[i]).padStart(10, "0") +
+      String(offs[i])
+        .padStart(10, "0") +
       " 00000 n \n";
   }
 
   pdf +=
-    `trailer\n<< /Size 7 /Root 1 0 R >>\n` +
-    `startxref\n${xref}\n%%EOF`;
+    `trailer\n` +
+    `<< /Size 7 /Root 1 0 R >>\n` +
+    `startxref\n` +
+    `${xref}\n` +
+    `%%EOF`;
 
   return enc.encode(pdf);
 }
 
+
 function bytesToBase64(bytes) {
   let out = "";
-  const chunk = 0x8000;
 
-  for (let i = 0; i < bytes.length; i += chunk) {
-    out += String.fromCharCode(
-      ...bytes.subarray(i, i + chunk)
-    );
+  const chunk =
+    0x8000;
+
+  for (
+    let i = 0;
+    i < bytes.length;
+    i += chunk
+  ) {
+    out +=
+      String.fromCharCode(
+        ...bytes.subarray(
+          i,
+          i + chunk
+        )
+      );
   }
 
   return btoa(out);
 }
+
 
 async function sendInvoiceEmail(
   env,
@@ -431,10 +744,14 @@ async function sendInvoiceEmail(
 
   const from =
     env.INVOICE_FROM_EMAIL ||
-    "Balkan Agent <invoices@balkanagent.com>";
+    "Balkan Agent <info@balkanagent.com>";
 
   const pdf =
-    makeInvoicePdf(invoice, customer, env);
+    makeInvoicePdf(
+      invoice,
+      customer,
+      env
+    );
 
   const total =
     money(
@@ -442,115 +759,228 @@ async function sendInvoiceEmail(
       invoice.currency
     );
 
+  const safeName =
+    String(
+      customer.name ||
+      customer.company ||
+      "Customer"
+    )
+      .replace(
+        /[<>]/g,
+        ""
+      );
+
   const html = `
     <div style="
-      font-family:Arial,sans-serif;
+      margin:0;
+      padding:0;
+      background:#f5f7fa;
+      font-family:Arial,Helvetica,sans-serif;
       color:#0a1733;
-      max-width:640px;
-      margin:auto
     ">
 
       <div style="
-        border-top:8px solid #0a1733;
-        padding:24px 0 10px;
-        border-bottom:2px solid #c7a24a
+        max-width:640px;
+        margin:0 auto;
+        background:#ffffff;
+        border-top:6px solid #0a1733;
       ">
 
-        <h1 style="margin:0">
-          BALKAN AGENT
-        </h1>
+        <div style="
+          padding:30px 34px 24px;
+          border-bottom:2px solid #c7a24a;
+        ">
 
-        <div style="color:#667085">
-          AI Automation & Digital Solutions
+          <div style="
+            font-size:24px;
+            font-weight:700;
+            letter-spacing:.5px;
+          ">
+            BALKAN AGENT
+          </div>
+
+          <div style="
+            margin-top:5px;
+            color:#a17c2c;
+            font-size:12px;
+            letter-spacing:1.2px;
+          ">
+            AI SOLUTIONS & AUTOMATION
+          </div>
+
         </div>
+
+        <div style="
+          padding:32px 34px;
+        ">
+
+          <div style="
+            color:#667085;
+            font-size:13px;
+          ">
+            Invoice ${invoice.invoice_number}
+          </div>
+
+          <h2 style="
+            margin:8px 0 20px;
+            font-size:24px;
+            color:#0a1733;
+          ">
+            Your Balkan Agent invoice
+          </h2>
+
+          <p style="
+            font-size:15px;
+            line-height:1.7;
+          ">
+            Hello ${safeName},
+          </p>
+
+          <p style="
+            font-size:15px;
+            line-height:1.7;
+          ">
+            Your Balkan Agent account has been activated.
+            Your invoice is attached to this email as a PDF.
+          </p>
+
+          <div style="
+            margin:25px 0;
+            padding:20px;
+            background:#f7f8fa;
+            border-left:4px solid #c7a24a;
+          ">
+
+            <div style="
+              margin-bottom:8px;
+            ">
+              <strong>Plan:</strong>
+              ${invoice.plan || ""}
+            </div>
+
+            <div style="
+              margin-bottom:8px;
+            ">
+              <strong>Total:</strong>
+              ${total}
+            </div>
+
+            <div>
+              <strong>Due date:</strong>
+              ${invoice.due_date}
+            </div>
+
+          </div>
+
+          <p style="
+            font-size:14px;
+            line-height:1.7;
+            color:#475467;
+          ">
+            Please use
+            <strong>${invoice.invoice_number}</strong>
+            as the payment reference when making
+            your bank transfer.
+          </p>
+
+          <p style="
+            margin-top:30px;
+            font-size:14px;
+          ">
+            Thank you for choosing Balkan Agent.
+          </p>
+
+        </div>
+
+        <div style="
+          padding:20px 34px;
+          background:#0a1733;
+          color:#ffffff;
+          font-size:12px;
+          line-height:1.7;
+        ">
+
+          <strong>Balkan Agent</strong><br>
+
+          AI Solutions & Automation<br>
+
+          +382 68 400 509 ·
+          info@balkanagent.com ·
+          balkanagent.com
+
+        </div>
+
+        <div style="
+          height:4px;
+          background:#c7a24a;
+        "></div>
+
       </div>
-
-      <h2>
-        Your invoice ${invoice.invoice_number}
-      </h2>
-
-      <p>
-        Hello ${
-          String(customer.name || "")
-            .replace(/[<>]/g, "")
-        },
-        your Balkan Agent account has been activated.
-      </p>
-
-      <p>
-        <b>Plan:</b> ${invoice.plan}
-        <br>
-        <b>Total:</b> ${total}
-        <br>
-        <b>Due date:</b> ${invoice.due_date}
-      </p>
-
-      <p>
-        Your PDF invoice is attached to this email.
-      </p>
-
-      <p style="
-        color:#667085;
-        font-size:13px
-      ">
-        Balkan Agent · +382 68 400 509 ·
-        info@balkanagent.com · balkanagent.com
-      </p>
 
     </div>
   `;
 
-  const r = await fetch(
-    "https://api.resend.com/emails",
-    {
-      method: "POST",
+  const r =
+    await fetch(
+      "https://api.resend.com/emails",
+      {
+        method: "POST",
 
-      headers: {
-        authorization:
-          `Bearer ${env.RESEND_API_KEY}`,
+        headers: {
+          authorization:
+            `Bearer ${env.RESEND_API_KEY}`,
 
-        "content-type":
-          "application/json",
-      },
+          "content-type":
+            "application/json",
+        },
 
-      body: JSON.stringify({
-        from,
+        body:
+          JSON.stringify({
+            from,
 
-        to: [
-          customer.email,
-        ],
+            to: [
+              customer.email,
+            ],
 
-        subject:
-          `Balkan Agent invoice ${invoice.invoice_number}`,
+            reply_to:
+              "info@balkanagent.com",
 
-        html,
+            subject:
+              `Balkan Agent invoice ${invoice.invoice_number}`,
 
-        attachments: [
-          {
-            filename:
-              `${invoice.invoice_number}.pdf`,
+            html,
 
-            content:
-              bytesToBase64(pdf),
-          },
-        ],
-      }),
-    }
-  );
+            attachments: [
+              {
+                filename:
+                  `${invoice.invoice_number}.pdf`,
+
+                content:
+                  bytesToBase64(pdf),
+              },
+            ],
+          }),
+      }
+    );
 
   const j =
-    await r.json().catch(() => ({}));
+    await r
+      .json()
+      .catch(
+        () => ({})
+      );
 
   if (!r.ok) {
     throw new Error(
       j.message ||
       j.error ||
-      `Email provider error ${r.status}`
+      `Resend error ${r.status}`
     );
   }
 
   return j.id || "";
 }
+
 
 async function createActivationInvoice(
   env,
@@ -586,26 +1016,31 @@ async function createActivationInvoice(
         due_date
       )
       VALUES (
-        ?, ?, ?, ?, ?,
+        ?,
+        ?,
+        ?,
+        ?,
+        ?,
         'EUR',
         'ISSUED',
         date('now'),
         ?
       )
     `)
-    .bind(
-      customer.id,
-      tmp,
-      customer.plan,
-      description,
-      amount,
-      dueDate(
-        Number(
-          env.INVOICE_DUE_DAYS || 7
+      .bind(
+        customer.id,
+        tmp,
+        customer.plan,
+        description,
+        amount,
+        dueDate(
+          Number(
+            env.INVOICE_DUE_DAYS ||
+            7
+          )
         )
       )
-    )
-    .run();
+      .run();
 
   const id =
     Number(
@@ -620,23 +1055,25 @@ async function createActivationInvoice(
   }
 
   const year =
-    new Date().getUTCFullYear();
+    new Date()
+      .getUTCFullYear();
 
   const number =
     `BA-${year}-${String(id).padStart(6, "0")}`;
 
-  await env.DB
-    .prepare(
-      "UPDATE invoices SET invoice_number=? WHERE id=?"
+  await env.DB.prepare(
+    "UPDATE invoices SET invoice_number=? WHERE id=?"
+  )
+    .bind(
+      number,
+      id
     )
-    .bind(number, id)
     .run();
 
   let invoice =
-    await env.DB
-      .prepare(
-        "SELECT * FROM invoices WHERE id=?"
-      )
+    await env.DB.prepare(
+      "SELECT * FROM invoices WHERE id=?"
+    )
       .bind(id)
       .first();
 
@@ -655,17 +1092,16 @@ async function createActivationInvoice(
         email_provider_id=?
       WHERE id=?
     `)
-    .bind(
-      providerId,
-      id
-    )
-    .run();
+      .bind(
+        providerId,
+        id
+      )
+      .run();
 
     invoice =
-      await env.DB
-        .prepare(
-          "SELECT * FROM invoices WHERE id=?"
-        )
+      await env.DB.prepare(
+        "SELECT * FROM invoices WHERE id=?"
+      )
         .bind(id)
         .first();
 
@@ -679,24 +1115,24 @@ async function createActivationInvoice(
       invoice,
       email_sent: false,
       email_error:
-        e.message,
+        e && e.message
+          ? e.message
+          : String(e),
     };
   }
 }
 
 
-// ==========================================
-// MAIN API ROUTER
-// ==========================================
-
 export async function onRequest(context) {
   const {
     request,
-    env,
+    env
   } = context;
 
   const url =
-    new URL(request.url);
+    new URL(
+      request.url
+    );
 
   const path =
     url.pathname.replace(
@@ -705,7 +1141,8 @@ export async function onRequest(context) {
     );
 
   const method =
-    request.method.toUpperCase();
+    request.method
+      .toUpperCase();
 
 
   if (!env.DB) {
@@ -730,37 +1167,45 @@ export async function onRequest(context) {
   }
 
 
-  // ==========================================
-  // REGISTER CUSTOMER
-  // ==========================================
-
   if (
     path === "auth/register" &&
     method === "POST"
   ) {
     try {
       const b =
-        await parseBody(request);
+        await parseBody(
+          request
+        );
 
       const name =
-        String(b.name || "")
+        String(
+          b.name || ""
+        )
           .trim();
 
       const company =
-        String(b.company || "")
+        String(
+          b.company || ""
+        )
           .trim();
 
       const email =
-        String(b.email || "")
+        String(
+          b.email || ""
+        )
           .trim()
           .toLowerCase();
 
       const phone =
-        String(b.phone || "")
+        String(
+          b.phone || ""
+        )
           .trim();
 
       const password =
-        String(b.password || "");
+        String(
+          b.password || ""
+        );
 
 
       if (
@@ -787,10 +1232,9 @@ export async function onRequest(context) {
 
 
       const exists =
-        await env.DB
-          .prepare(
-            "SELECT id FROM users WHERE email=?"
-          )
+        await env.DB.prepare(
+          "SELECT id FROM users WHERE email=?"
+        )
           .bind(email)
           .first();
 
@@ -806,8 +1250,8 @@ export async function onRequest(context) {
       const salt =
         randomHex(16);
 
-
       let password_hash;
+
 
       try {
         password_hash =
@@ -818,12 +1262,11 @@ export async function onRequest(context) {
 
       } catch (e) {
         return bad(
-          "Password hashing error: " +
-          (
+          `Password hashing error: ${
             e && e.message
               ? e.message
               : String(e)
-          ),
+          }`,
           500
         );
       }
@@ -851,7 +1294,14 @@ export async function onRequest(context) {
             created_at
           )
           VALUES (
-            ?,?,?,?,?,?,?,?,
+            ?,
+            ?,
+            ?,
+            ?,
+            ?,
+            ?,
+            ?,
+            ?,
             0,
             'customer',
             'Bank transfer / IBAN',
@@ -859,26 +1309,25 @@ export async function onRequest(context) {
             datetime('now')
           )
         `)
-        .bind(
-          id,
-          email,
-          password_hash,
-          salt,
-          name,
-          company,
-          phone,
-          "Starter"
-        )
-        .run();
+          .bind(
+            id,
+            email,
+            password_hash,
+            salt,
+            name,
+            company,
+            phone,
+            "Starter"
+          )
+          .run();
 
       } catch (e) {
         return bad(
-          "Database error: " +
-          (
+          `Database error: ${
             e && e.message
               ? e.message
               : String(e)
-          ),
+          }`,
           500
         );
       }
@@ -896,39 +1345,38 @@ export async function onRequest(context) {
 
     } catch (e) {
       return bad(
-        "Registration backend error: " +
-        (
+        `Registration backend error: ${
           e && e.message
             ? e.message
             : String(e)
-        ),
+        }`,
         500
       );
     }
   }
 
 
-  // ==========================================
-  // LOGIN ADMIN + CUSTOMER
-  // ==========================================
-
   if (
     path === "auth/login" &&
     method === "POST"
   ) {
     const b =
-      await parseBody(request);
+      await parseBody(
+        request
+      );
 
     const email =
-      String(b.email || "")
+      String(
+        b.email || ""
+      )
         .trim()
         .toLowerCase();
 
     const password =
-      String(b.password || "");
+      String(
+        b.password || ""
+      );
 
-
-    // ADMIN
 
     if (
       email ===
@@ -954,7 +1402,11 @@ export async function onRequest(context) {
             email,
             exp:
               Date.now() +
-              7 * 24 * 60 * 60 * 1000,
+              7 *
+              24 *
+              60 *
+              60 *
+              1000,
           }
         );
 
@@ -967,23 +1419,24 @@ export async function onRequest(context) {
         200,
         {
           "set-cookie":
-            sessionCookie(token),
+            sessionCookie(
+              token
+            ),
         }
       );
     }
 
 
-    // CUSTOMER
-
     const user =
       await env.DB.prepare(`
         SELECT *
         FROM users
-        WHERE email=?
-        AND role='customer'
+        WHERE
+          email=?
+          AND role='customer'
       `)
-      .bind(email)
-      .first();
+        .bind(email)
+        .first();
 
 
     if (!user) {
@@ -1024,12 +1477,22 @@ export async function onRequest(context) {
       await makeSession(
         env,
         {
-          sub: user.id,
-          role: "customer",
-          email: user.email,
+          sub:
+            user.id,
+
+          role:
+            "customer",
+
+          email:
+            user.email,
+
           exp:
             Date.now() +
-            7 * 24 * 60 * 60 * 1000,
+            7 *
+            24 *
+            60 *
+            60 *
+            1000,
         }
       );
 
@@ -1044,15 +1507,13 @@ export async function onRequest(context) {
       200,
       {
         "set-cookie":
-          sessionCookie(token),
+          sessionCookie(
+            token
+          ),
       }
     );
   }
 
-
-  // ==========================================
-  // LOGOUT
-  // ==========================================
 
   if (
     path === "auth/logout" &&
@@ -1070,10 +1531,6 @@ export async function onRequest(context) {
     );
   }
 
-
-  // ==========================================
-  // CURRENT LOGIN / SESSION
-  // ==========================================
 
   if (
     path === "auth/me" &&
@@ -1105,10 +1562,9 @@ export async function onRequest(context) {
 
 
     const user =
-      await env.DB
-        .prepare(
-          "SELECT * FROM users WHERE id=?"
-        )
+      await env.DB.prepare(
+        "SELECT * FROM users WHERE id=?"
+      )
         .bind(
           r.session.sub
         )
@@ -1135,10 +1591,6 @@ export async function onRequest(context) {
   }
 
 
-  // ==========================================
-  // CUSTOMER PROFILE
-  // ==========================================
-
   if (
     path === "profile" &&
     method === "GET"
@@ -1149,9 +1601,11 @@ export async function onRequest(context) {
         env
       );
 
+
     if (r.error) {
       return r.error;
     }
+
 
     if (
       r.session.role !==
@@ -1163,15 +1617,16 @@ export async function onRequest(context) {
       );
     }
 
+
     const user =
-      await env.DB
-        .prepare(
-          "SELECT * FROM users WHERE id=?"
-        )
+      await env.DB.prepare(
+        "SELECT * FROM users WHERE id=?"
+      )
         .bind(
           r.session.sub
         )
         .first();
+
 
     return json({
       ok: true,
@@ -1191,9 +1646,11 @@ export async function onRequest(context) {
         env
       );
 
+
     if (r.error) {
       return r.error;
     }
+
 
     if (
       r.session.role !==
@@ -1205,27 +1662,41 @@ export async function onRequest(context) {
       );
     }
 
+
     const b =
-      await parseBody(request);
+      await parseBody(
+        request
+      );
+
 
     const name =
-      String(b.name || "")
+      String(
+        b.name || ""
+      )
         .trim();
 
     const company =
-      String(b.company || "")
+      String(
+        b.company || ""
+      )
         .trim();
 
     const phone =
-      String(b.phone || "")
+      String(
+        b.phone || ""
+      )
         .trim();
 
     const iban =
-      String(b.iban || "")
+      String(
+        b.iban || ""
+      )
         .trim();
 
     const bank =
-      String(b.bank_name || "")
+      String(
+        b.bank_name || ""
+      )
         .trim();
 
 
@@ -1248,22 +1719,21 @@ export async function onRequest(context) {
         payment_method='Bank transfer / IBAN'
       WHERE id=?
     `)
-    .bind(
-      name,
-      company,
-      phone,
-      iban,
-      bank,
-      r.session.sub
-    )
-    .run();
+      .bind(
+        name,
+        company,
+        phone,
+        iban,
+        bank,
+        r.session.sub
+      )
+      .run();
 
 
     const user =
-      await env.DB
-        .prepare(
-          "SELECT * FROM users WHERE id=?"
-        )
+      await env.DB.prepare(
+        "SELECT * FROM users WHERE id=?"
+      )
         .bind(
           r.session.sub
         )
@@ -1278,13 +1748,8 @@ export async function onRequest(context) {
   }
 
 
-  // ==========================================
-  // ADMIN — LIST CUSTOMERS
-  // ==========================================
-
   if (
-    path ===
-      "admin/customers" &&
+    path === "admin/customers" &&
     method === "GET"
   ) {
     const r =
@@ -1293,27 +1758,33 @@ export async function onRequest(context) {
         env
       );
 
+
     if (r.error) {
       return r.error;
     }
 
 
     const rows =
-      await env.DB
-        .prepare(`
-          SELECT *
-          FROM users
-          WHERE role='customer'
-          ORDER BY created_at DESC
-        `)
+      await env.DB.prepare(`
+        SELECT *
+        FROM users
+        WHERE role='customer'
+        ORDER BY created_at DESC
+      `)
         .all();
 
 
     return json({
       ok: true,
+
       customers:
-        (rows.results || [])
-          .map(safeUser),
+        (
+          rows.results ||
+          []
+        )
+          .map(
+            safeUser
+          ),
     });
   }
 
@@ -1323,10 +1794,6 @@ export async function onRequest(context) {
       /^admin\/customers\/([^/]+)$/
     );
 
-
-  // ==========================================
-  // ADMIN — UPDATE CUSTOMER
-  // ==========================================
 
   if (
     customerMatch &&
@@ -1338,6 +1805,7 @@ export async function onRequest(context) {
         env
       );
 
+
     if (r.error) {
       return r.error;
     }
@@ -1346,18 +1814,21 @@ export async function onRequest(context) {
     const id =
       customerMatch[1];
 
+
     const b =
-      await parseBody(request);
+      await parseBody(
+        request
+      );
 
 
     const current =
-      await env.DB
-        .prepare(`
-          SELECT *
-          FROM users
-          WHERE id=?
+      await env.DB.prepare(`
+        SELECT *
+        FROM users
+        WHERE
+          id=?
           AND role='customer'
-        `)
+      `)
         .bind(id)
         .first();
 
@@ -1387,19 +1858,25 @@ export async function onRequest(context) {
     const phone =
       b.phone === undefined
         ? current.phone
-        : String(b.phone || "");
+        : String(
+            b.phone || ""
+          );
 
 
     const iban =
       b.iban === undefined
         ? current.iban
-        : String(b.iban || "");
+        : String(
+            b.iban || ""
+          );
 
 
     const bank =
       b.bank_name === undefined
         ? current.bank_name
-        : String(b.bank_name || "");
+        : String(
+            b.bank_name || ""
+          );
 
 
     const paymentStatus =
@@ -1420,26 +1897,26 @@ export async function onRequest(context) {
         bank_name=?,
         payment_status=?,
         payment_method='Bank transfer / IBAN'
-      WHERE id=?
-      AND role='customer'
+      WHERE
+        id=?
+        AND role='customer'
     `)
-    .bind(
-      active,
-      plan,
-      phone,
-      iban,
-      bank,
-      paymentStatus,
-      id
-    )
-    .run();
+      .bind(
+        active,
+        plan,
+        phone,
+        iban,
+        bank,
+        paymentStatus,
+        id
+      )
+      .run();
 
 
     const updated =
-      await env.DB
-        .prepare(
-          "SELECT * FROM users WHERE id=?"
-        )
+      await env.DB.prepare(
+        "SELECT * FROM users WHERE id=?"
+      )
         .bind(id)
         .first();
 
@@ -1462,17 +1939,15 @@ export async function onRequest(context) {
 
     return json({
       ok: true,
+
       customer:
         safeUser(updated),
+
       invoice:
         invoiceResult,
     });
   }
 
-
-  // ==========================================
-  // ADMIN — DELETE CUSTOMER
-  // ==========================================
 
   if (
     customerMatch &&
@@ -1484,17 +1959,18 @@ export async function onRequest(context) {
         env
       );
 
+
     if (r.error) {
       return r.error;
     }
 
 
-    await env.DB
-      .prepare(`
-        DELETE FROM users
-        WHERE id=?
+    await env.DB.prepare(`
+      DELETE FROM users
+      WHERE
+        id=?
         AND role='customer'
-      `)
+    `)
       .bind(
         customerMatch[1]
       )
@@ -1506,10 +1982,6 @@ export async function onRequest(context) {
     });
   }
 
-
-  // ==========================================
-  // ADMIN — CUSTOMER INVOICES
-  // ==========================================
 
   const customerInvoicesMatch =
     path.match(
@@ -1526,6 +1998,7 @@ export async function onRequest(context) {
         request,
         env
       );
+
 
     if (r.error) {
       return r.error;
@@ -1544,23 +2017,21 @@ export async function onRequest(context) {
         WHERE customer_id=?
         ORDER BY id DESC
       `)
-      .bind(
-        customerInvoicesMatch[1]
-      )
-      .all();
+        .bind(
+          customerInvoicesMatch[1]
+        )
+        .all();
 
 
     return json({
       ok: true,
+
       invoices:
-        rows.results || [],
+        rows.results ||
+        [],
     });
   }
 
-
-  // ==========================================
-  // ADMIN — RESEND LAST INVOICE
-  // ==========================================
 
   const resendMatch =
     path.match(
@@ -1578,6 +2049,7 @@ export async function onRequest(context) {
         env
       );
 
+
     if (r.error) {
       return r.error;
     }
@@ -1589,13 +2061,13 @@ export async function onRequest(context) {
 
 
     const customer =
-      await env.DB
-        .prepare(`
-          SELECT *
-          FROM users
-          WHERE id=?
+      await env.DB.prepare(`
+        SELECT *
+        FROM users
+        WHERE
+          id=?
           AND role='customer'
-        `)
+      `)
         .bind(
           resendMatch[1]
         )
@@ -1611,14 +2083,13 @@ export async function onRequest(context) {
 
 
     const invoice =
-      await env.DB
-        .prepare(`
-          SELECT *
-          FROM invoices
-          WHERE customer_id=?
-          ORDER BY id DESC
-          LIMIT 1
-        `)
+      await env.DB.prepare(`
+        SELECT *
+        FROM invoices
+        WHERE customer_id=?
+        ORDER BY id DESC
+        LIMIT 1
+      `)
         .bind(
           customer.id
         )
@@ -1649,11 +2120,11 @@ export async function onRequest(context) {
           email_provider_id=?
         WHERE id=?
       `)
-      .bind(
-        providerId,
-        invoice.id
-      )
-      .run();
+        .bind(
+          providerId,
+          invoice.id
+        )
+        .run();
 
 
       return json({
@@ -1666,16 +2137,14 @@ export async function onRequest(context) {
 
     } catch (e) {
       return bad(
-        e.message,
+        e && e.message
+          ? e.message
+          : String(e),
         502
       );
     }
   }
 
-
-  // ==========================================
-  // ADMIN — DOWNLOAD PDF
-  // ==========================================
 
   const adminPdfMatch =
     path.match(
@@ -1693,6 +2162,7 @@ export async function onRequest(context) {
         env
       );
 
+
     if (r.error) {
       return r.error;
     }
@@ -1704,10 +2174,9 @@ export async function onRequest(context) {
 
 
     const invoice =
-      await env.DB
-        .prepare(
-          "SELECT * FROM invoices WHERE id=?"
-        )
+      await env.DB.prepare(
+        "SELECT * FROM invoices WHERE id=?"
+      )
         .bind(
           Number(
             adminPdfMatch[1]
@@ -1725,10 +2194,9 @@ export async function onRequest(context) {
 
 
     const customer =
-      await env.DB
-        .prepare(
-          "SELECT * FROM users WHERE id=?"
-        )
+      await env.DB.prepare(
+        "SELECT * FROM users WHERE id=?"
+      )
         .bind(
           invoice.customer_id
         )
@@ -1747,6 +2215,7 @@ export async function onRequest(context) {
       pdf,
       {
         headers: {
+
           "content-type":
             "application/pdf",
 
@@ -1761,10 +2230,6 @@ export async function onRequest(context) {
   }
 
 
-  // ==========================================
-  // CUSTOMER — LIST OWN INVOICES
-  // ==========================================
-
   if (
     path === "invoices" &&
     method === "GET"
@@ -1774,6 +2239,7 @@ export async function onRequest(context) {
         request,
         env
       );
+
 
     if (r.error) {
       return r.error;
@@ -1812,23 +2278,21 @@ export async function onRequest(context) {
         WHERE customer_id=?
         ORDER BY id DESC
       `)
-      .bind(
-        r.session.sub
-      )
-      .all();
+        .bind(
+          r.session.sub
+        )
+        .all();
 
 
     return json({
       ok: true,
+
       invoices:
-        rows.results || [],
+        rows.results ||
+        [],
     });
   }
 
-
-  // ==========================================
-  // CUSTOMER — DOWNLOAD OWN PDF
-  // ==========================================
 
   const customerPdfMatch =
     path.match(
@@ -1845,6 +2309,7 @@ export async function onRequest(context) {
         request,
         env
       );
+
 
     if (r.error) {
       return r.error;
@@ -1871,16 +2336,17 @@ export async function onRequest(context) {
       await env.DB.prepare(`
         SELECT *
         FROM invoices
-        WHERE id=?
-        AND customer_id=?
+        WHERE
+          id=?
+          AND customer_id=?
       `)
-      .bind(
-        Number(
-          customerPdfMatch[1]
-        ),
-        r.session.sub
-      )
-      .first();
+        .bind(
+          Number(
+            customerPdfMatch[1]
+          ),
+          r.session.sub
+        )
+        .first();
 
 
     if (!invoice) {
@@ -1892,10 +2358,9 @@ export async function onRequest(context) {
 
 
     const customer =
-      await env.DB
-        .prepare(
-          "SELECT * FROM users WHERE id=?"
-        )
+      await env.DB.prepare(
+        "SELECT * FROM users WHERE id=?"
+      )
         .bind(
           r.session.sub
         )
@@ -1914,6 +2379,7 @@ export async function onRequest(context) {
       pdf,
       {
         headers: {
+
           "content-type":
             "application/pdf",
 
