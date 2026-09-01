@@ -1,0 +1,26 @@
+BALKAN AGENT — FINAL PACKAGE AUDIT
+
+Scope: delivered source package after limited fixes.
+
+PASSED
+- 7 HTML pages scanned: index, admin, customer, login, register, privacy, terms.
+- HTML inline JavaScript blocks: syntax check passed.
+- Duplicate HTML IDs: 0 found.
+- Relative asset references: all referenced local assets exist.
+- Cloudflare backend functions/[[path]].js: node syntax check passed.
+- Approved map reference remains approved-map-final-clean.jpg.
+- Existing brand/map/navigation structure was preserved; no logo or map asset was replaced.
+- Public prices: Starter EUR 89, Business EUR 199, Pro EUR 399, Enterprise custom.
+- Invoice backend prices: Starter 8900, Business 19900, Pro 39900 cents.
+- Web chat now calls POST /api/bot/chat server-side and keeps a safe FAQ fallback when live AI secrets are absent.
+
+REQUIRES OWNER CONFIGURATION BEFORE PRODUCTION
+- Cloudflare D1 binding named DB and schema.sql.
+- ADMIN_PASSWORD and SESSION_SECRET as Cloudflare secrets.
+- For live provider responses: BOT_AI_API_URL and BOT_AI_API_KEY as server-side secrets.
+- For invoice email: verified Resend domain and RESEND_API_KEY.
+- Real company, tax and bank details for invoices.
+- Meta/Instagram/Viber business credentials before activating those channel adapters.
+
+NOT CLAIMED
+- No live API account, D1 database, payment account or channel credential was available in the delivered package, so those external integrations cannot be truthfully marked production-live yet.

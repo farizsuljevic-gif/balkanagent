@@ -19,6 +19,12 @@ The admin password is NOT stored inside this ZIP.
 Set it in Cloudflare as the secret ADMIN_PASSWORD.
 Also create a long random secret SESSION_SECRET.
 
+OPTIONAL SERVER-SIDE AI BOT
+- The public web chat calls POST /api/bot/chat and never receives a provider key.
+- Without a provider configuration it uses a safe local FAQ fallback, so the site remains usable.
+- For live AI responses, configure BOT_AI_API_URL, BOT_AI_API_KEY and optionally BOT_AI_MODEL as Cloudflare secrets/variables.
+- The provider endpoint must accept an OpenAI-compatible JSON body and must not be called directly from browser code.
+
 CLOUDFLARE SETUP
 1. Create a D1 database, e.g. balkan-agent-db.
 2. Run schema.sql against that D1 database.
@@ -28,6 +34,7 @@ CLOUDFLARE SETUP
    ADMIN_PASSWORD
    SESSION_SECRET
 5. Deploy this complete repository including the functions/ directory.
+6. If live AI is enabled, add BOT_AI_API_URL and BOT_AI_API_KEY as server-side secrets; never place them in index.html.
 
 After deploy:
 - /login.html = one login for everyone
@@ -40,8 +47,8 @@ Do not put the Admin password directly in index.html/login.html or GitHub.
 
 AUTOMATIC INVOICES (ADDED)
 - When an admin changes a customer from INACTIVE to ACTIVE, the backend creates exactly one new activation invoice for that activation event and attempts to email it automatically as a PDF.
-- Standard monthly prices follow the public website: Starter EUR 49, Business EUR 79, Pro EUR 199.
-- Enterprise uses INVOICE_ENTERPRISE_PRICE_CENTS (for example 25900 = EUR 259) if configured.
+- Standard monthly prices follow the public website: Starter EUR 89, Business EUR 199, Pro EUR 399.
+- Enterprise uses INVOICE_ENTERPRISE_PRICE_CENTS if configured; keep the amount aligned with the signed custom offer.
 - Admin has "Račun" (download latest PDF) and "Pošalji račun" (resend latest invoice) buttons.
 - Customers see "Moji računi" in Plaćanje i profil and can download their own PDFs.
 - Invoice numbers use BA-YEAR-000001 style and are stored in D1.

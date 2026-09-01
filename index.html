@@ -289,9 +289,9 @@ html,body{overflow-x:hidden}
 <section class="section" id="presentation"><video class="video" controls preload="metadata" poster="balkan-agent-premium-video-poster.jpg"><source src="balkan-agent-premium-presentation-en.mp4" type="video/mp4"></video></section>
 
 <section class="section" id="pricing"><h2 data-t="pricingTitle"></h2><div class="pricing">
-<div class="plan"><h3>Starter</h3><div class="price">€49</div><p>1 AI employee · 1 channel</p><button class="btn choose" data-plan="Starter">Starter</button></div>
-<div class="plan pop"><h3>Business</h3><div class="price">€79</div><p>3 AI employees · 3 channels</p><button class="btn primary choose" data-plan="Business">Business</button></div>
-<div class="plan"><h3>Pro</h3><div class="price">€199</div><p>Up to 10 AI employees · all supported channels</p><button class="btn choose" data-plan="Pro">Pro</button></div>
+<div class="plan"><h3>Starter</h3><div class="price">€89</div><p>1 AI agent · 1 channel</p><button class="btn choose" data-plan="Starter">Starter</button></div>
+	<div class="plan pop"><h3>Business</h3><div class="price">€199</div><p>3 AI agents · 3 channels</p><button class="btn primary choose" data-plan="Business">Business</button></div>
+	<div class="plan"><h3>Pro</h3><div class="price">€399</div><p>Up to 10 AI agents · all supported channels</p><button class="btn choose" data-plan="Pro">Pro</button></div>
 <div class="plan"><h3>Enterprise</h3><div class="price">Custom</div><p>Custom integrations and onboarding</p><button class="btn choose" data-plan="Enterprise">Enterprise</button></div>
 </div></section>
 
@@ -337,20 +337,39 @@ disconnectBtn.onclick=()=>{delete configs[selectedChannel];localStorage.setItem(
 // Plan buttons carry the selected plan to the contact form + customer preview.
 document.querySelectorAll('.choose').forEach(b=>b.onclick=()=>{localStorage.setItem('ba_selected_plan',b.dataset.plan);document.getElementById('contact').scrollIntoView({behavior:'smooth'})});
 
-// Test AI bot
-const chatLog=document.getElementById('chatLog'), chatInput=document.getElementById('chatInput');
+// Server-side AI bot with a safe local fallback when no provider secret is configured.
+const chatLog=document.getElementById('chatLog'), chatInput=document.getElementById('chatInput'), chatSend=document.getElementById('chatSend');
 const replies={
 question:'Mogu odgovoriti na pitanja o Balkan Agent uslugama, kanalima i paketima.',
-reservation:'Za test rezervacije napišite datum, vrijeme, broj osoba i vrstu usluge.',
+reservation:'Za rezervaciju napišite datum, vrijeme, broj osoba i vrstu usluge. Konačnu dostupnost potvrđuje vaš tim.',
 serviceInfo:'Balkan Agent automatizuje AI chat, rezervacije, prodaju, podršku i povezivanje kanala.',
-plans:'Starter €49, Business €79, Pro €199, Enterprise po dogovoru.',
+plans:'Starter €89, Business €199, Pro €399, Enterprise po dogovoru.',
 partner:'Za partnerstvo: info@balkanagent.com',
 help:'Kontakt podrška: info@balkanagent.com'
 };
+const chatHistory=[];
 function addMsg(m,who){let d=document.createElement('div');d.className='msg '+who;d.textContent=m;chatLog.appendChild(d);chatLog.scrollTop=chatLog.scrollHeight}
-function botAnswer(v){let x=v.toLowerCase(),r=replies.question;if(x.includes('cijen')||x.includes('price')||x.includes('paket'))r=replies.plans;else if(x.includes('rezerv')||x.includes('book'))r=replies.reservation;else if(x.includes('whatsapp')||x.includes('instagram')||x.includes('viber')||x.includes('telegram'))r='Kliknite odgovarajući kanal u sekciji Usluge da testirate Connect ekran.';else if(x.includes('uslug')||x.includes('service'))r=replies.serviceInfo;setTimeout(()=>addMsg(r,'bot'),180)}
-function sendChat(){let v=chatInput.value.trim();if(!v)return;addMsg(v,'user');chatInput.value='';botAnswer(v)} document.getElementById('chatSend').onclick=sendChat;chatInput.onkeydown=e=>{if(e.key==='Enter')sendChat()};
-document.querySelectorAll('.quick button').forEach(b=>b.onclick=()=>{let k=b.dataset.key;addMsg((T[current]||T.English)[k],'user');setTimeout(()=>addMsg(replies[k]||replies.question,'bot'),150)});
+async function botAnswer(v){
+  chatHistory.push({role:'user',content:v});
+  chatSend.disabled=true;
+  try{
+    const r=await fetch('/api/bot/chat',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({message:v,history:chatHistory.slice(-8)})});
+    const j=await r.json();
+    if(!r.ok||!j.ok) throw new Error('bot unavailable');
+    addMsg(j.reply,'bot');chatHistory.push({role:'assistant',content:j.reply});
+    if(j.handoff) addMsg('Za konačnu potvrdu, naš tim preuzima razgovor. Pišite info@balkanagent.com.','bot');
+  }catch(e){
+    const x=v.toLowerCase(); let r=replies.question;
+    if(x.includes('cijen')||x.includes('price')||x.includes('paket'))r=replies.plans;
+    else if(x.includes('rezerv')||x.includes('book')||x.includes('termin'))r=replies.reservation;
+    else if(x.includes('whatsapp')||x.includes('instagram')||x.includes('viber')||x.includes('telegram'))r='Kliknite odgovarajući kanal u sekciji Usluge da testirate Connect ekran.';
+    else if(x.includes('uslug')||x.includes('service'))r=replies.serviceInfo;
+    addMsg(r,'bot');chatHistory.push({role:'assistant',content:r});
+  }finally{chatSend.disabled=false;chatInput.focus()}
+}
+function sendChat(){let v=chatInput.value.trim();if(!v)return;addMsg(v,'user');chatInput.value='';botAnswer(v)}
+chatSend.onclick=sendChat;chatInput.onkeydown=e=>{if(e.key==='Enter')sendChat()};
+document.querySelectorAll('.quick button').forEach(b=>b.onclick=()=>{let v=(T[current]||T.English)[b.dataset.key];addMsg(v,'user');botAnswer(v)});
 document.getElementById('minChat').onclick=()=>{let b=document.getElementById('chatBody');b.style.display=b.style.display==='none'?'block':'none'};
 document.getElementById('closeChat').onclick=()=>document.getElementById('chatWidget').style.display='none';
 
