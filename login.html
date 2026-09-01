@@ -12,7 +12,7 @@ a{text-decoration:none;color:inherit}
 button,input{font:inherit}
 .loginBox{width:min(520px,100%);background:#06101d;border:1px solid #193b60;border-radius:17px;box-shadow:0 30px 90px #000;overflow:hidden}
 .header{display:flex;align-items:center;justify-content:space-between;padding:21px 24px;border-bottom:1px solid #17324f}
-.brand{display:flex;align-items:center;gap:11px}
+.brand{display:flex;align-items:center;gap:11px}.brandLogo{width:52px;height:52px;object-fit:contain;filter:drop-shadow(0 0 14px rgba(211,164,79,.22))}
 .ba{font-size:40px;font-weight:950;letter-spacing:-5px;background:linear-gradient(135deg,#00adff,#bd4cff,#ff8bdc);-webkit-background-clip:text;color:transparent}
 .bn{font-size:19px;font-weight:850}.bn span{color:#6684ff}.tag{font-size:8px;color:#9ca9ba;letter-spacing:1.2px}
 .back{color:#9fb4d2;font-size:12px}
@@ -26,14 +26,27 @@ input{width:100%;background:#06101d;color:#fff;border:1px solid #26466b;border-r
 #msg{font-size:12px;margin-top:12px;min-height:18px}
 .error{color:#ff8190}.success{color:#34e09a}
 .help{border-top:1px solid #17324f;padding:15px 26px;color:#8798ad;font-size:11px}
-</style>
+
+<style id="ba-brand-system-v10">
+:root{--bg:#07090d!important;--panel:#0e1319!important;--line:#4a3920!important;--text:#f6f2e8!important;--muted:#b2ac9e!important;--gold:#d8ad5e!important;--violet:#b99046!important;--blue:#d3a858!important;--green:#d0ad62!important}
+html,body{background:radial-gradient(900px 500px at 70% -10%,rgba(121,88,35,.22),transparent 62%),#07090d!important;color:#f6f2e8!important}
+body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif!important}
+.panel,.metric,.box,.loginBox,.modalCard{background:linear-gradient(155deg,rgba(20,23,25,.97),rgba(10,12,14,.98))!important;border-color:rgba(194,149,70,.34)!important;box-shadow:0 20px 50px rgba(0,0,0,.32),inset 0 1px rgba(255,244,207,.05)!important}
+.brand,.bn{color:#f5efe2!important;letter-spacing:2px}.brand span,.bn span{color:#d8ad5e!important}.tag{color:#c4a36b!important;letter-spacing:1.6px!important}
+nav button,nav a{color:#c4bcae!important;border-radius:10px!important;transition:background .18s ease,color .18s ease,border-color .18s ease}nav button:hover,nav a:hover{background:rgba(165,119,40,.16)!important;color:#fff!important}nav .active{background:linear-gradient(135deg,rgba(134,94,27,.30),rgba(49,38,20,.40))!important;color:#fff!important;border-left-color:#d8ad5e!important}
+.btn{background:rgba(31,26,18,.84)!important;border-color:rgba(194,149,70,.45)!important;color:#f8efda!important;border-radius:999px!important;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}.btn:hover{transform:translateY(-2px);border-color:#dfb86b!important;box-shadow:0 12px 28px rgba(0,0,0,.26)}.btn.primary{background:linear-gradient(135deg,#a77a2f,#d2aa5d)!important;color:#1a1105!important;border-color:#e0ba70!important}.btn.success{border-color:#9c7938!important;color:#e9c982!important;background:rgba(63,46,19,.65)!important}.btn.danger{border-color:#7d4437!important;background:rgba(51,24,19,.60)!important}
+input,select{background:rgba(9,12,15,.86)!important;color:#f7f0e1!important;border-color:rgba(194,149,70,.33)!important;border-radius:10px!important}input:focus,select:focus{outline:2px solid rgba(218,175,92,.60)!important;outline-offset:2px}
+.notice{background:rgba(62,45,18,.32)!important;border-color:rgba(212,168,87,.43)!important;color:#e5c77f!important}.metric small,small{color:#baa98d!important}.metric b{color:#f5ead2!important}.activeBadge,.ok{color:#d8bd79!important}.inactiveBadge,.err{color:#df8b78!important}h1,h2,h3{color:#f6f1e6!important}th{color:#c0aa80!important}td{border-bottom-color:rgba(184,139,62,.18)!important}.detail div{background:rgba(51,38,18,.32)!important}.status{background:rgba(47,35,18,.62)!important;border-color:rgba(195,149,70,.42)!important}.modal{background:rgba(0,0,0,.78)!important}
+.loginBox .header{border-bottom-color:rgba(194,149,70,.28)!important}.ba{background:linear-gradient(135deg,#f5d58d,#b77f2d,#f0cc82)!important;-webkit-background-clip:text!important;color:transparent!important;text-shadow:0 0 18px rgba(204,155,64,.16)}.back,a{color:#d5b97d!important}.sub{color:#b9ad98!important}.box a{color:#d7b972!important}
+@media(max-width:700px){aside{border-right:0!important;border-bottom:1px solid rgba(194,149,70,.25)!important}.metrics{gap:12px!important}}
+</style></style>
 </head>
 <body>
 <div class="loginBox">
   <div class="header">
     <a href="index.html" class="brand">
-      <div class="ba">BA</div>
-      <div><div class="bn">BALKAN <span>AGENT</span></div><div class="tag">AI AUTOMATION PLATFORM</div></div>
+      <img class="brandLogo" src="/manus-storage/balkan-agent-ba-monogram-gold_64a4efd3.png" alt="BA monogram" onerror="this.src='balkan-agent-ba-monogram-gold.png'">
+      <div><div class="bn">BALKAN <span>AGENT</span></div><div class="tag">AI SOLUTIONS &amp; AUTOMATION</div></div>
     </a>
     <a href="index.html" class="back">← Nazad</a>
   </div>

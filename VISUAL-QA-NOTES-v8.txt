@@ -1,0 +1,12 @@
+Desktop visual QA after premium-redesign-v8:
+
+The visual change is now clearly visible: rounded pill navigation, textured/radial background, larger glass-like map panel, stronger premium cards, more spacious hierarchy, and a live panel overlay on the map area. The original BA logo and approved map image are still used unchanged.
+
+Adjustments still needed before showing mobile/final version: the desktop hero is too tall and the left title wraps into four lines because the left column is narrow; the map dominates the first viewport and the live panel overlaps it more aggressively than ideal; channel labels become cramped at the current viewport; the floating chat overlaps the lower-right content in the screenshot. The next visual pass should keep the new premium direction while widening the copy column slightly, reducing map-panel height a little, simplifying the live panel footprint, and improving below-fold spacing. Mobile needs a dedicated check for the 2-column service cards, CTA buttons, map panel, channel grid and floating chat.
+
+
+Refinement v9 QA:
+- Desktop now shows a materially different composition: the title is two lines instead of four, the map is in a rounded premium frame, the five service cards are arranged as a balanced 3+2 grid, and the live panel is smaller and better anchored to the map.
+- The BA logo and approved-map-final-clean.jpg are preserved.
+- Mobile screenshot at 390x844 renders the new header, title, gradient CTA-ready dark theme, and rounded cards without horizontal overflow. The floating chat is functional but intentionally overlays the lower hero area because it is fixed; if a less intrusive mobile experience is desired, the next optional change would be a collapsed chat launcher or an in-flow mobile chat section.
+- No fake customer counts or fabricated activity claims were introduced.

@@ -78,3 +78,21 @@ LATEST HOMEPAGE/BOT PATCH — 1. septembar 2026
 - Added a premium first-customer block while preserving the original BA logo, map, colors and navigation.
 - Final functional tests passed: FAQ/fallback, reservation validation and persistence, annual pricing, admin session handling, HTTPS cookie security, local HTTP compatibility.
 - Final static audit passed: 7 HTML files, duplicate_ids=0, relative_assets=ok, backend syntax=OK.
+
+FINAL COMPLETION PASS — 2026-09-01
+- Customer portal no longer blocks real API sessions with a localStorage-only preview gate.
+- Customer profile and billing save now use the authenticated API path.
+- Customer portal and login page use the BA monogram asset and BA AI SOLUTIONS & AUTOMATION wording.
+- The obsolete duplicate root backend [[path]].js was removed; production backend is functions/[[path]].js.
+- Bot knowledge expanded for tourism, medical administration, other services, channels, languages, bank transfer and human handover.
+- Protected POST /api/channels/inbound and GET /api/channels/verify routes were added for approved channel adapters.
+- Homepage and customer portal language switches now use a safe catalog fallback to prevent blank labels when a key is missing.
+- Functional test result: bot fallback, FAQ knowledge, channel webhook authorization, reservation validation/persistence, pricing, admin session and cookie behavior all passed.
+- Static audit result: 7 HTML files, duplicate IDs 0, relative assets OK, backend syntax check passed.
+- Remaining external setup is intentional: Cloudflare D1 binding, production secrets, provider webhook approval, outbound provider credentials and the real invoice IBAN.
+
+FINAL QA EXTENSION — 2026-09-01
+- Customer workspace-only state for agents, channels, leads and plan is explicitly labelled as local setup preview; account/profile/invoices remain authenticated API data.
+- Contact form now validates name, email format, message minimum/maximum length and provider failure with user-readable messages.
+- Regression tests now cover unavailable AI provider fallback, response secret non-disclosure, protected admin pricing route and channel webhook authorization.
+- Final visual screenshots were captured at desktop 1440x1000 and mobile 390x844 for the homepage, plus mobile login.

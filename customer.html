@@ -2,28 +2,31 @@
 <style>
 :root{--bg:#030814;--side:#06101f;--panel:#091426;--line:#1d304d;--text:#f7f9fd;--muted:#96a7bd;--violet:#7544ff;--gold:#d8a94c;--green:#30dc85}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 70% 0,#17204b,#030814 70%);color:var(--text);font:14px/1.5 system-ui}a{color:inherit;text-decoration:none}button,input,select{font:inherit}.shell{display:grid;grid-template-columns:250px 1fr;min-height:100vh}aside{background:#06101f;border-right:1px solid #172842;padding:22px;position:sticky;top:0;height:100vh}.brand{font-weight:900;font-size:20px;margin-bottom:25px}.brand span{color:#6e90ff}.tag{font-size:9px;color:var(--gold)}nav button,nav a{width:100%;display:block;text-align:left;padding:11px 12px;margin:5px 0;background:transparent;border:0;border-radius:9px;color:#9dacbf;cursor:pointer}nav .active{background:#21174d;color:#fff;border-left:3px solid var(--violet)}main{padding:25px 28px}.notice{border:1px solid #453a1d;background:#171407;color:#d8c78e;border-radius:10px;padding:11px 13px;margin-bottom:14px}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}.metric,.panel{background:#091426;border:1px solid #1d304d;border-radius:13px}.metric{padding:15px}.metric small{color:#8496ad}.metric b{display:block;font-size:27px;margin-top:5px}.panel{padding:16px}.section{display:none}.section.active{display:block}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.item{background:#0c1a31;border:1px solid #1e3250;border-radius:11px;padding:14px}.item button{margin-top:10px}.btn{border:1px solid #2a4064;background:#0a1627;color:#fff;border-radius:9px;padding:9px 12px;cursor:pointer}.primary{background:#6f42ee}.good{color:#30dc85}.warn{color:#d8a94c}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}select{background:#07101e;border:1px solid #263b5d;color:#fff;border-radius:8px;padding:9px}@media(max-width:900px){.shell{grid-template-columns:1fr}aside{position:relative;height:auto}nav{display:flex;overflow:auto}nav button,nav a{white-space:nowrap;width:auto}.metrics{grid-template-columns:repeat(2,1fr)}}@media(max-width:600px){main{padding:16px}.metrics,.grid{grid-template-columns:1fr}}
-</style></head><body><script>
-(function(){
-  try{
-    const logged=JSON.parse(localStorage.getItem('ba_logged_customer')||'null');
-    if(!logged){document.body.innerHTML='<div style="font-family:system-ui;background:#030814;color:#fff;min-height:100vh;display:grid;place-items:center"><div><h2>Customer login required</h2><a style="color:#8fa6ff" href="login.html">Open Login</a></div></div>';return}
-    const all=JSON.parse(localStorage.getItem('ba_customers_v3')||'[]');
-    const live=all.find(x=>String(x.id)===String(logged.id));
-    if(!live||!live.active){localStorage.removeItem('ba_logged_customer');document.body.innerHTML='<div style="font-family:system-ui;background:#030814;color:#fff;min-height:100vh;display:grid;place-items:center"><div><h2>Account inactive</h2><p>Admin must activate this account.</p><a style="color:#8fa6ff" href="login.html">Back to Login</a></div></div>';return}
-    localStorage.setItem('ba_logged_customer',JSON.stringify(live));
-  }catch(e){}
-})();
-</script>
-<div class="shell"><aside><div class="brand">BALKAN<span>AGENT</span><div class="tag">CUSTOMER PORTAL</div></div><select id="lang" class="btn" style="width:100%;margin-bottom:12px"><option value="Crnogorski">Crnogorski</option><option value="English">English</option><option value="Deutsch">Deutsch</option><option value="Русский">Русский</option><option value="Shqip">Shqip</option><option value="Slovenščina">Slovenščina</option><option value="Македонски">Македонски</option><option value="Български">Български</option><option value="Ελληνικά">Ελληνικά</option><option value="Română">Română</option><option value="Türkçe">Türkçe</option></select><nav>
+
+<style id="ba-brand-system-v10">
+:root{--bg:#07090d!important;--panel:#0e1319!important;--line:#4a3920!important;--text:#f6f2e8!important;--muted:#b2ac9e!important;--gold:#d8ad5e!important;--violet:#b99046!important;--blue:#d3a858!important;--green:#d0ad62!important}
+html,body{background:radial-gradient(900px 500px at 70% -10%,rgba(121,88,35,.22),transparent 62%),#07090d!important;color:#f6f2e8!important}
+body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif!important}
+.panel,.metric,.box,.loginBox,.modalCard{background:linear-gradient(155deg,rgba(20,23,25,.97),rgba(10,12,14,.98))!important;border-color:rgba(194,149,70,.34)!important;box-shadow:0 20px 50px rgba(0,0,0,.32),inset 0 1px rgba(255,244,207,.05)!important}
+.brand,.bn{color:#f5efe2!important;letter-spacing:2px}.brand span,.bn span{color:#d8ad5e!important}.tag{color:#c4a36b!important;letter-spacing:1.6px!important}
+.brandLogo{width:52px;height:52px;object-fit:contain;vertical-align:middle;margin-right:9px;filter:drop-shadow(0 0 14px rgba(211,164,79,.22))}.brandMark{display:none}
+nav button,nav a{color:#c4bcae!important;border-radius:10px!important;transition:background .18s ease,color .18s ease,border-color .18s ease}nav button:hover,nav a:hover{background:rgba(165,119,40,.16)!important;color:#fff!important}nav .active{background:linear-gradient(135deg,rgba(134,94,27,.30),rgba(49,38,20,.40))!important;color:#fff!important;border-left-color:#d8ad5e!important}
+.btn{background:rgba(31,26,18,.84)!important;border-color:rgba(194,149,70,.45)!important;color:#f8efda!important;border-radius:999px!important;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}.btn:hover{transform:translateY(-2px);border-color:#dfb86b!important;box-shadow:0 12px 28px rgba(0,0,0,.26)}.btn.primary{background:linear-gradient(135deg,#a77a2f,#d2aa5d)!important;color:#1a1105!important;border-color:#e0ba70!important}.btn.success{border-color:#9c7938!important;color:#e9c982!important;background:rgba(63,46,19,.65)!important}.btn.danger{border-color:#7d4437!important;background:rgba(51,24,19,.60)!important}
+input,select{background:rgba(9,12,15,.86)!important;color:#f7f0e1!important;border-color:rgba(194,149,70,.33)!important;border-radius:10px!important}input:focus,select:focus{outline:2px solid rgba(218,175,92,.60)!important;outline-offset:2px}
+.notice{background:rgba(62,45,18,.32)!important;border-color:rgba(212,168,87,.43)!important;color:#e5c77f!important}.metric small,small{color:#baa98d!important}.metric b{color:#f5ead2!important}.activeBadge,.ok{color:#d8bd79!important}.inactiveBadge,.err{color:#df8b78!important}h1,h2,h3{color:#f6f1e6!important}th{color:#c0aa80!important}td{border-bottom-color:rgba(184,139,62,.18)!important}.detail div{background:rgba(51,38,18,.32)!important}.status{background:rgba(47,35,18,.62)!important;border-color:rgba(195,149,70,.42)!important}.modal{background:rgba(0,0,0,.78)!important}
+.loginBox .header{border-bottom-color:rgba(194,149,70,.28)!important}.ba{background:linear-gradient(135deg,#f5d58d,#b77f2d,#f0cc82)!important;-webkit-background-clip:text!important;color:transparent!important;text-shadow:0 0 18px rgba(204,155,64,.16)}.back,a{color:#d5b97d!important}.sub{color:#b9ad98!important}.box a{color:#d7b972!important}
+@media(max-width:700px){aside{border-right:0!important;border-bottom:1px solid rgba(194,149,70,.25)!important}.metrics{gap:12px!important}.brandLogo{width:44px;height:44px}}
+</style></head><body>
+<div class="shell"><aside><div class="brand"><img class="brandLogo" src="/manus-storage/balkan-agent-ba-monogram-gold_64a4efd3.png" alt="BA monogram" onerror="this.src='balkan-agent-ba-monogram-gold.png'"><span>BALKAN</span><span>AGENT</span><div class="tag">CUSTOMER PORTAL</div></div><select id="lang" class="btn" style="width:100%;margin-bottom:12px"><option value="Crnogorski">Crnogorski</option><option value="English">English</option><option value="Deutsch">Deutsch</option><option value="Русский">Русский</option><option value="Shqip">Shqip</option><option value="Slovenščina">Slovenščina</option><option value="Македонски">Македонски</option><option value="Български">Български</option><option value="Ελληνικά">Ελληνικά</option><option value="Română">Română</option><option value="Türkçe">Türkçe</option></select><nav>
 <button class="active" data-tab="dashboard" data-t="overview">Pregled</button><button data-tab="agents" data-t="agents">AI zaposleni</button><button data-tab="leads" data-t="leads">Leadovi</button><button data-tab="channels" data-t="channels">Kanali</button><button data-tab="subscription" data-t="subscription">Pretplata</button><button data-tab="billing">Plaćanje i profil</button><button data-tab="settings" data-t="settings">Podešavanja</button><a href="index.html" data-t="back">Nazad na sajt</a>
 <a href="#" id="logoutCustomer">Logout</a></nav></aside><main>
-<div class="notice">LOCAL PREVIEW MODE — podešavanja, kanali i plan rade u ovom browseru. Pravi cloud podaci dolaze nakon D1/login integracije.</div>
+<div class="notice">SECURE CUSTOMER PORTAL — nalog, profil i računi dolaze iz sigurnog API-ja. Kanalne integracije se aktiviraju nakon povezivanja poslovnih naloga.</div>
 <div class="top"><h1 id="title">Pregled</h1><div>Balkan Agent Customer</div></div>
-<section id="dashboard" class="section active"><div class="metrics"><div class="metric"><small>AI EMPLOYEES</small><b id="mAgents">0</b></div><div class="metric"><small>CONNECTED CHANNELS</small><b id="mChannels">0</b></div><div class="metric"><small>LEADS</small><b id="mLeads">0</b></div><div class="metric"><small>PLAN</small><b id="mPlan" style="font-size:20px">Starter</b></div></div></section>
-<section id="agents" class="section"><div class="panel"><h2>AI zaposleni</h2><div class="grid" id="agentGrid"></div></div></section>
+<section id="dashboard" class="section active"><div class="metrics"><div class="metric"><small>AI EMPLOYEES · WORKSPACE</small><b id="mAgents">0</b></div><div class="metric"><small>CHANNELS · WORKSPACE</small><b id="mChannels">0</b></div><div class="metric"><small>LEADS · WORKSPACE</small><b id="mLeads">0</b></div><div class="metric"><small>PLAN · ACCOUNT</small><b id="mPlan" style="font-size:20px">Starter</b></div></div><p class="notice">Workspace toggles are a local setup preview until the related provider account and webhook are connected. Account, profile, invoices and payment status remain server-synced.</p></section>
+<section id="agents" class="section"><div class="panel"><h2>AI zaposleni</h2><p class="notice">Konfiguracija zaposlenih je pripremni workspace prikaz. Aktivacija produkcijskog AI providera se završava kroz server secrets.</p><div class="grid" id="agentGrid"></div></div></section>
 <section id="leads" class="section"><div class="panel"><h2>Leadovi</h2><p style="color:#8ea0b5">U ovoj statičkoj verziji leadovi se čitaju iz lokalnog pregleda. Cloudflare D1 će ih kasnije učiniti stvarnim i zajedničkim na svim uređajima.</p><div id="leadList"></div></div></section>
-<section id="channels" class="section"><div class="panel"><h2>Kanali</h2><div class="grid" id="channelGrid"></div></div></section>
-<section id="subscription" class="section"><div class="panel"><h2>Pretplata</h2><label>Plan<select id="plan"><option>Starter</option><option>Business</option><option>Pro</option><option>Enterprise</option></select></label><br><br><button id="savePlan" class="btn primary" data-t="manage">Upravljaj paketom</button><span id="planMsg" class="good" style="margin-left:10px"></span></div></section>
+<section id="channels" class="section"><div class="panel"><h2>Kanali</h2><p class="notice">Statusi kanala su lokalni setup indikatori dok se stvarni WhatsApp, Instagram, Viber ili drugi poslovni nalog ne poveže kroz webhook.</p><div class="grid" id="channelGrid"></div></div></section>
+<section id="subscription" class="section"><div class="panel"><h2>Pretplata</h2><p class="notice">Plan se prikazuje iz korisničkog workspacea; stvarnu aktivaciju i status plaćanja potvrđuje administrator nakon bank transfera.</p><label>Plan<select id="plan"><option>Starter</option><option>Business</option><option>Pro</option><option>Enterprise</option></select></label><br><br><button id="savePlan" class="btn primary" data-t="manage">Upravljaj paketom</button><span id="planMsg" class="good" style="margin-left:10px"></span></div></section>
 
 <section id="billing" class="section">
   <div class="panel">
@@ -71,7 +74,7 @@ function render(){
 document.querySelectorAll('nav button[data-tab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById(b.dataset.tab).classList.add('active');document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById('title').textContent=b.textContent});
 document.getElementById('savePlan').onclick=()=>{state.plan=document.getElementById('plan').value;save();document.getElementById('planMsg').textContent='✓ Saved';setTimeout(()=>document.getElementById('planMsg').textContent='',1200)};
 let currentLang=localStorage.getItem('ba_customer_lang')||'Crnogorski';const L=document.getElementById('lang');L.value=currentLang;document.getElementById('settingLang').value=currentLang;
-function applyLang(l){currentLang=l;localStorage.setItem('ba_customer_lang',l);let t=TR[l]||TR.Crnogorski;document.querySelectorAll('[data-t]').forEach(e=>{let k=e.dataset.t;if(t[k])e.textContent=t[k]})}
+function applyLang(l){currentLang=TR[l]?l:'Crnogorski';localStorage.setItem('ba_customer_lang',currentLang);const t=Object.assign({},TR.Crnogorski,TR[currentLang]||{});document.querySelectorAll('[data-t]').forEach(e=>{const k=e.dataset.t;e.textContent=t[k]??TR.Crnogorski[k]??''})}
 L.onchange=e=>{document.getElementById('settingLang').value=e.target.value;applyLang(e.target.value)};applyLang(currentLang);
 document.getElementById('saveSettings').onclick=()=>{let l=document.getElementById('settingLang').value;L.value=l;applyLang(l);document.getElementById('settingsMsg').textContent='✓ Saved';setTimeout(()=>document.getElementById('settingsMsg').textContent='',1200)};
 render();
@@ -108,48 +111,6 @@ render();
  if(b)b.onclick=(e)=>{e.preventDefault();localStorage.removeItem('ba_logged_customer');location.href='login.html';};
 })();
 </script>
-<script>
-(function(){
-  const customersKey='ba_customers_v3';
-  function loadCustomerBilling(){
-    let logged=null;
-    try{logged=JSON.parse(localStorage.getItem('ba_logged_customer')||'null')}catch(e){}
-    if(!logged)return;
-    const all=JSON.parse(localStorage.getItem(customersKey)||'[]');
-    const live=all.find(x=>String(x.id)===String(logged.id))||logged;
-    const byId=id=>document.getElementById(id);
-    if(byId('profileName')) byId('profileName').value=live.name||'';
-    if(byId('profileCompany')) byId('profileCompany').value=live.company||'';
-    if(byId('profileEmail')) byId('profileEmail').value=live.email||'';
-    if(byId('profilePhone')) byId('profilePhone').value=live.phone||'+38268400509';
-    if(byId('profilePaymentMethod')) byId('profilePaymentMethod').value=live.paymentMethod||'Bank transfer / IBAN';
-    if(byId('profileIban')) byId('profileIban').value=live.iban||'';
-    if(byId('profileBank')) byId('profileBank').value=live.bankName||'';
-    if(byId('profilePaymentStatus')) byId('profilePaymentStatus').value=live.paymentStatus||'UNPAID';
-
-    const btn=byId('saveProfileBilling');
-    if(btn) btn.onclick=()=>{
-      live.name=byId('profileName').value.trim();
-      live.company=byId('profileCompany').value.trim();
-      live.phone=byId('profilePhone').value.trim()||'+38268400509';
-      live.paymentMethod='Bank transfer / IBAN';
-      live.iban=byId('profileIban').value.trim();
-      live.bankName=byId('profileBank').value.trim();
-      if(!live.paymentStatus) live.paymentStatus='UNPAID';
-
-      const idx=all.findIndex(x=>String(x.id)===String(live.id));
-      if(idx>=0) all[idx]=live; else all.push(live);
-
-      localStorage.setItem(customersKey,JSON.stringify(all));
-      localStorage.setItem('ba_logged_customer',JSON.stringify(live));
-      const m=byId('billingMsg');
-      if(m){m.textContent='✓ Sačuvano';setTimeout(()=>m.textContent='',1500);}
-    };
-  }
-  document.addEventListener('DOMContentLoaded',loadCustomerBilling);
-})();
-</script>
-
 <script>
 (async function(){
   async function api(path,options={}){

@@ -1,0 +1,9 @@
+FINAL VISUAL QA — 2026-09-01
+
+Desktop homepage at 1440x1000 renders the BA gold monogram, BALKAN AGENT wordmark, dark premium palette, gold navigation accents, new Balkan map panel, live demo panel, service tiles, CTA and chat widget without visible overflow.
+
+Mobile homepage at 390x844 keeps the BA monogram and wordmark visible, places language and Login controls below the brand, wraps the hero heading and supporting copy cleanly, keeps service tiles readable, and keeps the chat widget inside the viewport with a usable input and send control.
+
+The visual direction is materially different from the old blue/purple interface and consistently follows the supplied BA brand reference. The chat is correctly labelled Live demo; no fake customer count or fabricated performance statistic is shown.
+
+Known production boundary: customer agent/channel/lead switches are local workspace configuration until provider-specific APIs are connected. The customer portal now uses the authenticated API for account/profile/invoice data and no longer blocks real sessions with the old local preview gate.
