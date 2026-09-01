@@ -153,3 +153,12 @@ FINAL v23 QA ADDENDUM
 - Browser contact QA: invalid email and empty required fields both blocked submit; screenshots and evidence are in QA-CONTACT-RESERVATION-v21.txt.
 - Reservation public form remains intentionally removed per user request; chat Reservation quick action was tested and backend invalid reservation validation remains covered by functional tests.
 - Customer billing now displays server-backed annual discount percent alongside authenticated payment instructions.
+
+FINAL RELEASE v24
+- Premium blank invoice added at invoice.html with responsive BA styling, blank customer fields, bank-transfer section, discount, no-VAT status and print-to-PDF action.
+- Functional regression passed: bot fallback intents, FAQ knowledge, channel webhook authorization, reservation validation/persistence and pricing.
+- Invoice activation E2E passed: annual discount, status, due date, email success and provider-error fallback.
+- Route E2E passed: admin pricing change reached public pricing, annual invoice and authenticated customer billing.
+- Customer billing DOM E2E passed with server-backed annual discount.
+- Syntax check passed for functions/[[path]].js; contact invalid/empty form browser checks passed.
+- Live limitation: a real external AI key is not configured, so bot responses use the safe FAQ fallback; actual Resend delivery requires a verified sender and production key.
