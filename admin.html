@@ -16,7 +16,7 @@
 <button data-tab="inactive">Neaktivne</button>
 <button data-tab="sales">Prodajni proces</button>
 <button data-tab="integrations">Integracije</button>
-<button data-tab="settings">Podešavanja</button>
+<button data-tab="settings">Podešavanja</button><button data-tab="pricingSettings">Cijene i popusti</button><button data-tab="reservations">Rezervacije</button>
 <a href="login.html">← Login</a><a href="#" id="logoutAdmin">Logout</a>
 </nav></aside>
 <main>
@@ -36,6 +36,7 @@
 <section id="sales" class="section"><div class="metrics"><div class="metric"><small>NEW</small><b id="sNew">0</b></div><div class="metric"><small>CONTACTED</small><b id="sContacted">0</b></div><div class="metric"><small>DEMO</small><b id="sDemo">0</b></div><div class="metric"><small>CUSTOMER</small><b id="sCustomer">0</b></div></div></section>
 <section id="integrations" class="section"><div class="panel"><h2>Integracije</h2><div id="integrationList"></div></div></section>
 <section id="settings" class="section"><div class="panel"><h2>Podešavanja</h2><p>Admin email: <b>ceo@balkanagent.com</b></p><p>Kontakt email: <b>info@balkanagent.com</b></p></div></section>
+<section id="pricingSettings" class="section"><div class="panel"><h2>Cijene i popusti</h2><p style="color:#96a7bd">Godišnji paket koristi popust na godišnji zbir. Maksimalni popust je ograničen na 50% radi zaštite cjenika.</p><div style="display:grid;gap:12px;max-width:520px"><label style="display:flex;gap:10px;align-items:center"><input id="annualEnabled" type="checkbox" style="width:auto;margin:0"> Ponudi godišnje plaćanje</label><label>Popust za godišnje plaćanje (%)<input id="annualDiscount" type="number" min="0" max="50" step="1" value="25"></label><button class="btn primary" id="savePricing">Sačuvaj cijene i popust</button><div id="pricingStatus" style="color:#72e6aa"></div></div><hr style="border-color:#172842;margin:18px 0"><div id="pricingPreview" style="color:#c8d2df"></div></div></section><section id="reservations" class="section"><div class="panel"><h2>Rezervacijski zahtjevi</h2><div style="overflow:auto"><table><thead><tr><th>Datum</th><th>Ime</th><th>Usluga</th><th>Kontakt</th><th>Status</th></tr></thead><tbody id="reservationRows"></tbody></table></div></div></section>
 </main></div>
 
 <div class="modal" id="detailModal"><div class="modalCard"><h2>Detalji mušterije</h2><div id="detailBody"></div><div style="text-align:right;margin-top:15px"><button class="btn" id="closeDetail">Zatvori</button></div></div></div>
@@ -196,6 +197,13 @@ save();
       });
     };
     if(typeof render==='function') render();
+    const pricing=await api('/api/admin/pricing');
+    document.getElementById('annualEnabled').checked=!!pricing.pricing.annual_enabled;
+    document.getElementById('annualDiscount').value=pricing.pricing.annual_discount_percent;
+    const showPreview=()=>{const d=Math.max(0,Math.min(50,Number(document.getElementById('annualDiscount').value||25)));document.getElementById('pricingPreview').textContent='Godišnji primjeri: Starter €'+(89*12*(1-d/100)).toFixed(2)+' · Business €'+(199*12*(1-d/100)).toFixed(2)+' · Pro €'+(399*12*(1-d/100)).toFixed(2)};
+    document.getElementById('annualDiscount').oninput=showPreview;showPreview();
+    document.getElementById('savePricing').onclick=async()=>{const status=document.getElementById('pricingStatus');status.textContent='Čuvam…';try{const j=await api('/api/admin/pricing',{method:'PATCH',body:JSON.stringify({annual_enabled:document.getElementById('annualEnabled').checked,annual_discount_percent:Number(document.getElementById('annualDiscount').value)})});document.getElementById('annualDiscount').value=j.pricing.annual_discount_percent;status.textContent='✓ Cijene i popust su sačuvani.';showPreview()}catch(e){status.textContent='Greška: '+e.message}};
+    const reservationData=await api('/api/admin/reservations'); const reservationRows=document.getElementById('reservationRows'); (reservationData.reservations||[]).forEach(item=>{const row=document.createElement('tr');row.innerHTML='<td>'+String(item.reservation_date||'')+' '+String(item.reservation_time||'')+'</td><td>'+String(item.name||'')+'</td><td>'+String(item.service||'')+'</td><td>'+String(item.email||'')+'<br>'+String(item.phone||'')+'</td><td>'+String(item.status||'NEW')+'</td>';reservationRows.appendChild(row)});
   }catch(e){
     console.error(e);
     location.href='login.html';

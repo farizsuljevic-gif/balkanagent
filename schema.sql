@@ -36,3 +36,35 @@ CREATE TABLE IF NOT EXISTS invoices (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_invoices_customer ON invoices(customer_id);
+
+CREATE TABLE IF NOT EXISTS pricing_config (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  annual_enabled INTEGER NOT NULL DEFAULT 1,
+  annual_discount_percent INTEGER NOT NULL DEFAULT 25,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+INSERT OR IGNORE INTO pricing_config (id, annual_enabled, annual_discount_percent) VALUES (1, 1, 25);
+
+CREATE TABLE IF NOT EXISTS pricing_plans (
+  plan TEXT PRIMARY KEY,
+  monthly_cents INTEGER NOT NULL,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+INSERT OR IGNORE INTO pricing_plans (plan, monthly_cents) VALUES
+  ('Starter', 8900), ('Business', 19900), ('Pro', 39900);
+
+CREATE TABLE IF NOT EXISTS reservations (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  phone TEXT DEFAULT '',
+  service TEXT NOT NULL,
+  reservation_date TEXT NOT NULL,
+  reservation_time TEXT DEFAULT '',
+  guests INTEGER NOT NULL DEFAULT 1,
+  notes TEXT DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'NEW',
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_reservations_date ON reservations(reservation_date);
+CREATE INDEX IF NOT EXISTS idx_reservations_status ON reservations(status);

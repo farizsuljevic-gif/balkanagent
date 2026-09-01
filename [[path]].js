@@ -122,9 +122,17 @@ function cleanBotText(value, max=1200){
   return String(value||'').replace(/[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F]/g,'').trim().slice(0,max);
 }
 
+const FAQ_KNOWLEDGE=[
+  {keys:['cijen','price','paket'],answer:'Naši planovi su Starter 89 EUR, Business 199 EUR i Pro 399 EUR mjesečno. Godišnji paket trenutno ima 25% popusta. Enterprise je po dogovoru. Pošaljite djelatnost i broj kanala pa možemo preporučiti paket.'},
+  {keys:['rezerv','termin','book'],answer:'Mogu pomoći oko rezervacije ili termina. Napišite djelatnost, željeni datum, vrijeme, broj osoba i kontakt. Konačnu dostupnost potvrđuje vaš tim.'},
+  {keys:['whatsapp','instagram','viber'],answer:'Balkan Agent može povezati web-chat i poslovne kanale. Za stvarno povezivanje potreban je odobreni poslovni nalog i sigurna konfiguracija; privatne API ključeve ne unosite u javni sajt.'},
+  {keys:['medicin','doktor','patient'],answer:'Za medicinu agent može dati potvrđene administrativne informacije, pomoći oko termina i predati razgovor osoblju. Ne daje dijagnoze niti medicinske savjete.'}
+];
+function knowledgeReply(message){const text=String(message||'').toLowerCase();return FAQ_KNOWLEDGE.find(item=>item.keys.some(key=>text.includes(key)))?.answer||null;}
 function localBotReply(message){
   const text=message.toLowerCase();
-  if(text.includes('cijen')||text.includes('price')||text.includes('paket')) return 'Naši planovi su Starter 89 EUR, Business 199 EUR i Pro 399 EUR mjesečno. Enterprise je po dogovoru. Pošaljite djelatnost i broj kanala pa možemo preporučiti paket.';
+  const known=knowledgeReply(message); if(known)return known;
+  if(text.includes('cijen')||text.includes('price')||text.includes('paket')) return 'Zdravo! Mogu pomoći oko usluga, cijena, rezervacija i povezivanja kanala. Ako želite razgovor s timom, napišite „kontakt“.';
   if(text.includes('rezerv')||text.includes('termin')||text.includes('book')) return 'Mogu pomoći oko rezervacije ili termina. Napišite djelatnost, željeni datum, vrijeme, broj osoba i kontakt. Konačnu dostupnost potvrđuje vaš tim.';
   if(text.includes('whatsapp')||text.includes('instagram')||text.includes('viber')) return 'Balkan Agent može povezati web-chat i poslovne kanale. Za stvarno povezivanje potreban je odobreni poslovni nalog i sigurna konfiguracija; privatne API ključeve ne unosite u javni sajt.';
   if(text.includes('medicin')||text.includes('doktor')||text.includes('patient')) return 'Za medicinu agent može dati potvrđene informacije, pomoći oko termina i predati razgovor osoblju. Ne daje dijagnoze niti medicinske savjete.';
@@ -142,6 +150,46 @@ async function serverBotReply(env, messages){
 
 // ---------- INVOICES ----------
 const PLAN_PRICES = {Starter:8900, Business:19900, Pro:39900};
+const DEFAULT_PRICING = {annual_enabled:1, annual_discount_percent:25};
+
+async function ensurePricingSchema(env){
+  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS pricing_config (
+    id INTEGER PRIMARY KEY CHECK (id=1),
+    annual_enabled INTEGER NOT NULL DEFAULT 1,
+    annual_discount_percent INTEGER NOT NULL DEFAULT 25,
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+  )`).run();
+  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS pricing_plans (
+    plan TEXT PRIMARY KEY,
+    monthly_cents INTEGER NOT NULL,
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+  )`).run();
+  await env.DB.prepare(`INSERT OR IGNORE INTO pricing_config(id,annual_enabled,annual_discount_percent) VALUES(1,1,25)`).run();
+  for(const [plan,cents] of Object.entries(PLAN_PRICES)) await env.DB.prepare('INSERT OR IGNORE INTO pricing_plans(plan,monthly_cents) VALUES(?,?)').bind(plan,cents).run();
+}
+async function getPricing(env){
+  await ensurePricingSchema(env);
+  const row=await env.DB.prepare('SELECT * FROM pricing_config WHERE id=1').first();
+  const rows=await env.DB.prepare('SELECT plan,monthly_cents FROM pricing_plans').all();
+  const plans=Object.fromEntries((rows.results||[]).map(x=>[x.plan,{monthly_cents:Number(x.monthly_cents),annual_cents:annualAmountCents(Number(x.monthly_cents),Number(row?.annual_discount_percent??25))}]));
+  return {annual_enabled:!!(row?.annual_enabled ?? DEFAULT_PRICING.annual_enabled),annual_discount_percent:Number(row?.annual_discount_percent ?? 25),plans};
+}
+
+async function ensureReservationSchema(env){
+  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS reservations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    phone TEXT DEFAULT '',
+    service TEXT NOT NULL,
+    reservation_date TEXT NOT NULL,
+    reservation_time TEXT DEFAULT '',
+    guests INTEGER NOT NULL DEFAULT 1,
+    notes TEXT DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'NEW',
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  )`).run();
+}
 
 async function ensureInvoiceSchema(env) {
   await env.DB.prepare(`CREATE TABLE IF NOT EXISTS invoices (
@@ -162,10 +210,16 @@ async function ensureInvoiceSchema(env) {
   await env.DB.prepare(`CREATE INDEX IF NOT EXISTS idx_invoices_customer ON invoices(customer_id)`).run();
 }
 
-function planAmountCents(plan, env) {
-  if (PLAN_PRICES[plan] !== undefined) return PLAN_PRICES[plan];
+async function planAmountCents(plan, env) {
+  await ensurePricingSchema(env);
+  const row=await env.DB.prepare('SELECT monthly_cents FROM pricing_plans WHERE plan=?').bind(plan).first();
+  if(row?.monthly_cents!==undefined) return Number(row.monthly_cents);
   const custom = Number(env.INVOICE_ENTERPRISE_PRICE_CENTS || 0);
   return Number.isFinite(custom) && custom > 0 ? Math.round(custom) : 0;
+}
+function annualAmountCents(monthly, discountPercent=25){
+  const pct=Math.max(0,Math.min(100,Number(discountPercent)||0));
+  return Math.round(monthly*12*(1-pct/100));
 }
 
 function ascii(s='') {
@@ -256,7 +310,7 @@ async function sendInvoiceEmail(env, invoice, customer) {
 
 async function createActivationInvoice(env, customer) {
   await ensureInvoiceSchema(env);
-  const amount=planAmountCents(customer.plan,env);
+  const amount=await planAmountCents(customer.plan,env);
   const tmp='TMP-'+crypto.randomUUID();
   const description = customer.plan==='Enterprise' ? 'Balkan Agent Enterprise - agreed monthly service' : `Balkan Agent ${customer.plan} plan - monthly service`;
   const result=await env.DB.prepare(`INSERT INTO invoices(customer_id,invoice_number,plan,description,amount_cents,currency,status,issue_date,due_date)
@@ -299,6 +353,34 @@ export async function onRequest(context) {
   if (!env.DB) return bad("D1 binding DB is not configured",500);
   if (!env.SESSION_SECRET) return bad("SESSION_SECRET is not configured",500);
   if (!env.ADMIN_PASSWORD) return bad("ADMIN_PASSWORD is not configured",500);
+
+  if (path === 'pricing' && method === 'GET') {
+    const pricing=await getPricing(env);
+    return json({ok:true,pricing,plans:pricing.plans});
+  }
+  if (path === 'reservations' && method === 'POST') {
+    await ensureReservationSchema(env);
+    const b=await parseBody(request); const name=String(b.name||'').trim().slice(0,120); const email=String(b.email||'').trim().toLowerCase().slice(0,320); const phone=String(b.phone||'').trim().slice(0,40); const service=String(b.service||'').trim().slice(0,120); const date=String(b.reservation_date||'').trim().slice(0,20); const time=String(b.reservation_time||'').trim().slice(0,20); const guests=Math.max(1,Math.min(100,Number(b.guests||1))); const notes=String(b.notes||'').trim().slice(0,1000);
+    if(!name||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||!service||!/^\d{4}-\d{2}-\d{2}$/.test(date)) return bad('Name, valid email, service and date are required.');
+    const result=await env.DB.prepare('INSERT INTO reservations(name,email,phone,service,reservation_date,reservation_time,guests,notes) VALUES(?,?,?,?,?,?,?,?)').bind(name,email,phone,service,date,time,guests,notes).run();
+    return json({ok:true,reservation_id:result.meta?.last_row_id,status:'NEW',message:'Request received. Our team will confirm availability.'},201);
+  }
+  if (path === 'admin/reservations' && method === 'GET') {
+    const r=await requireAdmin(request,env); if(r.error)return r.error; await ensureReservationSchema(env); const rows=await env.DB.prepare('SELECT * FROM reservations ORDER BY id DESC LIMIT 200').all(); return json({ok:true,reservations:rows.results||[]});
+  }
+  if (path === 'admin/pricing' && method === 'GET') {
+    const r=await requireAdmin(request,env); if(r.error)return r.error;
+    const pricing=await getPricing(env);
+    return json({ok:true,pricing,plans:pricing.plans});
+  }
+  if (path === 'admin/pricing' && method === 'PATCH') {
+    const r=await requireAdmin(request,env); if(r.error)return r.error;
+    const b=await parseBody(request); const enabled=b.annual_enabled===undefined?1:(b.annual_enabled?1:0);
+    const discount=Math.max(0,Math.min(50,Math.round(Number(b.annual_discount_percent ?? 25))));
+    await ensurePricingSchema(env);
+    await env.DB.prepare("UPDATE pricing_config SET annual_enabled=?, annual_discount_percent=?, updated_at=datetime('now') WHERE id=1").bind(enabled,discount).run();
+    return json({ok:true,pricing:await getPricing(env)});
+  }
 
   // REGISTER CUSTOMER
   if (path === "auth/register" && method === "POST") {
