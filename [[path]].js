@@ -59,11 +59,14 @@ async function readSession(request, env) {
   }
 }
 
-function sessionCookie(token) {
-  return `ba_session=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800`;
+function cookieSecurity(request) {
+  return new URL(request.url).protocol === 'https:' ? '; Secure' : '';
 }
-function clearCookie() {
-  return `ba_session=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`;
+function sessionCookie(token, request) {
+  return `ba_session=${token}; Path=/; HttpOnly${cookieSecurity(request)}; SameSite=Lax; Max-Age=604800`;
+}
+function clearCookie(request) {
+  return `ba_session=; Path=/; HttpOnly${cookieSecurity(request)}; SameSite=Lax; Max-Age=0`;
 }
 
 function randomHex(n=16) {
@@ -420,7 +423,7 @@ export async function onRequest(context) {
         sub:"admin", role:"admin", email,
         exp:Date.now()+7*24*60*60*1000
       });
-      return json({ok:true, role:"admin"},200,{"set-cookie":sessionCookie(token)});
+      return json({ok:true, role:"admin"},200,{"set-cookie":sessionCookie(token, request)});
     }
 
     const user = await env.DB.prepare("SELECT * FROM users WHERE email=? AND role='customer'").bind(email).first();
@@ -433,11 +436,11 @@ export async function onRequest(context) {
       sub:user.id, role:"customer", email:user.email,
       exp:Date.now()+7*24*60*60*1000
     });
-    return json({ok:true, role:"customer", user:safeUser(user)},200,{"set-cookie":sessionCookie(token)});
+    return json({ok:true, role:"customer", user:safeUser(user)},200,{"set-cookie":sessionCookie(token, request)});
   }
 
   if (path === "auth/logout" && method === "POST") {
-    return json({ok:true},200,{"set-cookie":clearCookie()});
+    return json({ok:true},200,{"set-cookie":clearCookie(request)});
   }
 
   if (path === "auth/me" && method === "GET") {

@@ -46,9 +46,9 @@ function env() {
   return { DB: createDb(), SESSION_SECRET: 'test-session', ADMIN_PASSWORD: 'test-admin' };
 }
 
-async function call(path, method, body, environment = env()) {
+async function call(path, method, body, environment = env(), protocol = 'https') {
   return onRequest({
-    request: new Request(`https://example.test/api/${path}`, {
+    request: new Request(`${protocol}://example.test/api/${path}`, {
       method,
       headers: { 'content-type': 'application/json' },
       body: body ? JSON.stringify(body) : undefined,
@@ -82,3 +82,17 @@ assert.equal(pricingJson.pricing.annual_discount_percent, 25);
 assert.equal(pricingJson.plans.Business.annual_cents, 179100);
 
 console.log('functional tests: bot fallback, FAQ knowledge, reservation validation/persistence and pricing passed');
+
+const adminHtml = await (await import('node:fs/promises')).readFile('./admin.html', 'utf8');
+assert.match(adminHtml, /credentials:'include'/);
+assert.match(adminHtml, /if\(e\.status===401\|\|e\.status===403\)\{location\.href='login\.html'/);
+assert.match(adminHtml, /Admin panel je otvoren, ali neki podaci trenutno nisu dostupni/);
+console.log('functional tests: admin session includes credentials and preserves panel on non-auth backend errors');
+
+const httpsLogin = await call('auth/login', 'POST', { email: 'ceo@balkanagent.com', password: 'test-admin' });
+assert.equal(httpsLogin.status, 200);
+assert.match(httpsLogin.headers.get('set-cookie') || '', /Secure/);
+const httpLogin = await call('auth/login', 'POST', { email: 'ceo@balkanagent.com', password: 'test-admin' }, env(), 'http');
+assert.equal(httpLogin.status, 200);
+assert.doesNotMatch(httpLogin.headers.get('set-cookie') || '', /; Secure/);
+console.log('functional tests: HTTPS Secure cookie and local HTTP compatibility passed');

@@ -40,3 +40,21 @@ FUNCTIONAL TESTS PASSED
 - reservation success persists a NEW reservation in mock D1
 - public pricing returns 25% annual discount and Business annual total EUR 1,791
 - backend syntax and static HTML audit remain OK
+
+
+FINAL PATCH AUDIT — 1. septembar 2026
+- Admin session fix: fetch koristi credentials:'include'; admin preusmjerava na login samo za HTTP 401/403, dok grešku D1/pricing/reservations prikazuje u admin panelu bez izbacivanja.
+- Premium presentation: postojeći video i poster su zadržani; dodat je vidljiv premium uvod sa jasnim poslovnim benefitom i CTA tokom.
+- Homepage refinement: dodata je diskretna sekcija za prve klijente sa jednim tokom, 24/7 prvim odgovorom i AI + tim handoverom; logo, mapa, boje, navigacija i osnovni motiv nisu dirani.
+- Functional tests: bot FAQ fallback, reservation validation/persistence, annual pricing 25%, admin session credentials i non-auth backend error behavior passed.
+- Static audit: 7 HTML files, duplicate_ids=0, relative_assets=ok, backend node --check passed.
+- Live limitation: real D1 binding, SESSION_SECRET, ADMIN_PASSWORD, AI provider and channel/payment credentials still must be configured in the deployment environment; no secret is stored in this package.
+
+
+SESSION REGRESSION AUDIT — 1. septembar 2026
+- Admin UI no longer redirects to login for non-auth backend failures; only HTTP 401/403 trigger login redirect.
+- Admin fetches explicitly include credentials.
+- HTTPS login sets HttpOnly; Secure; SameSite=Lax session cookie.
+- HTTP local test omits Secure only for local compatibility; production HTTPS always retains Secure.
+- Mock regression tests passed for HTTPS Secure cookie, local HTTP compatibility, admin error handling, FAQ bot, reservations and 25% annual pricing.
+- Browser homepage check passed after premium presentation and first-customer visual additions.

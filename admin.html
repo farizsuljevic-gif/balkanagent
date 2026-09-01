@@ -142,9 +142,9 @@ save();
 <script>
 (async function(){
   async function api(path,options={}){
-    const r=await fetch(path,{...options,headers:{'content-type':'application/json',...(options.headers||{})}});
+    const r=await fetch(path,{...options,credentials:'include',headers:{'content-type':'application/json',...(options.headers||{})}});
     const j=await r.json().catch(()=>({}));
-    if(!r.ok) throw new Error(j.error||'Request failed');
+    if(!r.ok){const error=new Error(j.error||'Request failed');error.status=r.status;throw error;}
     return j;
   }
   try{
@@ -206,7 +206,9 @@ save();
     const reservationData=await api('/api/admin/reservations'); const reservationRows=document.getElementById('reservationRows'); (reservationData.reservations||[]).forEach(item=>{const row=document.createElement('tr');row.innerHTML='<td>'+String(item.reservation_date||'')+' '+String(item.reservation_time||'')+'</td><td>'+String(item.name||'')+'</td><td>'+String(item.service||'')+'</td><td>'+String(item.email||'')+'<br>'+String(item.phone||'')+'</td><td>'+String(item.status||'NEW')+'</td>';reservationRows.appendChild(row)});
   }catch(e){
     console.error(e);
-    location.href='login.html';
+    if(e.status===401||e.status===403){location.href='login.html';return;}
+    const notice=document.querySelector('.notice');
+    if(notice){notice.textContent='Admin panel je otvoren, ali neki podaci trenutno nisu dostupni. Provjeri D1 binding, schema.sql i server postavke; pokušaj osvježiti stranicu nakon ispravke.';notice.style.borderColor='#6c2934';notice.style.color='#ffb2bd';}
   }
 })();
 </script>
