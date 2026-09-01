@@ -58,3 +58,23 @@ SESSION REGRESSION AUDIT — 1. septembar 2026
 - HTTP local test omits Secure only for local compatibility; production HTTPS always retains Secure.
 - Mock regression tests passed for HTTPS Secure cookie, local HTTP compatibility, admin error handling, FAQ bot, reservations and 25% annual pricing.
 - Browser homepage check passed after premium presentation and first-customer visual additions.
+
+
+FINAL UX/BOT PATCH — 1. septembar 2026
+- Removed the lower public reservation form as requested; the backend reservation endpoint and admin reservation view remain available for controlled integrations.
+- Expanded the local bot knowledge replies for tourism, medicine, other services, channels, pricing, reservations, partner and support questions.
+- Chat status is labelled “Live demo” to avoid falsely claiming real customer activity.
+- Replaced the unverified 100% security metric with the verifiable “Server-side / AI key not in browser” signal.
+- Preserved the original BA logo, approved Balkan map asset, main palette, navigation and primary visual identity.
+- Browser homepage check shows the premium first-customer block, existing presentation intro/video, unchanged logo/map and no lower reservation form.
+
+
+LATEST HOMEPAGE/BOT PATCH — 1. septembar 2026
+- Removed the lower public reservation form; the controlled backend/admin reservation endpoints remain available.
+- Expanded bot answers for tourism, medicine, other services, channels, pricing, reservations, partners and support.
+- Updated chat status to “Live demo” rather than implying real customer activity.
+- Replaced the unverified “100% security” claim with the verifiable server-side key signal.
+- Updated live panel from “1 forma / Rezervacijski zahtjev” to “1 tok / Upit ka timu”.
+- Added a premium first-customer block while preserving the original BA logo, map, colors and navigation.
+- Final functional tests passed: FAQ/fallback, reservation validation and persistence, annual pricing, admin session handling, HTTPS cookie security, local HTTP compatibility.
+- Final static audit passed: 7 HTML files, duplicate_ids=0, relative_assets=ok, backend syntax=OK.
