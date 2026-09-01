@@ -1,0 +1,11 @@
+Browser QA evidence
+
+Homepage contact anchor opened successfully on file:///home/ubuntu/balkanagent-source-package/index.html#contact. The visible contact form contains name, company, email, phone, message textarea and submit button. The reservation quick action was clicked in the live chat widget and rendered a distinct reservation response requesting service type, date, time and guest count and stating that the team confirms availability. The screenshot path for the post-click state is /home/ubuntu/screenshots/page_2026-09-01_16-49-46_7418.webp.
+
+The contact form validation and backend reservation validation are also covered by functional_tests.mjs; no real message or reservation was submitted during this QA run.
+
+Additional browser evidence: after entering `not-an-email` in the email field and pressing the contact submit button, the browser displayed its required email validation popup and did not submit the form. Screenshot: /home/ubuntu/screenshots/page_2026-09-01_16-50-58_2550.webp. Reservation quick action had already rendered its distinct reservation guidance in the previous browser step.
+
+Additional browser evidence: after clearing the email field while all required contact fields remained empty and pressing submit, Chromium displayed the required-field validation popup and blocked submission. Screenshot: /home/ubuntu/screenshots/page_2026-09-01_16-52-11_8791.webp. No real contact request was sent.
+
+Reservation note: the public reservation form was intentionally removed earlier at the user's request. The browser-tested reservation interface is the chat quick action, which returns the distinct reservation guidance; backend invalid reservation validation is covered by functional_tests.mjs.

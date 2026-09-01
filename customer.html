@@ -54,6 +54,7 @@ input,select{background:rgba(9,12,15,.86)!important;color:#f7f0e1!important;bord
         <span>IBAN<br><b id="invoiceIban">Učitavanje...</b></span>
         <span>BIC / SWIFT<br><b id="invoiceBic">Učitavanje...</b></span>
         <span>Status VAT/PDV<br><b id="invoiceVatStatus">Učitavanje...</b></span>
+        <span>Godišnji popust<br><b id="invoiceAnnualDiscount">Učitavanje...</b></span>
       </div>
       <small style="display:block;margin-top:10px">Uplatu šalji tek nakon što primiš račun. Referenca plaćanja je broj računa.</small>
     </div>
@@ -124,7 +125,7 @@ render();
 <script>
 function populateBillingInstructions(payment){
   const text=(id,value)=>{const e=document.getElementById(id);if(e)e.textContent=value||'Nije podešeno';};
-  text('invoiceAccountHolder',payment.account_holder);text('invoiceIban',payment.iban);text('invoiceBic',payment.bic);text('invoiceVatStatus',payment.vat_status);
+  text('invoiceAccountHolder',payment.account_holder);text('invoiceIban',payment.iban);text('invoiceBic',payment.bic);text('invoiceVatStatus',payment.vat_status);text('invoiceAnnualDiscount',payment.annual_enabled ? `−${Number(payment.annual_discount_percent||0)}% na godišnji paket` : 'Godišnje plaćanje nije aktivno');
 }
 async function loadCustomerBilling(api){
   const me=await api('/api/auth/me');

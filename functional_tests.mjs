@@ -129,7 +129,11 @@ const adminHtml = await fs.readFile('./admin.html', 'utf8');
 assert.match(adminHtml, /credentials:'include'/);
 assert.match(adminHtml, /if\(e\.status===401\|\|e\.status===403\)\{location\.href='login\.html'/);
 assert.match(adminHtml, /Admin panel je otvoren, ali neki podaci trenutno nisu dostupni/);
-console.log('functional tests: admin session includes credentials and preserves panel on non-auth backend errors');
+assert.match(adminHtml, /showPreview=\(serverPricing\)/);
+assert.match(adminHtml, /plans\[name\]\?\.monthly_cents/);
+assert.match(adminHtml, /annual_discount_percent/);
+assert.doesNotMatch(adminHtml, /89\*12\*\(1-d\/100\)/);
+console.log('functional tests: admin session includes credentials and server-backed annual discount preview');
 
 const httpsLogin = await call('auth/login', 'POST', { email: 'ceo@balkanagent.com', password: 'test-admin' });
 assert.equal(httpsLogin.status, 200);

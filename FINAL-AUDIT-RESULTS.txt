@@ -129,3 +129,27 @@ FINAL E2E EVIDENCE — 2026-09-01
 - Single activation-to-PDF test now uses the stored invoice returned by createActivationInvoice, then renders that same record and verifies due date, status, 25% discount, no-VAT note, payment reference, account holder and IBAN/BIC.
 - Full activation provider failure path returns email_sent:false and email_error on a mocked 503.
 - Integrated customer portal smoke test creates a signed customer session, calls the real billing instructions onRequest route, passes the response into the existing loadCustomerBilling portal function and verifies DOM values.
+
+v20 FINAL UPDATE
+- Admin annual discount preview now reads monthly plan amounts from the server pricing payload and updates the annual selector label after save; no hardcoded annual preview arithmetic remains.
+- Public /api/pricing and activation invoice remain the source of truth for annual discount and invoice amount.
+- Added balkan-agent-premium-presentation-v19.mp4, a 24-second original visual presentation assembled from four generated BA premium scenes.
+- Regression, static HTML, language smoke and MP4 duration checks passed.
+
+v21 PRICING UPDATE
+- Admin annual discount preview now uses server-returned plan monthly cents and updates Annual label after save.
+- Integration test changed admin pricing from 25% to 30%, verified public /api/pricing changed to 30%, and verified Business annual invoice changed to 167160 cents with 30% discount.
+- Monthly activation remains undiscounted; customer billing instructions remain authenticated.
+- Functional, static, language, route, activation-invoice, customer-DOM and 24-second MP4 checks passed.
+
+FINAL v22 QA ADDENDUM
+- Customer billing instructions now returns annual_enabled and annual_discount_percent from the server pricing configuration.
+- Customer portal displays the current annual discount beside the authenticated bank-transfer instructions.
+- functional_tests.mjs, invoice_routes_e2e_test.mjs, invoice_activation_e2e_test.mjs and customer_billing_dom_test.mjs passed.
+- Browser QA covered the contact anchor, reservation quick action, invalid email submit prevention, and saved evidence in QA-CONTACT-RESERVATION-v21.txt.
+- Static audit: 7 HTML files, duplicate_ids=0, relative_assets=ok. Language smoke: homepage 11 languages/48 keys; customer 11 languages/9 keys.
+
+FINAL v23 QA ADDENDUM
+- Browser contact QA: invalid email and empty required fields both blocked submit; screenshots and evidence are in QA-CONTACT-RESERVATION-v21.txt.
+- Reservation public form remains intentionally removed per user request; chat Reservation quick action was tested and backend invalid reservation validation remains covered by functional tests.
+- Customer billing now displays server-backed annual discount percent alongside authenticated payment instructions.

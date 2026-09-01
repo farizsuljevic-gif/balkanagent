@@ -502,7 +502,8 @@ export async function onRequest(context) {
     const r=await requireSession(request,env);
     if (r.error) return r.error;
     if (r.session.role!=="customer") return bad("Customer required",403);
-    return json({ok:true,payment_method:"Bank transfer / IBAN",account_holder:env.INVOICE_ACCOUNT_HOLDER||"BALKAN AGENT",iban:env.INVOICE_IBAN||"",bic:env.INVOICE_SWIFT||"",contact_email:env.INVOICE_CONTACT_EMAIL||"info@balkanagent.com",vat_status:"VAT / PDV: Not charged"});
+    const pricing=await getPricing(env);
+    return json({ok:true,payment_method:"Bank transfer / IBAN",account_holder:env.INVOICE_ACCOUNT_HOLDER||"BALKAN AGENT",iban:env.INVOICE_IBAN||"",bic:env.INVOICE_SWIFT||"",contact_email:env.INVOICE_CONTACT_EMAIL||"info@balkanagent.com",vat_status:"VAT / PDV: Not charged",annual_enabled:pricing.annual_enabled,annual_discount_percent:pricing.annual_discount_percent});
   }
 
   // CUSTOMER PROFILE
