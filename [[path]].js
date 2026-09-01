@@ -101,6 +101,7 @@ function safeUser(row) {
     iban: row.iban || "",
     bank_name: row.bank_name || "",
     payment_status: row.payment_status || "UNPAID",
+    billing_cycle: row.billing_cycle || "monthly",
     created_at: row.created_at
   };
 }
@@ -138,13 +139,17 @@ const FAQ_KNOWLEDGE=[
 ];
 function knowledgeReply(message){const text=String(message||'').toLowerCase();return FAQ_KNOWLEDGE.find(item=>item.keys.some(key=>text.includes(key)))?.answer||null;}
 function localBotReply(message){
-  const text=message.toLowerCase();
+  const text=String(message||'').toLowerCase();
   const known=knowledgeReply(message); if(known)return known;
-  if(text.includes('cijen')||text.includes('price')||text.includes('paket')) return 'Zdravo! Mogu pomoći oko usluga, cijena, rezervacija i povezivanja kanala. Ako želite razgovor s timom, napišite „kontakt“.';
-  if(text.includes('rezerv')||text.includes('termin')||text.includes('book')) return 'Mogu pomoći oko rezervacije ili termina. Napišite djelatnost, željeni datum, vrijeme, broj osoba i kontakt. Konačnu dostupnost potvrđuje vaš tim.';
-  if(text.includes('whatsapp')||text.includes('instagram')||text.includes('viber')) return 'Balkan Agent može povezati web-chat i poslovne kanale. Za stvarno povezivanje potreban je odobreni poslovni nalog i sigurna konfiguracija; privatne API ključeve ne unosite u javni sajt.';
-  if(text.includes('medicin')||text.includes('doktor')||text.includes('patient')) return 'Za medicinu agent može dati potvrđene informacije, pomoći oko termina i predati razgovor osoblju. Ne daje dijagnoze niti medicinske savjete.';
-  return 'Zdravo! Mogu pomoći oko usluga, cijena, rezervacija i povezivanja kanala. Ako želite razgovor s timom, napišite „kontakt“.';
+  if(/cijen|price|paket|pretplat|koliko košta|koliko kosta/.test(text)) return 'Naši planovi su Starter 89 EUR, Business 199 EUR i Pro 399 EUR mjesečno. Godišnji paket ima 25% popusta, a Enterprise je po dogovoru. Napišite broj kanala i djelatnost za preporuku.';
+  if(/rezerv|termin|book|datum|vrijeme|vreme/.test(text)) return 'Za rezervaciju pošaljite djelatnost, željeni datum, vrijeme, broj osoba i kontakt. Zahtjev se evidentira, a konačnu dostupnost potvrđuje vaš tim.';
+  if(/turiz|hotel|apartman|smješt|smestaj|restoran|gost|putov/.test(text)) return 'Za turizam agent odgovara gostima, prikuplja zahtjeve, pomaže oko rezervacija i predaje složen razgovor recepciji ili prodaji.';
+  if(/medicin|doktor|patient|pacij|klin|ordin/.test(text)) return 'Za medicinu agent daje samo administrativne informacije, pomaže oko termina i predaje osjetljive slučajeve osoblju. Ne daje dijagnoze niti medicinske savjete.';
+  if(/whatsapp|instagram|viber|facebook|telegram|email|sms|kanal|integr/.test(text)) return 'Možemo povezati web-chat i poslovne kanale. Za live rad potreban je odobren poslovni nalog, webhook i server-side konfiguracija; privatni ključevi ne idu u browser.';
+  if(/transfer|iban|uplata|plać|plac|račun|racun/.test(text)) return 'Plaćanje ide ručnim bank transferom. Nakon registracije administrator pregleda nalog, izdaje račun i aktivira pristup kada potvrdi uplatu.';
+  if(/kontakt|čovjek|covjek|tim|podrš|podrs|support|poziv/.test(text)) return 'Za razgovor sa timom pošaljite ime, firmu, email i telefon kroz kontakt formu ili napišite info@balkanagent.com. Tim potvrđuje sljedeći korak.';
+  if(/uslug|šta radi|sta radi|kako radi|what|how/.test(text)) return 'Balkan Agent automatizuje FAQ odgovore, kvalifikaciju upita, rezervacije i predaju razgovora timu kroz web-chat i povezane poslovne kanale.';
+  return 'Mogu pomoći oko usluga, cijena, rezervacija, turizma, medicinskih administrativnih pitanja, kanala i bank transfera. Napišite konkretno pitanje ili „kontakt“ za tim.';
 }
 
 async function serverBotReply(env, messages){
@@ -216,6 +221,10 @@ async function ensureInvoiceSchema(env) {
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   )`).run();
   await env.DB.prepare(`CREATE INDEX IF NOT EXISTS idx_invoices_customer ON invoices(customer_id)`).run();
+  for (const statement of [
+    `ALTER TABLE invoices ADD COLUMN discount_percent INTEGER NOT NULL DEFAULT 0`,
+    `ALTER TABLE users ADD COLUMN billing_cycle TEXT NOT NULL DEFAULT 'monthly'`
+  ]) { try { await env.DB.prepare(statement).run(); } catch (e) { /* already migrated */ } }
 }
 
 async function planAmountCents(plan, env) {
@@ -238,12 +247,14 @@ function money(cents,currency='EUR'){ return `${(Number(cents||0)/100).toFixed(2
 function dueDate(days=7){ const d=new Date(); d.setUTCDate(d.getUTCDate()+days); return d.toISOString().slice(0,10); }
 
 function makeInvoicePdf(invoice, customer, env) {
-  const company = env.INVOICE_COMPANY_NAME || 'Balkan Agent';
+  const company = env.INVOICE_COMPANY_NAME || 'BALKAN AGENT';
   const address = env.INVOICE_COMPANY_ADDRESS || '';
   const tax = env.INVOICE_TAX_ID || '';
   const iban = env.INVOICE_IBAN || '';
   const bank = env.INVOICE_BANK_NAME || '';
   const swift = env.INVOICE_SWIFT || '';
+  const accountHolder = env.INVOICE_ACCOUNT_HOLDER || company;
+  const discountPercent = Math.max(0, Math.min(100, Number(invoice.discount_percent || 0)));
   const phone = env.INVOICE_PHONE || '+382 68 400 509';
   const email = env.INVOICE_CONTACT_EMAIL || 'info@balkanagent.com';
   const lines = [
@@ -256,8 +267,11 @@ function makeInvoicePdf(invoice, customer, env) {
     ['R',customer.email,315,670,8], ['R',customer.phone||'',315,657,8],
     ['B','DESCRIPTION / SERVICE',48,604,8], ['B','AMOUNT',455,604,8],
     ['R',invoice.description,48,578,10], ['R',money(invoice.amount_cents,invoice.currency),455,578,10],
+    ...(discountPercent>0 ? [['R',`Annual discount: ${discountPercent}%`,390,540,8]] : []),
     ['B','TOTAL',390,520,11], ['B',money(invoice.amount_cents,invoice.currency),455,520,11],
-    ['B','PAYMENT DETAILS',48,465,9], ['R',`Account holder: ${company}`,48,447,8], ['R',`Bank: ${bank}`,48,433,8],
+    ['R',`Status: ${invoice.status || 'ISSUED'}`,390,510,8],
+    ['R','VAT / PDV: Not charged',390,500,8],
+    ['B','PAYMENT DETAILS',48,465,9], ['R',`Account holder: ${accountHolder}`,48,447,8], ['R',`Bank: ${bank}`,48,433,8],
     ['R',`IBAN: ${iban}`,48,419,8], ['R',`SWIFT / BIC: ${swift}`,48,405,8],
     ['R',`Payment reference: ${invoice.invoice_number}`,48,391,8],
     ['R','Thank you for choosing Balkan Agent - intelligent automation for modern business.',48,92,8]
@@ -292,7 +306,7 @@ function bytesToBase64(bytes){
 
 async function sendInvoiceEmail(env, invoice, customer) {
   if (!env.RESEND_API_KEY) throw new Error('RESEND_API_KEY is not configured');
-  const from = env.INVOICE_FROM_EMAIL || 'Balkan Agent <invoices@balkanagent.com>';
+  const from = env.INVOICE_FROM_EMAIL || 'Balkan Agent <info@balkanagent.com>';
   const pdf = makeInvoicePdf(invoice, customer, env);
   const total = money(invoice.amount_cents, invoice.currency);
   const html = `
@@ -302,7 +316,7 @@ async function sendInvoiceEmail(env, invoice, customer) {
       </div>
       <h2>Your invoice ${invoice.invoice_number}</h2>
       <p>Hello ${String(customer.name||'').replace(/[<>]/g,'')}, your Balkan Agent account has been activated.</p>
-      <p><b>Plan:</b> ${invoice.plan}<br><b>Total:</b> ${total}<br><b>Due date:</b> ${invoice.due_date}</p>
+      <p><b>Plan:</b> ${invoice.plan}<br><b>Total:</b> ${total}<br><b>Discount:</b> ${Number(invoice.discount_percent||0)}%<br><b>Status:</b> ${invoice.status||'ISSUED'}<br><b>VAT / PDV:</b> Not charged<br><b>Due date:</b> ${invoice.due_date}</p>
       <p>Your PDF invoice is attached to this email.</p>
       <p style="color:#667085;font-size:13px">Balkan Agent · +382 68 400 509 · info@balkanagent.com · balkanagent.com</p>
     </div>`;
@@ -318,11 +332,15 @@ async function sendInvoiceEmail(env, invoice, customer) {
 
 async function createActivationInvoice(env, customer) {
   await ensureInvoiceSchema(env);
-  const amount=await planAmountCents(customer.plan,env);
+  const monthly=await planAmountCents(customer.plan,env);
+  const annual=String(customer.billing_cycle||'monthly').toLowerCase()==='annual';
+  const pricing=await getPricing(env);
+  const discountPercent=annual && pricing.annual_enabled ? pricing.annual_discount_percent : 0;
+  const amount=annual ? annualAmountCents(monthly,discountPercent) : monthly;
   const tmp='TMP-'+crypto.randomUUID();
-  const description = customer.plan==='Enterprise' ? 'Balkan Agent Enterprise - agreed monthly service' : `Balkan Agent ${customer.plan} plan - monthly service`;
-  const result=await env.DB.prepare(`INSERT INTO invoices(customer_id,invoice_number,plan,description,amount_cents,currency,status,issue_date,due_date)
-    VALUES(?,?,?,?,?,'EUR','ISSUED',date('now'),?)`).bind(customer.id,tmp,customer.plan,description,amount,dueDate(Number(env.INVOICE_DUE_DAYS||7))).run();
+  const description = customer.plan==='Enterprise' ? `Balkan Agent Enterprise - ${annual?'annual':'monthly'} service` : `Balkan Agent ${customer.plan} plan - ${annual?'annual':'monthly'} service`;
+  const result=await env.DB.prepare(`INSERT INTO invoices(customer_id,invoice_number,plan,description,amount_cents,discount_percent,currency,status,issue_date,due_date)
+    VALUES(?,?,?,?,?,?,'EUR','ISSUED',date('now'),?)`).bind(customer.id,tmp,customer.plan,description,amount,discountPercent,dueDate(Number(env.INVOICE_DUE_DAYS||7))).run();
   const id=Number(result.meta && result.meta.last_row_id);
   const year=new Date().getUTCFullYear();
   const number=`BA-${year}-${String(id).padStart(6,'0')}`;
@@ -479,6 +497,14 @@ export async function onRequest(context) {
     return json({ok:true,role:"customer",user:safeUser(user)});
   }
 
+  // CUSTOMER BILLING INSTRUCTIONS
+  if (path === "billing/instructions" && method === "GET") {
+    const r=await requireSession(request,env);
+    if (r.error) return r.error;
+    if (r.session.role!=="customer") return bad("Customer required",403);
+    return json({ok:true,payment_method:"Bank transfer / IBAN",account_holder:env.INVOICE_ACCOUNT_HOLDER||"BALKAN AGENT",iban:env.INVOICE_IBAN||"",bic:env.INVOICE_SWIFT||"",contact_email:env.INVOICE_CONTACT_EMAIL||"info@balkanagent.com",vat_status:"VAT / PDV: Not charged"});
+  }
+
   // CUSTOMER PROFILE
   if (path === "profile" && method === "GET") {
     const r=await requireSession(request,env);
@@ -519,6 +545,7 @@ export async function onRequest(context) {
   if (match && method === "PATCH") {
     const r=await requireAdmin(request,env);
     if (r.error) return r.error;
+    await ensureInvoiceSchema(env);
     const id=match[1];
     const b=await parseBody(request);
     const current=await env.DB.prepare("SELECT * FROM users WHERE id=? AND role='customer'").bind(id).first();
@@ -530,11 +557,11 @@ export async function onRequest(context) {
     const iban = b.iban === undefined ? current.iban : String(b.iban||"");
     const bank = b.bank_name === undefined ? current.bank_name : String(b.bank_name||"");
     const paymentStatus = b.payment_status === undefined ? current.payment_status : String(b.payment_status);
-
+    const billingCycle = b.billing_cycle === undefined ? (current.billing_cycle || 'monthly') : (String(b.billing_cycle).toLowerCase()==='annual' ? 'annual' : 'monthly');
     await env.DB.prepare(`
-      UPDATE users SET active=?, plan=?, phone=?, iban=?, bank_name=?, payment_status=?, payment_method='Bank transfer / IBAN'
+      UPDATE users SET active=?, plan=?, phone=?, iban=?, bank_name=?, payment_status=?, billing_cycle=?, payment_method='Bank transfer / IBAN'
       WHERE id=? AND role='customer'
-    `).bind(active,plan,phone,iban,bank,paymentStatus,id).run();
+    `).bind(active,plan,phone,iban,bank,paymentStatus,billingCycle,id).run();
 
     const updated=await env.DB.prepare("SELECT * FROM users WHERE id=?").bind(id).first();
     let invoiceResult=null;
@@ -606,3 +633,6 @@ export async function onRequest(context) {
 
   return bad("Not found",404);
 }
+
+// Named exports are used only by local regression tests; production routing remains unchanged.
+export { makeInvoicePdf, sendInvoiceEmail, createActivationInvoice, makeSession };

@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
   iban TEXT DEFAULT '',
   bank_name TEXT DEFAULT '',
   payment_status TEXT NOT NULL DEFAULT 'UNPAID',
+  billing_cycle TEXT NOT NULL DEFAULT 'monthly',
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -27,6 +28,7 @@ CREATE TABLE IF NOT EXISTS invoices (
   plan TEXT NOT NULL,
   description TEXT NOT NULL,
   amount_cents INTEGER NOT NULL DEFAULT 0,
+  discount_percent INTEGER NOT NULL DEFAULT 0,
   currency TEXT NOT NULL DEFAULT 'EUR',
   status TEXT NOT NULL DEFAULT 'ISSUED',
   issue_date TEXT NOT NULL DEFAULT (date('now')),

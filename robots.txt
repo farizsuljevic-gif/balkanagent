@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /customer.html
+Disallow: /login.html
+Disallow: /register.html
+Sitemap: https://balkanagent.com/sitemap.xml

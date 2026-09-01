@@ -68,7 +68,7 @@ function ensureFromLeads(){
   });
 }
 ensureFromLeads();
-function actions(c){return `<button class="btn" data-detail="${c.id}">Detalji</button> <button class="btn ${c.active?'danger':'success'}" data-toggle="${c.id}">${c.active?'Deaktiviraj':'Aktiviraj'}</button> <button class="btn" data-invoice="${c.id}">Račun</button> <button class="btn" data-resend="${c.id}">Pošalji račun</button> <select class="status planSelect" data-planid="${c.id}"><option ${c.plan==='Starter'?'selected':''}>Starter</option><option ${c.plan==='Business'?'selected':''}>Business</option><option ${c.plan==='Pro'?'selected':''}>Pro</option><option ${c.plan==='Enterprise'?'selected':''}>Enterprise</option></select> <button class="btn danger" data-delete="${c.id}">Obriši</button>`}
+function actions(c){return `<button class="btn" data-detail="${c.id}">Detalji</button> <button class="btn ${c.active?'danger':'success'}" data-toggle="${c.id}">${c.active?'Deaktiviraj':'Aktiviraj'}</button> <button class="btn" data-invoice="${c.id}">Račun</button> <button class="btn" data-resend="${c.id}">Pošalji račun</button> <select class="status planSelect" data-planid="${c.id}"><option ${c.plan==='Starter'?'selected':''}>Starter</option><option ${c.plan==='Business'?'selected':''}>Business</option><option ${c.plan==='Pro'?'selected':''}>Pro</option><option ${c.plan==='Enterprise'?'selected':''}>Enterprise</option></select> <select class="status billingCycleSelect" data-cycleid="${c.id}"><option value="monthly" ${c.billing_cycle==='annual'?'':'selected'}>Monthly</option><option value="annual" ${c.billing_cycle==='annual'?'selected':''}>Annual - 25%*</option></select> <button class="btn danger" data-delete="${c.id}">Obriši</button>`}
 function customerRow(c){return `<tr>
 <td>${esc(c.name)}</td>
 <td>${esc(c.company)}</td>
@@ -166,7 +166,7 @@ save();
     const result=await api('/api/admin/customers');
     window.backendCustomers=result.customers||[];
     if(typeof customers!=='undefined'){
-      customers=window.backendCustomers.map(c=>({...c,active:!!c.active,bankName:c.bank_name,paymentStatus:c.payment_status,paymentMethod:c.payment_method}));
+      customers=window.backendCustomers.map(c=>({...c,active:!!c.active,bankName:c.bank_name,paymentStatus:c.payment_status,paymentMethod:c.payment_method,billing_cycle:c.billing_cycle||'monthly'}));
       if(typeof render==='function') render();
     }
 
@@ -206,6 +206,11 @@ save();
       document.querySelectorAll('.planSelect').forEach(sel=>sel.onchange=async()=>{
         const c=customers.find(x=>String(x.id)===sel.dataset.planid);if(!c)return;
         const j=await api('/api/admin/customers/'+c.id,{method:'PATCH',body:JSON.stringify({plan:sel.value})});
+        Object.assign(c,j.customer);render();
+      });
+      document.querySelectorAll('.billingCycleSelect').forEach(sel=>sel.onchange=async()=>{
+        const c=customers.find(x=>String(x.id)===sel.dataset.cycleid);if(!c)return;
+        const j=await api('/api/admin/customers/'+c.id,{method:'PATCH',body:JSON.stringify({billing_cycle:sel.value})});
         Object.assign(c,j.customer);render();
       });
     };

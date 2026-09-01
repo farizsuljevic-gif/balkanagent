@@ -96,3 +96,36 @@ FINAL QA EXTENSION — 2026-09-01
 - Contact form now validates name, email format, message minimum/maximum length and provider failure with user-readable messages.
 - Regression tests now cover unavailable AI provider fallback, response secret non-disclosure, protected admin pricing route and channel webhook authorization.
 - Final visual screenshots were captured at desktop 1440x1000 and mobile 390x844 for the homepage, plus mobile login.
+
+FINAL INVOICE/SEO UPDATE — 2026-09-01
+- Invoice issuer fallback is BALKAN AGENT.
+- PDF and email invoice explicitly show VAT / PDV: Not charged, subject to owner/accountant confirmation.
+- Account holder is read from INVOICE_ACCOUNT_HOLDER and payment details include IBAN, BIC and payment reference.
+- Invoice sender defaults to info@balkanagent.com and requires a verified email domain plus RESEND_API_KEY for live delivery.
+- Added title, description, keywords, canonical, Open Graph, Twitter metadata, JSON-LD, robots.txt and sitemap.xml.
+- Language smoke, functional bot/reservation/pricing/admin tests, JS syntax, HTML audit, invoice config and RGBA logo checks passed.
+
+FINAL INVOICE FLOW UPDATE — 2026-09-01
+- Added billing_cycle to users and discount_percent to invoices; annual activation now reads admin pricing and stores the actual discount.
+- PDF/email renders include discount, invoice status, due date, payment reference, account holder, IBAN/BIC and VAT / PDV: Not charged.
+- Customer portal now loads protected billing instructions from /api/billing/instructions; unauthenticated access returns 401.
+- Mock provider tests cover both successful info@ sender delivery and provider failure handling.
+- Final activation-to-PDF test passed for annual Business plan at 25% discount.
+
+FINAL VERIFIED INVOICE FLOW — 2026-09-01
+- Admin UI now exposes Monthly / Annual - 25% billing cycle and sends billing_cycle through the real admin PATCH route.
+- users.billing_cycle and invoices.discount_percent are included in schema and legacy-safe runtime migration.
+- Route E2E passed: admin annual activation stored 25% discount and authenticated customer billing instructions returned Suljevic Fariz, IBAN, BIC and no-VAT status.
+- Activation-to-PDF E2E passed with due date, status, discount, no-VAT text, reference, bank details and email success/error branches.
+
+FINAL VERIFIED OWNER BILLING FLOW — 2026-09-01
+- Admin UI has a real Monthly/Annual selector and sends billing_cycle through the protected customer PATCH route.
+- Route-level test confirmed annual activation stores 25% discount and authenticated billing instructions return server-side payment values.
+- createActivationInvoice failure test confirmed email_sent:false and email_error when provider returns 503.
+- One activation-to-invoice test creates the invoice record and verifies stored discount, due date, status and successful/failed email paths; PDF field test verifies full rendered payment content.
+- Mock DOM test confirmed customer billing instructions populate account holder, IBAN, BIC and no-VAT status fields.
+
+FINAL E2E EVIDENCE — 2026-09-01
+- Single activation-to-PDF test now uses the stored invoice returned by createActivationInvoice, then renders that same record and verifies due date, status, 25% discount, no-VAT note, payment reference, account holder and IBAN/BIC.
+- Full activation provider failure path returns email_sent:false and email_error on a mocked 503.
+- Integrated customer portal smoke test creates a signed customer session, calls the real billing instructions onRequest route, passes the response into the existing loadCustomerBilling portal function and verifies DOM values.

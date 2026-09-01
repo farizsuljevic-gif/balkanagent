@@ -17,7 +17,7 @@ input,select{background:rgba(9,12,15,.86)!important;color:#f7f0e1!important;bord
 .loginBox .header{border-bottom-color:rgba(194,149,70,.28)!important}.ba{background:linear-gradient(135deg,#f5d58d,#b77f2d,#f0cc82)!important;-webkit-background-clip:text!important;color:transparent!important;text-shadow:0 0 18px rgba(204,155,64,.16)}.back,a{color:#d5b97d!important}.sub{color:#b9ad98!important}.box a{color:#d7b972!important}
 @media(max-width:700px){aside{border-right:0!important;border-bottom:1px solid rgba(194,149,70,.25)!important}.metrics{gap:12px!important}.brandLogo{width:44px;height:44px}}
 </style></head><body>
-<div class="shell"><aside><div class="brand"><img class="brandLogo" src="/manus-storage/balkan-agent-ba-monogram-gold_64a4efd3.png" alt="BA monogram" onerror="this.src='balkan-agent-ba-monogram-gold.png'"><span>BALKAN</span><span>AGENT</span><div class="tag">CUSTOMER PORTAL</div></div><select id="lang" class="btn" style="width:100%;margin-bottom:12px"><option value="Crnogorski">Crnogorski</option><option value="English">English</option><option value="Deutsch">Deutsch</option><option value="Русский">Русский</option><option value="Shqip">Shqip</option><option value="Slovenščina">Slovenščina</option><option value="Македонски">Македонски</option><option value="Български">Български</option><option value="Ελληνικά">Ελληνικά</option><option value="Română">Română</option><option value="Türkçe">Türkçe</option></select><nav>
+<div class="shell"><aside><div class="brand"><img class="brandLogo" src="balkan-agent-ba-monogram-transparent.png" alt="BA monogram" onerror="this.src='balkan-agent-ba-monogram-transparent.png'"><span>BALKAN</span><span>AGENT</span><div class="tag">CUSTOMER PORTAL</div></div><select id="lang" class="btn" style="width:100%;margin-bottom:12px"><option value="Crnogorski">Crnogorski</option><option value="English">English</option><option value="Deutsch">Deutsch</option><option value="Русский">Русский</option><option value="Shqip">Shqip</option><option value="Slovenščina">Slovenščina</option><option value="Македонски">Македонски</option><option value="Български">Български</option><option value="Ελληνικά">Ελληνικά</option><option value="Română">Română</option><option value="Türkçe">Türkçe</option></select><nav>
 <button class="active" data-tab="dashboard" data-t="overview">Pregled</button><button data-tab="agents" data-t="agents">AI zaposleni</button><button data-tab="leads" data-t="leads">Leadovi</button><button data-tab="channels" data-t="channels">Kanali</button><button data-tab="subscription" data-t="subscription">Pretplata</button><button data-tab="billing">Plaćanje i profil</button><button data-tab="settings" data-t="settings">Podešavanja</button><a href="index.html" data-t="back">Nazad na sajt</a>
 <a href="#" id="logoutCustomer">Logout</a></nav></aside><main>
 <div class="notice">SECURE CUSTOMER PORTAL — nalog, profil i računi dolaze iz sigurnog API-ja. Kanalne integracije se aktiviraju nakon povezivanja poslovnih naloga.</div>
@@ -47,6 +47,16 @@ input,select{background:rgba(9,12,15,.86)!important;color:#f7f0e1!important;bord
     </div>
     <br>
     <button id="saveProfileBilling" class="btn primary">Sačuvaj podatke</button>
+    <div id="bankTransferInstructions" class="notice" style="margin-top:18px;border:1px solid #2d5270;border-radius:12px;padding:16px;background:linear-gradient(135deg,#081a2b,#10152a)">
+      <strong>Instrukcije za bankovni transfer</strong>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px">
+        <span>Vlasnik računa<br><b id="invoiceAccountHolder">Učitavanje...</b></span>
+        <span>IBAN<br><b id="invoiceIban">Učitavanje...</b></span>
+        <span>BIC / SWIFT<br><b id="invoiceBic">Učitavanje...</b></span>
+        <span>Status VAT/PDV<br><b id="invoiceVatStatus">Učitavanje...</b></span>
+      </div>
+      <small style="display:block;margin-top:10px">Uplatu šalji tek nakon što primiš račun. Referenca plaćanja je broj računa.</small>
+    </div>
     <div style="margin-top:24px;border-top:1px solid #1d304d;padding-top:18px">
       <h3>Moji računi</h3>
       <div id="invoiceList" style="color:#9dacbf">Učitavanje računa...</div>
@@ -112,6 +122,22 @@ render();
 })();
 </script>
 <script>
+function populateBillingInstructions(payment){
+  const text=(id,value)=>{const e=document.getElementById(id);if(e)e.textContent=value||'Nije podešeno';};
+  text('invoiceAccountHolder',payment.account_holder);text('invoiceIban',payment.iban);text('invoiceBic',payment.bic);text('invoiceVatStatus',payment.vat_status);
+}
+async function loadCustomerBilling(api){
+  const me=await api('/api/auth/me');
+  if(me.role!=='customer'){location.href='login.html';return null;}
+  const u=me.user;
+  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v??''};
+  set('profileName',u.name);set('profileCompany',u.company);set('profileEmail',u.email);
+  set('profilePhone',u.phone);set('profilePaymentMethod',u.payment_method||'Bank transfer / IBAN');
+  set('profileIban',u.iban);set('profileBank',u.bank_name);set('profilePaymentStatus',u.payment_status||'UNPAID');
+  const payment=await api('/api/billing/instructions');
+  populateBillingInstructions(payment);
+  return payment;
+}
 (async function(){
   async function api(path,options={}){
     const r=await fetch(path,{...options,headers:{'content-type':'application/json',...(options.headers||{})}});
@@ -120,13 +146,7 @@ render();
     return j;
   }
   try{
-    const me=await api('/api/auth/me');
-    if(me.role!=='customer'){location.href='login.html';return;}
-    const u=me.user;
-    const set=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v??''};
-    set('profileName',u.name);set('profileCompany',u.company);set('profileEmail',u.email);
-    set('profilePhone',u.phone);set('profilePaymentMethod',u.payment_method||'Bank transfer / IBAN');
-    set('profileIban',u.iban);set('profileBank',u.bank_name);set('profilePaymentStatus',u.payment_status||'UNPAID');
+    await loadCustomerBilling(api);
     const btn=document.getElementById('saveProfileBilling');
     if(btn)btn.onclick=async()=>{
       const j=await api('/api/profile',{method:'PATCH',body:JSON.stringify({
