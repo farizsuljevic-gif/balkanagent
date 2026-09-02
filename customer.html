@@ -26,7 +26,7 @@ input,select{background:rgba(9,12,15,.86)!important;color:#f7f0e1!important;bord
 <section id="agents" class="section"><div class="panel"><h2>AI zaposleni</h2><p class="notice">Konfiguracija zaposlenih je pripremni workspace prikaz. Aktivacija produkcijskog AI providera se završava kroz server secrets.</p><div class="grid" id="agentGrid"></div></div></section>
 <section id="leads" class="section"><div class="panel"><h2>Leadovi</h2><p style="color:#8ea0b5">U ovoj statičkoj verziji leadovi se čitaju iz lokalnog pregleda. Cloudflare D1 će ih kasnije učiniti stvarnim i zajedničkim na svim uređajima.</p><div id="leadList"></div></div></section>
 <section id="channels" class="section"><div class="panel"><h2>Kanali</h2><p class="notice">Statusi kanala su lokalni setup indikatori dok se stvarni WhatsApp, Instagram, Viber ili drugi poslovni nalog ne poveže kroz webhook.</p><div class="grid" id="channelGrid"></div></div></section>
-<section id="subscription" class="section"><div class="panel"><h2>Pretplata</h2><p class="notice">Plan se prikazuje iz korisničkog workspacea; stvarnu aktivaciju i status plaćanja potvrđuje administrator nakon bank transfera.</p><label>Plan<select id="plan"><option>Starter</option><option>Business</option><option>Pro</option><option>Enterprise</option></select></label><br><br><button id="savePlan" class="btn primary" data-t="manage">Upravljaj paketom</button><span id="planMsg" class="good" style="margin-left:10px"></span></div></section>
+<section id="subscription" class="section"><div class="panel"><h2>Pretplata</h2><p class="notice">Plan se prikazuje iz korisničkog workspacea; stvarnu aktivaciju i status plaćanja potvrđuje administrator nakon bank transfera.</p><label>Plan<select id="plan"><option>Starter</option><option>Business</option><option>Pro</option><option>Enterprise</option><option>Premium</option></select></label><br><br><button id="savePlan" class="btn primary" data-t="manage">Upravljaj paketom</button><span id="planMsg" class="good" style="margin-left:10px"></span></div></section>
 
 <section id="billing" class="section">
   <div class="panel">
@@ -55,6 +55,7 @@ input,select{background:rgba(9,12,15,.86)!important;color:#f7f0e1!important;bord
         <span>BIC / SWIFT<br><b id="invoiceBic">Učitavanje...</b></span>
         <span>Status VAT/PDV<br><b id="invoiceVatStatus">Učitavanje...</b></span>
         <span>Godišnji popust<br><b id="invoiceAnnualDiscount">Učitavanje...</b></span>
+        <span>Jednokratna aktivacija<br><b id="invoiceActivationPrice">Učitavanje...</b></span>
       </div>
       <small style="display:block;margin-top:10px">Uplatu šalji tek nakon što primiš račun. Referenca plaćanja je broj računa.</small>
     </div>
@@ -126,10 +127,11 @@ render();
 function populateBillingInstructions(payment){
   const text=(id,value)=>{const e=document.getElementById(id);if(e)e.textContent=value||'Nije podešeno';};
   text('invoiceAccountHolder',payment.account_holder);text('invoiceIban',payment.iban);text('invoiceBic',payment.bic);text('invoiceVatStatus',payment.vat_status);text('invoiceAnnualDiscount',payment.annual_enabled ? `−${Number(payment.annual_discount_percent||0)}% na godišnji paket` : 'Godišnje plaćanje nije aktivno');
+  const plan=payment.plans?.[state.plan]||payment.plans?.Starter; if(plan)text('invoiceActivationPrice',(Number(plan.activation_cents||0)/100).toLocaleString('de-DE',{style:'currency',currency:'EUR'})+' jednokratno');
 }
 async function loadCustomerBilling(api){
   const me=await api('/api/auth/me');
-  if(me.role!=='customer'){location.href='login.html';return null;}
+  if(me.role!=='customer'){const error=new Error('Customer session required');error.status=403;throw error;}
   const u=me.user;
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v??''};
   set('profileName',u.name);set('profileCompany',u.company);set('profileEmail',u.email);
@@ -141,9 +143,9 @@ async function loadCustomerBilling(api){
 }
 (async function(){
   async function api(path,options={}){
-    const r=await fetch(path,{...options,headers:{'content-type':'application/json',...(options.headers||{})}});
+    const r=await fetch(path,{...options,credentials:'include',headers:{'content-type':'application/json',...(options.headers||{})}});
     const j=await r.json().catch(()=>({}));
-    if(!r.ok) throw new Error(j.error||'Request failed');
+    if(!r.ok){const error=new Error(j.error||'Request failed');error.status=r.status;throw error;}
     return j;
   }
   try{
@@ -159,7 +161,12 @@ async function loadCustomerBilling(api){
       })});
       const m=document.getElementById('billingMsg');if(m){m.textContent='✓ Sačuvano';setTimeout(()=>m.textContent='',1500);}
     };
-  }catch(e){location.href='login.html'}
+  }catch(e){
+    if(e?.status===401||e?.status===403){location.href='login.html?next=customer.html';return;}
+    const notice=document.querySelector('main > .notice');
+    if(notice)notice.textContent='Customer portal je privremeno nedostupan. Pokušaj osvježiti stranicu; prijava ostaje sačuvana.';
+    console.error('[customer-portal]',e);
+  }
 })();
 </script>
 
@@ -167,8 +174,8 @@ async function loadCustomerBilling(api){
 (async function(){
   const box=document.getElementById('invoiceList'); if(!box)return;
   try{
-    const r=await fetch('/api/invoices',{headers:{'content-type':'application/json'}});
-    const j=await r.json(); if(!r.ok)throw new Error(j.error||'Request failed');
+    const r=await fetch('/api/invoices',{credentials:'include',headers:{'content-type':'application/json'}});
+    const j=await r.json(); if(!r.ok){const error=new Error(j.error||'Request failed');error.status=r.status;throw error;}
     if(!j.invoices.length){box.textContent='Još nema izdatih računa.';return;}
     box.innerHTML=j.invoices.map(i=>`<div class="item" style="margin:8px 0;display:flex;justify-content:space-between;gap:10px;align-items:center"><div><b>${i.invoice_number}</b><br><small>${i.issue_date} · ${i.plan} · ${(i.amount_cents/100).toFixed(2)} ${i.currency}</small></div><a class="btn" href="/api/invoices/${i.id}/pdf">Preuzmi PDF</a></div>`).join('');
   }catch(e){box.textContent='Računi trenutno nijesu dostupni.'}

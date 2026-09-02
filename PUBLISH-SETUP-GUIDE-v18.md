@@ -60,22 +60,26 @@ Otvori **Pages project → Settings → Variables and Secrets → Production**. 
 | `INVOICE_ACCOUNT_HOLDER` | `Suljevic Fariz` | vlasnik računa za bank transfer |
 | `INVOICE_IBAN` | `DE40 1001 1001 2345 8334 17` | potvrdi prije prvog live računa |
 | `INVOICE_SWIFT` | `NTSBDEB1XXX` | potvrdi da je BIC prepisan tačno |
-| `INVOICE_FROM_EMAIL` | `info@balkanagent.com` | sender za invoice email |
+| `INVOICE_FROM_EMAIL` | `info@balkanagent.com` ili ranija vrijednost `Balkan Agent <info@balkanagent.com>` | sender za invoice i registration email; backend iz obje varijante koristi čistu verifikovanu adresu |
 
 ### Invoice variables
 
 | Varijabla | Preporučena vrijednost |
 |---|---|
 | `INVOICE_COMPANY_NAME` | `BALKAN AGENT` |
-| `INVOICE_CONTACT_EMAIL` | `info@balkanagent.com` |
+| `INVOICE_CONTACT_EMAIL` | `info@balkanagent.com` | invoice kontakt i podrazumijevani recipient za owner obavijest o novoj registraciji |
 | `INVOICE_PHONE` | `+382 68 400 509` ako je i dalje tačan |
 | `INVOICE_DUE_DAYS` | `7` |
 | `INVOICE_COMPANY_ADDRESS` | unesi samo potvrđenu pravnu adresu iz starog računa |
 | `INVOICE_TAX_ID` | ostavi prazno dok ne potvrdiš stvarni poreski broj |
 | `INVOICE_BANK_NAME` | unesi tačan naziv banke ako želiš da bude na računu |
-| `INVOICE_ENTERPRISE_PRICE_CENTS` | `0` ili potvrđena cijena iz ponude |
+| `INVOICE_ENTERPRISE_PRICE_CENTS` | `0` ili potvrđena mjesečna cijena iz ponude |
 
 Na računu je podešeno da nema obračunatog VAT/PDV-a. Nemoj upisivati poreski broj ili pravni status koji nije potvrđen.
+
+### Jednokratna aktivacija
+
+Aktivaciona naknada se naplaćuje jednom pri prvoj aktivaciji i ne umanjuje se godišnjim popustom. Početni cjenik je: Starter `89 EUR/mjesečno + 149 EUR aktivacija`, Business `199 EUR/mjesečno + 349 EUR aktivacija`, Pro `399 EUR/mjesečno + 699 EUR aktivacija` i Premium `699 EUR/mjesečno + 990 EUR aktivacija`. Enterprise ostaje po dogovoru sa aktivacijom od `1.490 EUR`. Premium je prikazan kao posljednji paket sa najširim stvarnim obimom: do 20 AI agenata, svi podržani kanali i prioritetna podrška. Prvi invoice prikazuje aktivaciju zajedno sa izabranom mjesečnom ili godišnjom pretplatom; kod godišnjeg paketa 25% popusta važi samo za pretplatu. Premium godišnja pretplata iznosi `6.291 EUR`, a aktivacija ostaje `990 EUR`. Ove cijene su početni cjenik i vlasnik ih treba potvrditi prije objave u skladu sa svojim troškovima i poreskim statusom.
 
 ## 5. Email slanje invoice računa
 
@@ -87,13 +91,13 @@ U Cloudflare Production secrets dodaj:
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxx
 ```
 
-Ne kopiraj ključ u `index.html`, `admin.html`, GitHub ili javni chat. Pošiljalac treba da bude:
+Ne kopiraj ključ u `index.html`, `admin.html`, GitHub ili javni chat. Backend je kompatibilan sa starim display-name podešavanjem `Balkan Agent <info@balkanagent.com>` i automatski ga normalizuje. Za Cloudflare Production ipak preporučujem čistu vrijednost, jer provider validacija tako ostaje najstabilnija:
 
 ```text
 info@balkanagent.com
 ```
 
-Prije prvog klijenta pošalji test na vlastiti email. Provjeri inbox i spam folder. Ako provider nije podešen, aktivacija kupca i kreiranje invoice zapisa mogu uspjeti, ali rezultat će jasno sadržati `email_sent:false` i grešku providera; invoice možeš ponovo poslati iz admina nakon popravke.
+Prije prvog klijenta pošalji test na vlastiti email. Provjeri inbox i spam folder. Nova customer registracija sada pravi pending nalog i automatski šalje owner obavijest na `INVOICE_CONTACT_EMAIL` (ili na opcioni `OWNER_NOTIFICATION_EMAIL`). Aktivacija kupca zatim pravi invoice i šalje ga kupcu. Ako provider nije podešen ili domen nije verifikovan, nalog i invoice zapis mogu uspjeti, ali odgovor jasno sadrži `owner_notification_sent:false` ili `email_sent:false`; invoice se može ponovo poslati iz admina nakon popravke. Nakon izmjene secrets obavezno uradi novi Production deploy.
 
 ## 6. AI bot
 
@@ -117,7 +121,13 @@ Provider mora prihvatati OpenAI-kompatibilan JSON request. Ključ se nikada ne s
 | „Želim razgovarati sa čovjekom.“ | handover timu |
 | „Da li imate WhatsApp/Viber/Instagram?“ | channel konfiguracija i upozorenje da provider nalog mora biti povezan |
 
-## 7. WhatsApp, Instagram i Viber webhooks
+## 7. Floating AI support widget
+
+Homepage sada ima premium floating launcher u donjem desnom uglu. Widget koristi postojeći server-side `/api/bot/chat` endpoint i lokalni FAQ fallback, pa radi i bez eksternog AI ključa u demo režimu. U panelu su quick pitanja, loading/error tok, pristupačan chat log i direktan link `Podrška → Kontakt` za predaju razgovora timu. Widget ne smije biti opisan kao stalno prisutan ljudski operater ako takva služba nije stvarno organizovana.
+
+Ako želiš da podrška bude stvarno uživo sa agentom, potrebno je naknadno povezati eksterni inbox/chat servis ili organizovati email/WhatsApp dežurstvo. Bez toga widget ostaje AI demo + handover ka kontakt formi, što je jasno prikazano korisniku.
+
+## 8. WhatsApp, Instagram i Viber webhooks
 
 Dodaj server secrets:
 
@@ -195,13 +205,16 @@ Testiraj u privatnom/incognito prozoru i na telefonu. Redoslijed je:
 3. Chat vraća različite relevantne odgovore na najmanje sedam pitanja.
 4. Registracija stvara `PENDING` korisnika.
 5. Admin login radi sa `ceo@balkanagent.com` i `ADMIN_PASSWORD` secretom.
-6. Admin aktivira testnog kupca i bira monthly ili annual.
-7. Za annual račun provjeri 25% popust, `ISSUED` status, due date i referencu.
-8. Provjeri PDF i email; sender treba biti `info@balkanagent.com`.
-9. Customer portal prikazuje samo autentifikovane bank-transfer instrukcije.
-10. Neautorizovan poziv admin ili billing rute dobija odbijanje.
-11. Rezervacija validira obavezna polja i stiže u admin pregled.
-12. Nakon testa obriši testnog korisnika ili ga jasno označi kao testnog.
+6. Registruj testnog customer korisnika i provjeri da owner prima obavijest na `info@balkanagent.com`.
+7. Customer login mora ostati aktivan nakon otvaranja `customer.html` i osvježavanja stranice; ako backend privremeno nije dostupan, portal više ne radi nepotreban redirect na login.
+8. Aktiviraj korisnika tek nakon provjere bank transfera i provjeri da kupac prima invoice.
+9. Provjeri PDF i email; sender treba biti `info@balkanagent.com`, a invoice total mora sadržati pretplatu plus jednokratnu aktivaciju.
+10. Admin aktivira testnog kupca i bira monthly ili annual.
+11. Za annual račun provjeri 25% popust, `ISSUED` status, due date i referencu.
+12. Customer portal prikazuje samo autentifikovane bank-transfer instrukcije.
+13. Neautorizovan poziv admin ili billing rute dobija odbijanje.
+14. Rezervacija validira obavezna polja i stiže u admin pregled.
+15. Nakon testa obriši testnog korisnika ili ga jasno označi kao testnog.
 
 ## 12. Šta je obavezno prije prvog pravog kupca
 

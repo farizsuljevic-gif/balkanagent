@@ -127,7 +127,7 @@ function cleanBotText(value, max=1200){
 }
 
 const FAQ_KNOWLEDGE=[
-  {keys:['cijen','price','paket','pretplat'],answer:'Naši planovi su Starter 89 EUR, Business 199 EUR i Pro 399 EUR mjesečno. Godišnji paket trenutno ima 25% popusta. Enterprise je po dogovoru. Pošaljite djelatnost i broj kanala pa možemo preporučiti paket.'},
+  {keys:['cijen','price','paket','pretplat'],answer:'Naši planovi su Starter 89 EUR + 149 EUR jednokratna aktivacija, Business 199 EUR + 349 EUR aktivacija, Pro 399 EUR + 699 EUR aktivacija i Premium 699 EUR + 990 EUR aktivacija mjesečno. Godišnji popust od 25% odnosi se na pretplatu, ne na jednokratnu aktivaciju. Enterprise počinje od 1.490 EUR aktivacije, a pretplata je po dogovoru.'},
   {keys:['rezerv','termin','book','soba','hotel'],answer:'Mogu pomoći oko rezervacije ili termina. Napišite djelatnost, željeni datum, vrijeme, broj osoba i kontakt. Konačnu dostupnost i potvrdu daje vaš tim.'},
   {keys:['turiz','putov','apartman','restoran','gost'],answer:'Za turizam agent može odgovarati na česta pitanja gostiju, prikupljati zahtjeve, pomagati oko rezervacija i predati složen razgovor timu. Za početak pošaljite tip objekta, kanal i jezik podrške.'},
   {keys:['whatsapp','instagram','viber','facebook','telegram','email','sms','kanal','integr'],answer:'Balkan Agent može povezati web-chat i poslovne kanale. Za stvarno povezivanje potreban je odobreni poslovni nalog, webhook/API podešavanje i sigurna konfiguracija; privatne API ključeve ne unosite u javni sajt.'},
@@ -141,7 +141,7 @@ function knowledgeReply(message){const text=String(message||'').toLowerCase();re
 function localBotReply(message){
   const text=String(message||'').toLowerCase();
   const known=knowledgeReply(message); if(known)return known;
-  if(/cijen|price|paket|pretplat|koliko košta|koliko kosta/.test(text)) return 'Naši planovi su Starter 89 EUR, Business 199 EUR i Pro 399 EUR mjesečno. Godišnji paket ima 25% popusta, a Enterprise je po dogovoru. Napišite broj kanala i djelatnost za preporuku.';
+  if(/cijen|price|paket|pretplat|koliko košta|koliko kosta/.test(text)) return 'Naši planovi: Starter 89 EUR + 149 EUR jednokratna aktivacija, Business 199 EUR + 349 EUR aktivacija, Pro 399 EUR + 699 EUR aktivacija i Premium 699 EUR + 990 EUR aktivacija mjesečno. Godišnji popust od 25% odnosi se samo na pretplatu. Enterprise ima aktivaciju od 1.490 EUR i pretplatu po dogovoru. Napišite broj kanala i djelatnost za preporuku.';
   if(/rezerv|termin|book|datum|vrijeme|vreme/.test(text)) return 'Za rezervaciju pošaljite djelatnost, željeni datum, vrijeme, broj osoba i kontakt. Zahtjev se evidentira, a konačnu dostupnost potvrđuje vaš tim.';
   if(/turiz|hotel|apartman|smješt|smestaj|restoran|gost|putov/.test(text)) return 'Za turizam agent odgovara gostima, prikuplja zahtjeve, pomaže oko rezervacija i predaje složen razgovor recepciji ili prodaji.';
   if(/medicin|doktor|patient|pacij|klin|ordin/.test(text)) return 'Za medicinu agent daje samo administrativne informacije, pomaže oko termina i predaje osjetljive slučajeve osoblju. Ne daje dijagnoze niti medicinske savjete.';
@@ -162,7 +162,10 @@ async function serverBotReply(env, messages){
 }
 
 // ---------- INVOICES ----------
-const PLAN_PRICES = {Starter:8900, Business:19900, Pro:39900};
+const PLAN_PRICES = {Starter:8900, Business:19900, Pro:39900, Premium:69900};
+// One-time onboarding/activation fees are charged once when an account is activated.
+// Subscription annual discounts never reduce these implementation fees.
+const ACTIVATION_PRICES = {Starter:14900, Business:34900, Pro:69900, Enterprise:149000, Premium:99000};
 const DEFAULT_PRICING = {annual_enabled:1, annual_discount_percent:25};
 
 async function ensurePricingSchema(env){
@@ -175,16 +178,21 @@ async function ensurePricingSchema(env){
   await env.DB.prepare(`CREATE TABLE IF NOT EXISTS pricing_plans (
     plan TEXT PRIMARY KEY,
     monthly_cents INTEGER NOT NULL,
+    activation_cents INTEGER NOT NULL DEFAULT 0,
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
   )`).run();
+  try { await env.DB.prepare(`ALTER TABLE pricing_plans ADD COLUMN activation_cents INTEGER NOT NULL DEFAULT 0`).run(); } catch (e) { /* already migrated */ }
   await env.DB.prepare(`INSERT OR IGNORE INTO pricing_config(id,annual_enabled,annual_discount_percent) VALUES(1,1,25)`).run();
-  for(const [plan,cents] of Object.entries(PLAN_PRICES)) await env.DB.prepare('INSERT OR IGNORE INTO pricing_plans(plan,monthly_cents) VALUES(?,?)').bind(plan,cents).run();
+  for(const [plan,cents] of Object.entries(PLAN_PRICES)) {
+    await env.DB.prepare('INSERT OR IGNORE INTO pricing_plans(plan,monthly_cents,activation_cents) VALUES(?,?,?)').bind(plan,cents,ACTIVATION_PRICES[plan]||0).run();
+    await env.DB.prepare('UPDATE pricing_plans SET activation_cents=? WHERE plan=? AND (activation_cents IS NULL OR activation_cents=0)').bind(ACTIVATION_PRICES[plan]||0,plan).run();
+  }
 }
 async function getPricing(env){
   await ensurePricingSchema(env);
   const row=await env.DB.prepare('SELECT * FROM pricing_config WHERE id=1').first();
-  const rows=await env.DB.prepare('SELECT plan,monthly_cents FROM pricing_plans').all();
-  const plans=Object.fromEntries((rows.results||[]).map(x=>[x.plan,{monthly_cents:Number(x.monthly_cents),annual_cents:annualAmountCents(Number(x.monthly_cents),Number(row?.annual_discount_percent??25))}]));
+  const rows=await env.DB.prepare('SELECT plan,monthly_cents,activation_cents FROM pricing_plans').all();
+  const plans=Object.fromEntries((rows.results||[]).map(x=>[x.plan,{monthly_cents:Number(x.monthly_cents),activation_cents:Number(x.activation_cents ?? ACTIVATION_PRICES[x.plan] ?? 0),annual_cents:annualAmountCents(Number(x.monthly_cents),Number(row?.annual_discount_percent??25))}]));
   return {annual_enabled:!!(row?.annual_enabled ?? DEFAULT_PRICING.annual_enabled),annual_discount_percent:Number(row?.annual_discount_percent ?? 25),plans};
 }
 
@@ -233,6 +241,12 @@ async function planAmountCents(plan, env) {
   if(row?.monthly_cents!==undefined) return Number(row.monthly_cents);
   const custom = Number(env.INVOICE_ENTERPRISE_PRICE_CENTS || 0);
   return Number.isFinite(custom) && custom > 0 ? Math.round(custom) : 0;
+}
+async function activationAmountCents(plan, env) {
+  await ensurePricingSchema(env);
+  const row=await env.DB.prepare('SELECT activation_cents FROM pricing_plans WHERE plan=?').bind(plan).first();
+  if(row?.activation_cents!==undefined && Number(row.activation_cents)>0) return Number(row.activation_cents);
+  return Number(ACTIVATION_PRICES[plan] || Number(env.INVOICE_ENTERPRISE_ACTIVATION_CENTS || 149000));
 }
 function annualAmountCents(monthly, discountPercent=25){
   const pct=Math.max(0,Math.min(100,Number(discountPercent)||0));
@@ -304,9 +318,30 @@ function bytesToBase64(bytes){
   return btoa(out);
 }
 
-async function sendInvoiceEmail(env, invoice, customer) {
+function normaliseEmailAddress(value, fallback='info@balkanagent.com') {
+  const raw = String(value || fallback).trim();
+  const named = raw.match(/<\s*([^>]+)\s*>/);
+  const email = String(named?.[1] || raw).trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Email sender is not configured as a valid address. Use a plain address such as info@balkanagent.com.');
+  return email;
+}
+function htmlEsc(value='') {
+  return String(value).replace(/[&<>\"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[character]));
+}
+async function sendResendEmail(env, payload) {
   if (!env.RESEND_API_KEY) throw new Error('RESEND_API_KEY is not configured');
-  const from = env.INVOICE_FROM_EMAIL || 'Balkan Agent <info@balkanagent.com>';
+  const r = await fetch('https://api.resend.com/emails', {
+    method:'POST', headers:{'authorization':`Bearer ${env.RESEND_API_KEY}`,'content-type':'application/json'},
+    body:JSON.stringify(payload)
+  });
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(j.message||j.error||`Email provider error ${r.status}`);
+  return j.id || '';
+}
+
+async function sendInvoiceEmail(env, invoice, customer) {
+  const from = normaliseEmailAddress(env.INVOICE_FROM_EMAIL, 'info@balkanagent.com');
+  const recipient = normaliseEmailAddress(customer.email);
   const pdf = makeInvoicePdf(invoice, customer, env);
   const total = money(invoice.amount_cents, invoice.currency);
   const html = `
@@ -320,14 +355,19 @@ async function sendInvoiceEmail(env, invoice, customer) {
       <p>Your PDF invoice is attached to this email.</p>
       <p style="color:#667085;font-size:13px">Balkan Agent · +382 68 400 509 · info@balkanagent.com · balkanagent.com</p>
     </div>`;
-  const r = await fetch('https://api.resend.com/emails', {
-    method:'POST', headers:{'authorization':`Bearer ${env.RESEND_API_KEY}`,'content-type':'application/json'},
-    body:JSON.stringify({from,to:[customer.email],subject:`Balkan Agent invoice ${invoice.invoice_number}`,html,
-      attachments:[{filename:`${invoice.invoice_number}.pdf`,content:bytesToBase64(pdf)}]})
-  });
-  const j=await r.json().catch(()=>({}));
-  if(!r.ok) throw new Error(j.message||j.error||`Email provider error ${r.status}`);
-  return j.id || '';
+  return sendResendEmail(env, {from,to:[recipient],subject:`Balkan Agent invoice ${invoice.invoice_number}`,html,
+    attachments:[{filename:`${invoice.invoice_number}.pdf`,content:bytesToBase64(pdf)}]});
+}
+
+async function sendRegistrationNotification(env, customer) {
+  const from = normaliseEmailAddress(env.INVOICE_FROM_EMAIL, 'info@balkanagent.com');
+  const recipient = normaliseEmailAddress(env.OWNER_NOTIFICATION_EMAIL || env.INVOICE_CONTACT_EMAIL, 'info@balkanagent.com');
+  const name = htmlEsc(customer.name);
+  const company = htmlEsc(customer.company || 'Nije navedena');
+  const email = htmlEsc(customer.email);
+  const phone = htmlEsc(customer.phone || 'Nije naveden');
+  const html = `<div style="font-family:Arial,sans-serif;color:#0a1733;max-width:640px;margin:auto"><div style="border-top:8px solid #0a1733;padding:24px 0 10px;border-bottom:2px solid #c7a24a"><h1 style="margin:0">BALKAN AGENT</h1><div style="color:#667085">Nova customer registracija</div></div><h2>Novi nalog čeka aktivaciju</h2><p><b>Ime:</b> ${name}<br><b>Firma:</b> ${company}<br><b>Email:</b> ${email}<br><b>Telefon:</b> ${phone}</p><p>Otvori Admin panel, provjeri prijavu i aktiviraj nalog nakon potvrde bank transfera.</p><p style="color:#667085;font-size:13px">Ova poruka je automatski poslata sa Balkan Agent sistema.</p></div>`;
+  return sendResendEmail(env, {from,to:[recipient],subject:`Nova Balkan Agent registracija — ${customer.email}`,html});
 }
 
 async function createActivationInvoice(env, customer) {
@@ -336,9 +376,13 @@ async function createActivationInvoice(env, customer) {
   const annual=String(customer.billing_cycle||'monthly').toLowerCase()==='annual';
   const pricing=await getPricing(env);
   const discountPercent=annual && pricing.annual_enabled ? pricing.annual_discount_percent : 0;
-  const amount=annual ? annualAmountCents(monthly,discountPercent) : monthly;
+  const subscriptionAmount=annual ? annualAmountCents(monthly,discountPercent) : monthly;
+  const activationAmount=await activationAmountCents(customer.plan,env);
+  const amount=subscriptionAmount+activationAmount;
   const tmp='TMP-'+crypto.randomUUID();
-  const description = customer.plan==='Enterprise' ? `Balkan Agent Enterprise - ${annual?'annual':'monthly'} service` : `Balkan Agent ${customer.plan} plan - ${annual?'annual':'monthly'} service`;
+  const activationLabel=money(activationAmount,'EUR');
+  const subscriptionLabel=money(subscriptionAmount,'EUR');
+  const description = `${customer.plan==='Enterprise'?'Balkan Agent Enterprise':`Balkan Agent ${customer.plan} plan`} - one-time activation ${activationLabel} + ${annual?'annual':'monthly'} service ${subscriptionLabel}`;
   const result=await env.DB.prepare(`INSERT INTO invoices(customer_id,invoice_number,plan,description,amount_cents,discount_percent,currency,status,issue_date,due_date)
     VALUES(?,?,?,?,?,?,'EUR','ISSUED',date('now'),?)`).bind(customer.id,tmp,customer.plan,description,amount,discountPercent,dueDate(Number(env.INVOICE_DUE_DAYS||7))).run();
   const id=Number(result.meta && result.meta.last_row_id);
@@ -453,7 +497,13 @@ export async function onRequest(context) {
       VALUES (?,?,?,?,?,?,?,?,0,'customer','Bank transfer / IBAN','UNPAID',datetime('now'))
     `).bind(id,email,password_hash,salt,name,company,phone,"Starter").run();
 
-    return json({ok:true, status:"pending", message:"Account created. Admin activation is required."},201);
+    let ownerNotificationSent = false;
+    try {
+      ownerNotificationSent = !!await sendRegistrationNotification(env, {id,email,name,company,phone});
+    } catch (e) {
+      console.error('[registration-email]', e?.message || e);
+    }
+    return json({ok:true, status:"pending", owner_notification_sent:ownerNotificationSent, message:"Account created. Admin activation is required."},201);
   }
 
   // LOGIN: one endpoint for admin + customer
@@ -503,7 +553,7 @@ export async function onRequest(context) {
     if (r.error) return r.error;
     if (r.session.role!=="customer") return bad("Customer required",403);
     const pricing=await getPricing(env);
-    return json({ok:true,payment_method:"Bank transfer / IBAN",account_holder:env.INVOICE_ACCOUNT_HOLDER||"BALKAN AGENT",iban:env.INVOICE_IBAN||"",bic:env.INVOICE_SWIFT||"",contact_email:env.INVOICE_CONTACT_EMAIL||"info@balkanagent.com",vat_status:"VAT / PDV: Not charged",annual_enabled:pricing.annual_enabled,annual_discount_percent:pricing.annual_discount_percent});
+    return json({ok:true,payment_method:"Bank transfer / IBAN",account_holder:env.INVOICE_ACCOUNT_HOLDER||"BALKAN AGENT",iban:env.INVOICE_IBAN||"",bic:env.INVOICE_SWIFT||"",contact_email:env.INVOICE_CONTACT_EMAIL||"info@balkanagent.com",vat_status:"VAT / PDV: Not charged",annual_enabled:pricing.annual_enabled,annual_discount_percent:pricing.annual_discount_percent,plans:pricing.plans});
   }
 
   // CUSTOMER PROFILE
@@ -636,4 +686,4 @@ export async function onRequest(context) {
 }
 
 // Named exports are used only by local regression tests; production routing remains unchanged.
-export { makeInvoicePdf, sendInvoiceEmail, createActivationInvoice, makeSession };
+export { makeInvoicePdf, sendInvoiceEmail, sendRegistrationNotification, createActivationInvoice, makeSession, getPricing, activationAmountCents };

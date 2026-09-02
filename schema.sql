@@ -50,10 +50,11 @@ INSERT OR IGNORE INTO pricing_config (id, annual_enabled, annual_discount_percen
 CREATE TABLE IF NOT EXISTS pricing_plans (
   plan TEXT PRIMARY KEY,
   monthly_cents INTEGER NOT NULL,
+  activation_cents INTEGER NOT NULL DEFAULT 0,
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
-INSERT OR IGNORE INTO pricing_plans (plan, monthly_cents) VALUES
-  ('Starter', 8900), ('Business', 19900), ('Pro', 39900);
+INSERT OR IGNORE INTO pricing_plans (plan, monthly_cents, activation_cents) VALUES
+  ('Starter', 8900, 14900), ('Business', 19900, 34900), ('Pro', 39900, 69900), ('Enterprise', 0, 149000), ('Premium', 69900, 99000);
 
 CREATE TABLE IF NOT EXISTS reservations (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

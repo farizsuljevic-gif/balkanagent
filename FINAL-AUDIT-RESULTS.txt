@@ -162,3 +162,58 @@ FINAL RELEASE v24
 - Customer billing DOM E2E passed with server-backed annual discount.
 - Syntax check passed for functions/[[path]].js; contact invalid/empty form browser checks passed.
 - Live limitation: a real external AI key is not configured, so bot responses use the safe FAQ fallback; actual Resend delivery requires a verified sender and production key.
+
+FINAL v25 AUTH/EMAIL REGRESSION FIX — 2026-09-01
+- Confirmed root cause: v24 `auth/register` created the pending customer but had no owner notification call; registration frontend only displayed local success text.
+- Added server-side Resend owner notification to `INVOICE_CONTACT_EMAIL`, with optional `OWNER_NOTIFICATION_EMAIL` override and no password disclosure.
+- Normalized `INVOICE_FROM_EMAIL` so named input is reduced to a valid plain sender address; recommended live value remains `info@balkanagent.com`.
+- Added `owner_notification_sent` to registration response and a transparent registration status message.
+- Customer portal API calls now explicitly include the session cookie, preserve the session on refresh, attach HTTP status to errors, and only redirect to login for 401/403; transient backend failures no longer log users out.
+- Login and registration requests explicitly include credentials.
+- New `auth-email-session-regression.mjs` passed: registration owner notification, sender normalization, inactive activation gate, customer login cookie, auth/me refresh and customer portal guards.
+- Existing functional, language and static audits passed after the fix.
+- Live limitation: the fix requires a new Cloudflare Production deploy, valid `RESEND_API_KEY`, verified `balkanagent.com` sender domain and a final real registration test.
+
+FINAL v26 ACTIVATION PRICING UPDATE — 2026-09-01
+- Added server-side one-time activation prices: Starter EUR 149, Business EUR 349, Pro EUR 699 and Enterprise from EUR 1,490.
+- Added `activation_cents` to `pricing_plans` with a legacy-safe runtime migration and updated schema.sql seed values.
+- Public pricing cards and the public `/api/pricing` response now show activation separately from monthly/annual subscription pricing.
+- Customer billing instructions expose activation pricing for the selected plan; admin pricing preview shows all activation values.
+- Activation is included once in the first activation invoice. The configured annual discount applies only to the subscription portion, not the activation fee.
+- Invoice descriptions contain the activation and subscription breakdown; bank-transfer/no-VAT flow remains unchanged.
+- Bot pricing replies now explain activation amounts and the annual discount rule.
+- `activation-pricing-regression.mjs` passed for all packages, annual discount exclusion, invoice totals and invoice descriptions.
+- Existing auth/email/session, functional, language and static audits passed after the change.
+
+FINAL PREMIUM PACKAGE UPDATE — 2026-09-02
+Premium je dodat kao posljednji i vizuelno naglašeni paket. Cijena je 699 EUR mjesečno, 6.291 EUR godišnje uz 25% popusta na pretplatu, plus 990 EUR jednokratne aktivacije. Paket javno navodi do 20 AI agenata, sve podržane kanale i prioritetnu podršku; nisu dodane lažne statistike, recenzije ili rezultati.
+
+Premium je uveden u server-side pricing, D1 schema seed, public pricing, customer plan selector, admin plan selector, admin pricing preview, customer billing, invoice kalkulaciju i bot FAQ. Svi postojeći auth/email/session, activation invoice, functional, language i static audit testovi ponovo prolaze nakon izmjene.
+
+FINAL PREMIUM QA — 2026-09-02
+Završna provjera nakon dodavanja Premium paketa je prošla: backend syntax, activation pricing totals, godišnji popust, auth/email/session, public pricing, admin preview, customer plan selector, bot FAQ, 11-jezični smoke test i static HTML audit. Premium annual invoice potvrđen je kao 6.291 EUR subscription + 990 EUR activation = 7.281 EUR ukupno prije eventualnog poreskog obračuna koji vlasnik mora potvrditi. Public Cloudflare deploy mora biti osvježen novom arhivom prije live korištenja.
+
+PREMIUM VISUAL QA — 2026-09-02
+Desktop preview potvrđuje da je Premium posljednja i centralno izdvojena pricing kartica sa BA zlatnim spotlightom, ribbon oznakom, jasnom uštedom, listom funkcija i punim CTA dugmetom. Responsive CSS postavlja karticu preko cijele širine do 1100px i vraća prirodan mobilni redoslijed ispod 900px. Nisu dodane lažne statistike, recenzije ili neprovjerena obećanja.
+
+FAQ UPDATE — 2026-09-02
+FAQ sekcija je dodata odmah ispod cjenovnika sa osam native accordion pitanja i odgovorima o aktivaciji, godišnjem popustu, bank transferu, invoice-u, AI ključu, kanalima, medicinskoj sigurnosti i handoveru timu. Dodata je i FAQ navigaciona veza. Svi homepage jezički katalozi imaju FAQ ključeve; jezički smoke test potvrđuje 11 jezika i 67 homepage ključeva. Browser preview potvrđuje čitljiv dark/gold layout u dvije kolone na desktopu i jednu kolonu na manjim ekranima.
+
+FINAL SOURCE QA — 2026-09-02
+Kompletna provjera nakon finalnog audita prolazi: svi HTML JavaScript blokovi imaju validnu sintaksu, auth/email/session, pricing/activation/invoice, bot, FAQ i 11-jezički testovi prolaze, duplicate ID i relativne asset provjere prolaze. Dodan je site footer sa Privacy, Terms i info@balkanagent.com linkovima; source assertions i raspakivanje arhive potvrđuju prisustvo potrebnih linkova i asseta. Lokalni privremeni preview nije bio aktivan u posljednjoj provjeri, ali statički QA i raniji browser preview su uspješni.
+
+
+FINAL CHAT SUPPORT WIDGET — 2026-09-02
+- Added a premium floating AI support launcher in the lower-right corner of the homepage.
+- The widget opens and closes without changing the page layout, retains the chat panel, and includes quick questions, input/send controls and an accessible polite chat log.
+- Existing server-side /api/bot/chat and FAQ fallback were reused; the Premium pricing test question returned a relevant response.
+- Added a translated Support → Contact handover link so visitors have a clear path to the team.
+- The widget is documented as AI support plus handover, not as a falsely staffed human live-chat service.
+- Final chat widget, activation pricing, auth/email/session, functional, language and static checks passed.
+
+
+FINAL DEMO-ONLY CHAT SCOPE — 2026-09-02
+- The homepage chat remains an AI demo using the existing server-side bot route and safe FAQ fallback.
+- No WhatsApp live inbox connection, Meta token, or human-inbox credential is required or bundled in this package.
+- The widget provides a transparent Support → Contact handover path for manual follow-up.
+- WhatsApp and other channel adapters remain optional future integrations and are not represented as active in this release.

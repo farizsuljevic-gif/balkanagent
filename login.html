@@ -75,6 +75,7 @@ document.getElementById('loginForm').onsubmit=async(e)=>{
   try{
     const r=await fetch('/api/auth/login',{
       method:'POST',
+      credentials:'include',
       headers:{'content-type':'application/json'},
       body:JSON.stringify({
         email:document.getElementById('email').value.trim(),

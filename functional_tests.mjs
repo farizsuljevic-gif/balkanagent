@@ -5,7 +5,7 @@ function createDb() {
   const state = {
     reservations: [],
     pricing: { annual_enabled: 1, annual_discount_percent: 25 },
-    plans: { Starter: 8900, Business: 19900, Pro: 39900 },
+    plans: { Starter: 8900, Business: 19900, Pro: 39900, Premium: 69900 },
   };
   return {
     state,
@@ -61,6 +61,7 @@ const bot = await call('bot/chat', 'POST', { message: 'Koje su cijene i da li po
 assert.equal(bot.status, 200);
 const botJson = await bot.json();
 assert.match(botJson.reply, /25%/);
+assert.match(botJson.reply, /149|349|699|990/);
 assert.equal(botJson.mode, 'fallback');
 const providerErrorEnv = { ...env(), BOT_AI_API_URL: 'http://127.0.0.1:9/unavailable', BOT_AI_API_KEY: 'do-not-leak-test-secret' };
 const providerError = await call('bot/chat', 'POST', { message: 'Koje su cijene?' }, providerErrorEnv);
@@ -99,6 +100,12 @@ assert.equal(pricing.status, 200);
 const pricingJson = await pricing.json();
 assert.equal(pricingJson.pricing.annual_discount_percent, 25);
 assert.equal(pricingJson.plans.Business.annual_cents, 179100);
+assert.equal(pricingJson.plans.Starter.activation_cents, 14900);
+assert.equal(pricingJson.plans.Business.activation_cents, 34900);
+assert.equal(pricingJson.plans.Pro.activation_cents, 69900);
+assert.equal(pricingJson.plans.Premium.monthly_cents, 69900);
+assert.equal(pricingJson.plans.Premium.activation_cents, 99000);
+assert.equal(pricingJson.plans.Premium.annual_cents, 629100);
 
 const unauthorizedChannel = await call('channels/inbound', 'POST', { channel: 'whatsapp', message: 'Koji su paketi?' });
 assert.equal(unauthorizedChannel.status, 401);
@@ -115,6 +122,17 @@ const channelJson = await channelResponse.json();
 assert.equal(channelJson.channel, 'whatsapp');
 assert.match(channelJson.reply, /25%/);
 const fs = await import('node:fs/promises');
+const indexHtml = await fs.readFile('./index.html', 'utf8');
+assert.match(indexHtml, /id="faq"/);
+assert.match(indexHtml, /href="#faq"/);
+assert.match(indexHtml, /class="faqGrid"/);
+assert.equal((indexHtml.match(/class="faqItem"/g)||[]).length, 8);
+assert.match(indexHtml, /data-t="faqQ1"/);
+assert.match(indexHtml, /class="chatLauncher"/);
+assert.match(indexHtml, /id="chatWidget"[^>]*role="dialog"/);
+assert.match(indexHtml, /id="chatLog"[^>]*aria-live="polite"/);
+assert.match(indexHtml, /function openChat\(\)/);
+assert.match(indexHtml, /fetch\('\/api\/bot\/chat'/);
 const customerHtml = await fs.readFile('./customer.html', 'utf8');
 const backendSource = await fs.readFile('./functions/[[path]].js', 'utf8');
 assert.match(customerHtml, /invoiceAccountHolder/);
@@ -131,6 +149,7 @@ assert.match(adminHtml, /if\(e\.status===401\|\|e\.status===403\)\{location\.hre
 assert.match(adminHtml, /Admin panel je otvoren, ali neki podaci trenutno nisu dostupni/);
 assert.match(adminHtml, /showPreview=\(serverPricing\)/);
 assert.match(adminHtml, /plans\[name\]\?\.monthly_cents/);
+assert.match(adminHtml, /activation\('Premium',99000\)/);
 assert.match(adminHtml, /annual_discount_percent/);
 assert.doesNotMatch(adminHtml, /89\*12\*\(1-d\/100\)/);
 console.log('functional tests: admin session includes credentials and server-backed annual discount preview');

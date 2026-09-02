@@ -1,0 +1,9 @@
+BALKAN AGENT LIVE REGRESSION EVIDENCE — 2026-09-01
+
+URL checked: https://balkanagent.pages.dev/register
+
+The live registration page loaded successfully, but its current JavaScript registration script reports:
+- credentials:'include': false
+- owner_notification_sent handling: false
+
+This proves the public Pages deploy is still serving the older registration frontend, not the corrected v25 source package. The source package fix is therefore not live until v25 is uploaded/deployed to the Cloudflare Pages project. The v25 source package contains the server-side owner registration notification, plain sender normalization, explicit credentials on auth requests, customer portal session handling and the auth-email-session-regression.mjs test.
