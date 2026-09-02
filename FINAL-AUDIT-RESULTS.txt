@@ -217,3 +217,12 @@ FINAL DEMO-ONLY CHAT SCOPE — 2026-09-02
 - No WhatsApp live inbox connection, Meta token, or human-inbox credential is required or bundled in this package.
 - The widget provides a transparent Support → Contact handover path for manual follow-up.
 - WhatsApp and other channel adapters remain optional future integrations and are not represented as active in this release.
+
+FINAL SCREENSHOT CORRECTION PASS — 2026-09-02
+- Removed Enterprise/Custom from public pricing, admin selectors, D1 seed and public bot price answers; Starter, Business, Pro and Premium remain.
+- Replaced remaining blue billing-toggle accent with BA gold styling and stabilized admin Monthly/Annual selection.
+- Replaced unclear admin email display with clear owner-notification and customer/invoice sender explanations.
+- Removed the misleading unavailable-data banner from the admin page and isolated reservation-load failure so it cannot block the rest of the panel.
+- Updated contact display with confirmed info@balkanagent.com, +382 68 400 509 and Suljevic Fariz; no unconfirmed IBAN was invented.
+- Removed homepage video presentation, video CTA, MP4 assets and video setup references; the primary CTA now leads to pricing.
+- Final node syntax, functional, auth/email, activation, FAQ, language and static checks passed after these changes.

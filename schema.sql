@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS pricing_plans (
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 INSERT OR IGNORE INTO pricing_plans (plan, monthly_cents, activation_cents) VALUES
-  ('Starter', 8900, 14900), ('Business', 19900, 34900), ('Pro', 39900, 69900), ('Enterprise', 0, 149000), ('Premium', 69900, 99000);
+  ('Starter', 8900, 14900), ('Business', 19900, 34900), ('Pro', 39900, 69900), ('Premium', 69900, 99000);
 
 CREATE TABLE IF NOT EXISTS reservations (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

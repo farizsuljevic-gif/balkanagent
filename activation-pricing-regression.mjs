@@ -7,7 +7,6 @@ const state = {
     {plan:'Starter',monthly_cents:8900,activation_cents:14900},
     {plan:'Business',monthly_cents:19900,activation_cents:34900},
     {plan:'Pro',monthly_cents:39900,activation_cents:69900},
-    {plan:'Enterprise',monthly_cents:0,activation_cents:149000},
     {plan:'Premium',monthly_cents:69900,activation_cents:99000},
   ],
   invoices:[],
@@ -44,7 +43,8 @@ const pricing=await getPricing(env);
 assert.equal(pricing.plans.Starter.activation_cents,14900);
 assert.equal(pricing.plans.Business.activation_cents,34900);
 assert.equal(pricing.plans.Pro.activation_cents,69900);
-assert.equal(pricing.plans.Enterprise.activation_cents,149000);
+assert.equal(pricing.plans.Enterprise,undefined);
+assert.equal(Object.keys(pricing.plans).length,4);
 assert.equal(pricing.plans.Premium.activation_cents,99000);
 assert.equal(pricing.plans.Premium.annual_cents,629100);
 
@@ -59,14 +59,10 @@ const monthlyStarter=await createActivationInvoice(env,{id:'customer-starter',em
 assert.equal(monthlyStarter.invoice.amount_cents,23800); // EUR 89 monthly subscription + EUR 149 activation.
 assert.equal(monthlyStarter.invoice.discount_percent,0);
 
-const enterprise=await createActivationInvoice(env,{id:'customer-enterprise',email:'enterprise@example.com',name:'Enterprise Customer',company:'Enterprise Co',plan:'Enterprise',billing_cycle:'monthly'});
-assert.equal(enterprise.invoice.amount_cents,149000);
-assert.match(enterprise.invoice.description,/1490\.00 EUR/);
-
 const premium=await createActivationInvoice(env,{id:'customer-premium',email:'premium@example.com',name:'Premium Customer',company:'Premium Co',plan:'Premium',billing_cycle:'annual'});
 assert.equal(premium.invoice.amount_cents,728100); // EUR 6,291 annual subscription + EUR 990 activation.
 assert.equal(premium.invoice.discount_percent,25);
 assert.match(premium.invoice.description,/one-time activation 990\.00 EUR/);
 
-console.log('activation pricing regression passed: all packages, annual discount excludes activation, invoice totals and activation description');
+console.log('activation pricing regression passed: four public packages, annual discount excludes activation, invoice totals and activation description');
 globalThis.fetch=originalFetch;

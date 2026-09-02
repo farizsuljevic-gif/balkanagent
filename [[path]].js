@@ -127,7 +127,7 @@ function cleanBotText(value, max=1200){
 }
 
 const FAQ_KNOWLEDGE=[
-  {keys:['cijen','price','paket','pretplat'],answer:'Naši planovi su Starter 89 EUR + 149 EUR jednokratna aktivacija, Business 199 EUR + 349 EUR aktivacija, Pro 399 EUR + 699 EUR aktivacija i Premium 699 EUR + 990 EUR aktivacija mjesečno. Godišnji popust od 25% odnosi se na pretplatu, ne na jednokratnu aktivaciju. Enterprise počinje od 1.490 EUR aktivacije, a pretplata je po dogovoru.'},
+  {keys:['cijen','price','paket','pretplat'],answer:'Naši planovi su Starter 89 EUR + 149 EUR jednokratna aktivacija, Business 199 EUR + 349 EUR aktivacija, Pro 399 EUR + 699 EUR aktivacija i Premium 699 EUR + 990 EUR aktivacija mjesečno. Godišnji popust od 25% odnosi se na pretplatu, ne na jednokratnu aktivaciju. Napišite djelatnost i broj kanala za preporuku paketa.'},
   {keys:['rezerv','termin','book','soba','hotel'],answer:'Mogu pomoći oko rezervacije ili termina. Napišite djelatnost, željeni datum, vrijeme, broj osoba i kontakt. Konačnu dostupnost i potvrdu daje vaš tim.'},
   {keys:['turiz','putov','apartman','restoran','gost'],answer:'Za turizam agent može odgovarati na česta pitanja gostiju, prikupljati zahtjeve, pomagati oko rezervacija i predati složen razgovor timu. Za početak pošaljite tip objekta, kanal i jezik podrške.'},
   {keys:['whatsapp','instagram','viber','facebook','telegram','email','sms','kanal','integr'],answer:'Balkan Agent može povezati web-chat i poslovne kanale. Za stvarno povezivanje potreban je odobreni poslovni nalog, webhook/API podešavanje i sigurna konfiguracija; privatne API ključeve ne unosite u javni sajt.'},
@@ -141,7 +141,7 @@ function knowledgeReply(message){const text=String(message||'').toLowerCase();re
 function localBotReply(message){
   const text=String(message||'').toLowerCase();
   const known=knowledgeReply(message); if(known)return known;
-  if(/cijen|price|paket|pretplat|koliko košta|koliko kosta/.test(text)) return 'Naši planovi: Starter 89 EUR + 149 EUR jednokratna aktivacija, Business 199 EUR + 349 EUR aktivacija, Pro 399 EUR + 699 EUR aktivacija i Premium 699 EUR + 990 EUR aktivacija mjesečno. Godišnji popust od 25% odnosi se samo na pretplatu. Enterprise ima aktivaciju od 1.490 EUR i pretplatu po dogovoru. Napišite broj kanala i djelatnost za preporuku.';
+  if(/cijen|price|paket|pretplat|koliko košta|koliko kosta/.test(text)) return 'Naši planovi: Starter 89 EUR + 149 EUR jednokratna aktivacija, Business 199 EUR + 349 EUR aktivacija, Pro 399 EUR + 699 EUR aktivacija i Premium 699 EUR + 990 EUR aktivacija mjesečno. Godišnji popust od 25% odnosi se samo na pretplatu. Napišite broj kanala i djelatnost za preporuku.';
   if(/rezerv|termin|book|datum|vrijeme|vreme/.test(text)) return 'Za rezervaciju pošaljite djelatnost, željeni datum, vrijeme, broj osoba i kontakt. Zahtjev se evidentira, a konačnu dostupnost potvrđuje vaš tim.';
   if(/turiz|hotel|apartman|smješt|smestaj|restoran|gost|putov/.test(text)) return 'Za turizam agent odgovara gostima, prikuplja zahtjeve, pomaže oko rezervacija i predaje složen razgovor recepciji ili prodaji.';
   if(/medicin|doktor|patient|pacij|klin|ordin/.test(text)) return 'Za medicinu agent daje samo administrativne informacije, pomaže oko termina i predaje osjetljive slučajeve osoblju. Ne daje dijagnoze niti medicinske savjete.';
@@ -165,7 +165,8 @@ async function serverBotReply(env, messages){
 const PLAN_PRICES = {Starter:8900, Business:19900, Pro:39900, Premium:69900};
 // One-time onboarding/activation fees are charged once when an account is activated.
 // Subscription annual discounts never reduce these implementation fees.
-const ACTIVATION_PRICES = {Starter:14900, Business:34900, Pro:69900, Enterprise:149000, Premium:99000};
+const ACTIVATION_PRICES = {Starter:14900, Business:34900, Pro:69900, Premium:99000};
+const SUPPORTED_PLANS = Object.keys(PLAN_PRICES);
 const DEFAULT_PRICING = {annual_enabled:1, annual_discount_percent:25};
 
 async function ensurePricingSchema(env){
@@ -192,7 +193,7 @@ async function getPricing(env){
   await ensurePricingSchema(env);
   const row=await env.DB.prepare('SELECT * FROM pricing_config WHERE id=1').first();
   const rows=await env.DB.prepare('SELECT plan,monthly_cents,activation_cents FROM pricing_plans').all();
-  const plans=Object.fromEntries((rows.results||[]).map(x=>[x.plan,{monthly_cents:Number(x.monthly_cents),activation_cents:Number(x.activation_cents ?? ACTIVATION_PRICES[x.plan] ?? 0),annual_cents:annualAmountCents(Number(x.monthly_cents),Number(row?.annual_discount_percent??25))}]));
+  const plans=Object.fromEntries((rows.results||[]).filter(x=>SUPPORTED_PLANS.includes(x.plan)).map(x=>[x.plan,{monthly_cents:Number(x.monthly_cents),activation_cents:Number(x.activation_cents ?? ACTIVATION_PRICES[x.plan] ?? 0),annual_cents:annualAmountCents(Number(x.monthly_cents),Number(row?.annual_discount_percent??25))}]));
   return {annual_enabled:!!(row?.annual_enabled ?? DEFAULT_PRICING.annual_enabled),annual_discount_percent:Number(row?.annual_discount_percent ?? 25),plans};
 }
 
@@ -239,14 +240,13 @@ async function planAmountCents(plan, env) {
   await ensurePricingSchema(env);
   const row=await env.DB.prepare('SELECT monthly_cents FROM pricing_plans WHERE plan=?').bind(plan).first();
   if(row?.monthly_cents!==undefined) return Number(row.monthly_cents);
-  const custom = Number(env.INVOICE_ENTERPRISE_PRICE_CENTS || 0);
-  return Number.isFinite(custom) && custom > 0 ? Math.round(custom) : 0;
+  return 0;
 }
 async function activationAmountCents(plan, env) {
   await ensurePricingSchema(env);
   const row=await env.DB.prepare('SELECT activation_cents FROM pricing_plans WHERE plan=?').bind(plan).first();
   if(row?.activation_cents!==undefined && Number(row.activation_cents)>0) return Number(row.activation_cents);
-  return Number(ACTIVATION_PRICES[plan] || Number(env.INVOICE_ENTERPRISE_ACTIVATION_CENTS || 149000));
+  return Number(ACTIVATION_PRICES[plan] || 0);
 }
 function annualAmountCents(monthly, discountPercent=25){
   const pct=Math.max(0,Math.min(100,Number(discountPercent)||0));
@@ -382,7 +382,7 @@ async function createActivationInvoice(env, customer) {
   const tmp='TMP-'+crypto.randomUUID();
   const activationLabel=money(activationAmount,'EUR');
   const subscriptionLabel=money(subscriptionAmount,'EUR');
-  const description = `${customer.plan==='Enterprise'?'Balkan Agent Enterprise':`Balkan Agent ${customer.plan} plan`} - one-time activation ${activationLabel} + ${annual?'annual':'monthly'} service ${subscriptionLabel}`;
+  const description = `Balkan Agent ${customer.plan} plan - one-time activation ${activationLabel} + ${annual?'annual':'monthly'} service ${subscriptionLabel}`;
   const result=await env.DB.prepare(`INSERT INTO invoices(customer_id,invoice_number,plan,description,amount_cents,discount_percent,currency,status,issue_date,due_date)
     VALUES(?,?,?,?,?,?,'EUR','ISSUED',date('now'),?)`).bind(customer.id,tmp,customer.plan,description,amount,discountPercent,dueDate(Number(env.INVOICE_DUE_DAYS||7))).run();
   const id=Number(result.meta && result.meta.last_row_id);
@@ -604,6 +604,7 @@ export async function onRequest(context) {
 
     const active = b.active === undefined ? current.active : (b.active ? 1 : 0);
     const plan = b.plan === undefined ? current.plan : String(b.plan);
+    if (!SUPPORTED_PLANS.includes(plan)) return bad('Unknown plan. Choose Starter, Business, Pro or Premium.',400);
     const phone = b.phone === undefined ? current.phone : String(b.phone||"");
     const iban = b.iban === undefined ? current.iban : String(b.iban||"");
     const bank = b.bank_name === undefined ? current.bank_name : String(b.bank_name||"");

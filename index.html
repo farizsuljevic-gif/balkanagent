@@ -249,7 +249,7 @@ html,body{overflow-x:hidden}
 }
 @media(max-width:700px){.paymentContactInfo{grid-template-columns:1fr}}
 </style>
-<style id="annual-pricing-ui">.billingSwitch{display:flex;gap:6px;margin:-6px 0 10px}.billingBtn{border:1px solid #294b72;background:#06101d;color:#aab6c6;border-radius:999px;padding:8px 13px;cursor:pointer}.billingBtn.active{background:linear-gradient(135deg,#6e2dff,#1e66ff);color:#fff;border-color:#7a49ff}.billingBtn b{color:#49e5a0;margin-left:4px}.annualNote{color:#49e5a0;font-size:12px;margin:-2px 0 12px}.recommended{display:inline-block;color:#e8bf62;font-size:10px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}.billingLabel{color:#8d9db2;font-size:11px;margin:-4px 0 4px}</style><style id="premium-redesign-v8">
+<style id="annual-pricing-ui">.billingSwitch{display:flex;gap:6px;margin:-6px 0 10px}.billingBtn{border:1px solid rgba(201,160,86,.52);background:rgba(31,25,16,.76);color:#d8c39b;border-radius:999px;padding:8px 13px;cursor:pointer;transition:background .18s ease,border-color .18s ease,transform .18s ease}.billingBtn:hover{border-color:#e0b866;transform:translateY(-1px)}.billingBtn.active{background:linear-gradient(135deg,#a6782e,#f1c768);color:#1b1205;border-color:#f1c768;box-shadow:0 8px 22px rgba(241,199,104,.22)}.billingBtn b{color:#f3d58f;margin-left:4px}.annualNote{color:#e0b866;font-size:12px;margin:-2px 0 12px}.recommended{display:inline-block;color:#e8bf62;font-size:10px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}.billingLabel{color:#8d9db2;font-size:11px;margin:-4px 0 4px}</style><style id="premium-redesign-v8">
 :root{--bg:#030714;--panel:#091326;--panel-2:#0d1a31;--line:rgba(105,165,232,.22);--line-strong:rgba(86,196,255,.46);--text:#f6f8ff;--muted:#a4b1c4;--cyan:#49d8ff;--purple:#9d6bff;--mint:#52e5ae;--gold:#f1c768;--ease-out:cubic-bezier(.23,1,.32,1)}
 body{background:radial-gradient(900px 520px at 52% -12%,rgba(56,63,164,.32),transparent 65%),radial-gradient(700px 480px at 90% 35%,rgba(0,154,255,.10),transparent 70%),#030714;letter-spacing:.005em}
 body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.28;background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);background-size:42px 42px;mask-image:linear-gradient(to bottom,black,transparent 72%);z-index:-1}
@@ -346,7 +346,7 @@ nav a{color:#d7d0c2}nav a:hover{background:rgba(205,163,83,.10);color:#fff}nav a
 <div class="serviceCard" data-service="Support"><svg viewBox="0 0 24 24"><path d="M4 13v-2a8 8 0 0 1 16 0v2M4 13h3v6H5a1 1 0 0 1-1-1v-5Zm16 0h-3v6h2a1 1 0 0 0 1-1v-5Z" fill="none" stroke="currentColor" stroke-width="1.7"/></svg><b data-t="support"></b><small>Uvijek dostupna</small></div>
 <div class="serviceCard" data-service="Integrations"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="17" r="2"/><circle cx="19" cy="17" r="2"/><path d="M12 7v4M7 16l4-4m6 4-4-4" fill="none" stroke="currentColor" stroke-width="1.7"/></svg><b data-t="integrations"></b><small>Više kanala</small></div>
 </div>
-<div class="ctas"><a href="#presentation" class="btn primary">▶ &nbsp;<span data-t="watch"></span></a><a href="#services" class="btn secondary"><span data-t="explore"></span>&nbsp; →</a></div>
+<div class="ctas"><a href="#pricing" class="btn primary">↘ &nbsp;<span data-t="pricing"></span></a><a href="#services" class="btn secondary"><span data-t="explore"></span>&nbsp; →</a></div>
 <div class="stats">
 <div class="stat"><div class="statIcon"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="17" r="2"/><circle cx="19" cy="17" r="2"/><path d="M12 7v4M7 16l4-4m6 4-4-4" fill="none" stroke="currentColor" stroke-width="1.7"/></svg></div><div><b>AI + tim</b><small>Handover kada treba</small></div></div>
 <div class="stat"><div class="statIcon"><svg viewBox="0 0 24 24"><path d="M5 5h14a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3h-7l-4.5 3V17H5a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3Z" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="8" cy="11" r="1"/><circle cx="12" cy="11" r="1"/><circle cx="16" cy="11" r="1"/></svg></div><div><b>24/7</b><small>Demo dostupan</small></div></div>
@@ -375,13 +375,12 @@ nav a{color:#d7d0c2}nav a:hover{background:rgba(205,163,83,.10);color:#fff}nav a
 <section class="clientReady"><div><div class="clientReadyKicker">BALKAN AGENT · PRVI KORAK</div><h2>Počnite s jednim upitom koji vrijedi više.</h2><p>Postavite jedan jasan tok — web-chat, rezervacija ili kvalifikacija leadova — i pretvorite ga u mjerljiv proces za vaš tim.</p></div><div class="readyPoints"><div class="readyPoint"><strong>01</strong><span>Jedan tok</span></div><div class="readyPoint"><strong>24/7</strong><span>Prvi odgovor</span></div><div class="readyPoint"><strong>AI + tim</strong><span>Sigurna predaja</span></div></div></section>
 <div class="tagline"><span data-t="tagline1"></span> <span data-t="tagline2"></span></div>
 
-<section class="section" id="presentation"><div class="presentationIntro"><div><div class="presentationKicker">BALKAN AGENT · PREMIUM DEMO</div><h2>Od prvog upita do jasnog sljedećeg koraka.</h2><p>Jedan pregled kako AI može pomoći vašem timu da odgovori brže, prikupi prave podatke i preda razgovor čovjeku kada je to važno.</p></div><div class="presentationBadge">24 sek · BA poslovni tok</div></div><video class="video" controls preload="metadata"><source src="balkan-agent-premium-presentation-v19.mp4" type="video/mp4"></video></section>
+
 
 <section class="section" id="pricing"><h2 data-t="pricingTitle"></h2><div class="billingSwitch" role="group" aria-label="Billing interval"><button class="billingBtn active" data-billing="monthly">Mjesečno</button><button class="billingBtn" data-billing="annual">Godišnje <b>−25%</b></button></div><p class="annualNote" id="annualNote" hidden>Godišnji paket uključuje 25% popusta.</p><div class="pricing">
 	<div class="plan"><h3>Starter</h3><div class="price" data-monthly="€89" data-annual="€801">€89</div><p class="billingLabel">mjesečno</p><p class="activationLabel" style="color:#c7a24a">+ €149 jednokratna aktivacija</p><p>1 AI agent · 1 channel</p><button class="btn choose" data-plan="Starter">Starter</button></div>
 		<div class="plan pop"><span class="recommended">Najpopularnije</span><h3>Business</h3><div class="price" data-monthly="€199" data-annual="€1.791">€199</div><p class="billingLabel">mjesečno</p><p class="activationLabel" style="color:#c7a24a">+ €349 jednokratna aktivacija</p><p>3 AI agents · 3 channels</p><button class="btn primary choose" data-plan="Business">Business</button></div>
 		<div class="plan"><h3>Pro</h3><div class="price" data-monthly="€399" data-annual="€3.591">€399</div><p class="billingLabel">mjesečno</p><p class="activationLabel" style="color:#c7a24a">+ €699 jednokratna aktivacija</p><p>Up to 10 AI agents · all supported channels</p><button class="btn choose" data-plan="Pro">Pro</button></div>
-	<div class="plan"><h3>Enterprise</h3><div class="price">Custom</div><p class="billingLabel">pretplata po dogovoru</p><p class="activationLabel" style="color:#c7a24a">od €1.490 jednokratna aktivacija</p><p>Custom integrations and onboarding</p><button class="btn choose" data-plan="Enterprise">Enterprise</button></div>
 		<div class="plan pop premiumPlan"><span class="recommended">Najviše mogućnosti</span><div class="premiumEyebrow">BALKAN AGENT · PREMIUM</div><h3>Premium</h3><div class="price" data-monthly="€699" data-annual="€6.291">€699</div><p class="billingLabel">mjesečno</p><p class="premiumPriceNote">€6.291 godišnje uz 25% popusta na pretplatu</p><p class="activationLabel" style="color:#e4bd6d">+ €990 jednokratna aktivacija</p><span class="premiumSaving">Ušteda €2.097 godišnje</span><ul class="premiumFeatures"><li>Do 20 AI agenata</li><li>Svi podržani poslovni kanali</li><li>Prioritetna podrška i handover timu</li></ul><button class="btn primary choose premiumCta" data-plan="Premium">Izaberi Premium</button></div>
 			</div></section>
 
@@ -391,11 +390,11 @@ nav a{color:#d7d0c2}nav a:hover{background:rgba(205,163,83,.10);color:#fff}nav a
 
 <section class="section" id="resources"><h2 data-t="resourcesTitle"></h2><div class="resources"><div class="resource" data-resource="guide"><h3 data-t="resource1"></h3><p>PDF / onboarding information</p></div><div class="resource" data-resource="integrations"><h3 data-t="resource2"></h3><p>WhatsApp · Instagram · Facebook · Viber · Telegram</p></div><div class="resource" onclick="location.href='customer.html'"><h3 data-t="resource3"></h3><p>Open customer panel →</p></div></div></section>
 
-<section class="section" id="contact"><h2 data-t="contactTitle"></h2><div class="contactGrid"><div class="contactCard"><h3>Balkan Agent</h3><p>info@balkanagent.com</p><p>AI Automation Platform</p></div><div class="contactCard"><form id="contactForm" class="form"><label><span data-t="fullName"></span><input name="full_name" required></label><label><span data-t="company"></span><input name="company"></label><label><span data-t="email"></span><input type="email" name="email" required></label><label><span>Broj telefona</span><input name="phone" type="tel" placeholder="+382 ..." value="+38268400509"></label><label class="full"><span data-t="message"></span><textarea name="message"></textarea></label><div class="full"><button class="btn primary" type="submit" data-t="send"></button><div id="formStatus"></div></div>
+<section class="section" id="contact"><h2 data-t="contactTitle"></h2><div class="contactGrid"><div class="contactCard"><h3>Balkan Agent</h3><p><strong>Suljevic Fariz</strong><br>Founder</p><p><a href="mailto:info@balkanagent.com">info@balkanagent.com</a><br><a href="tel:+38268400509">+382 68 400 509</a></p><p>AI Automation Platform</p></div><div class="contactCard"><form id="contactForm" class="form"><label><span data-t="fullName"></span><input name="full_name" required></label><label><span data-t="company"></span><input name="company"></label><label><span data-t="email"></span><input type="email" name="email" required></label><label><span>Broj telefona</span><input name="phone" type="tel" placeholder="+382 ..." value="+38268400509"></label><label class="full"><span data-t="message"></span><textarea name="message"></textarea></label><div class="full"><button class="btn primary" type="submit" data-t="send"></button><div id="formStatus"></div></div>
 <div class="paymentContactInfo">
-  <div><span>Telefon</span><strong>+38268400509</strong></div>
+  <div><span>Telefon</span><strong><a href="tel:+38268400509">+382 68 400 509</a></strong></div>
   <div><span>Način plaćanja</span><strong>Bank transfer / IBAN</strong></div>
-  <div><span>IBAN</span><strong id="publicIban">Dodati IBAN</strong></div>
+  <div><span>Račun primaoca</span><strong>Suljevic Fariz</strong></div>
 </div>
 </form></div></div></section>
 </main>
@@ -438,9 +437,9 @@ serviceInfo:'Balkan Agent povezuje web-chat, WhatsApp, Instagram, Viber, Telegra
 tourism:'Za turizam nudimo AI odgovore gostima, prikupljanje datuma i broja osoba, pitanja o smještaju i predaju zahtjeva recepciji ili prodaji.',
 medicine:'Za medicinu nudimo informacije o uslugama, zakazivanje i podsjetnike. Bot ne postavlja dijagnoze i medicinski osjetljive slučajeve predaje osoblju.',
 other:'Za druge biznise nudimo kvalifikaciju leadova, korisničku podršku, FAQ, kontakt forme i automatizaciju više kanala.',
-plans:'Starter €89 + €149 aktivacija, Business €199 + €349 aktivacija, Pro €399 + €699 aktivacija i Premium €699 + €990 aktivacija mjesečno. Godišnji paket ima 25% popusta na pretplatu; Premium godišnje iznosi €6.291 plus aktivacija. Enterprise je po dogovoru.',
+plans:'Starter €89 + €149 aktivacija, Business €199 + €349 aktivacija, Pro €399 + €699 aktivacija i Premium €699 + €990 aktivacija mjesečno. Godišnji paket ima 25% popusta na pretplatu; Premium godišnje iznosi €6.291 plus aktivacija. Za preporuku paketa napišite djelatnost i broj kanala.',
 partner:'Za partnerstvo i demo: info@balkanagent.com',
-help:'Kontakt podrška: info@balkanagent.com'
+help:'Kontakt podrška: info@balkanagent.com ili +382 68 400 509. Pošaljite ime, firmu i pitanje kroz kontakt formu.'
 };
 const chatHistory=[];
 function addMsg(m,who){let d=document.createElement('div');d.className='msg '+who;d.textContent=m;chatLog.appendChild(d);chatLog.scrollTop=chatLog.scrollHeight}
@@ -459,7 +458,7 @@ async function botAnswer(v){
     else if(x.includes('rezerv')||x.includes('book')||x.includes('termin')||x.includes('datum'))r=replies.reservation;
     else if(x.includes('hotel')||x.includes('turiz')||x.includes('smješt')||x.includes('soba')||x.includes('gost'))r=replies.tourism;
     else if(x.includes('medic')||x.includes('klin')||x.includes('doktor')||x.includes('pacij'))r=replies.medicine;
-    else if(x.includes('whatsapp')||x.includes('instagram')||x.includes('viber')||x.includes('telegram')||x.includes('kanal'))r='Podržavamo web-chat, WhatsApp, Instagram, Viber, Telegram, email i SMS. Dostupnost kanala zavisi od odobrenog poslovnog naloga i webhooka.';
+    else if(x.includes('whatsapp')||x.includes('instagram')||x.includes('viber')||x.includes('telegram')||x.includes('kanal'))r='Demo trenutno radi kroz web-chat. WhatsApp, Instagram, Viber, Telegram, email i SMS povezivanje zahtijevaju odobrene poslovne naloge i webhook/API podešavanje.';
     else if(x.includes('uslug')||x.includes('service'))r=replies.serviceInfo;
     else if(x.includes('lead')||x.includes('prodaj')||x.includes('podrš')||x.includes('support'))r=replies.other;
     else if(x.includes('transfer')||x.includes('iban')||x.includes('uplat')||x.includes('račun')||x.includes('racun'))r='Plaćanje ide ručnim bank transferom. Nakon registracije administrator pregleda nalog, izdaje račun i aktivira pristup kada potvrdi uplatu.';
@@ -528,7 +527,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     const discount=Math.max(0,Math.min(50,Number(p.annual_discount_percent||25)));
     document.querySelectorAll('.billingBtn b').forEach(x=>x.textContent='−'+discount+'%');
     const planCents=j.plans||{};
-    document.querySelectorAll('.price[data-monthly]').forEach((el)=>{const name=el.closest('.plan')?.querySelector('h3')?.textContent.trim();const plan=planCents[name]||{};const monthly=Number(plan.monthly_cents||0);if(monthly)el.dataset.annual='€'+(Math.round(monthly*12*(1-discount/100))/100).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});const activation=Number(plan.activation_cents||0);const label=el.closest('.plan')?.querySelector('.activationLabel');if(activation&&label)label.textContent=(name==='Enterprise'?'od ':'+ ')+'€'+(activation/100).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+' jednokratna aktivacija'});
+    document.querySelectorAll('.price[data-monthly]').forEach((el)=>{const name=el.closest('.plan')?.querySelector('h3')?.textContent.trim();const plan=planCents[name]||{};const monthly=Number(plan.monthly_cents||0);if(monthly)el.dataset.annual='€'+(Math.round(monthly*12*(1-discount/100))/100).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});const activation=Number(plan.activation_cents||0);const label=el.closest('.plan')?.querySelector('.activationLabel');if(activation&&label)label.textContent='+ €'+(activation/100).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+' jednokratna aktivacija'});
     if(!p.annual_enabled)document.querySelector('[data-billing="annual"]')?.remove();
   }).catch(()=>{});
   })();

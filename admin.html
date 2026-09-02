@@ -18,7 +18,7 @@ input,select{background:rgba(9,12,15,.86)!important;color:#f7f0e1!important;bord
 .notice{background:rgba(62,45,18,.32)!important;border-color:rgba(212,168,87,.43)!important;color:#e5c77f!important}.metric small,small{color:#baa98d!important}.metric b{color:#f5ead2!important}.activeBadge,.ok{color:#d8bd79!important}.inactiveBadge,.err{color:#df8b78!important}h1,h2,h3{color:#f6f1e6!important}th{color:#c0aa80!important}td{border-bottom-color:rgba(184,139,62,.18)!important}.detail div{background:rgba(51,38,18,.32)!important}.status{background:rgba(47,35,18,.62)!important;border-color:rgba(195,149,70,.42)!important}.modal{background:rgba(0,0,0,.78)!important}
 .loginBox .header{border-bottom-color:rgba(194,149,70,.28)!important}.ba{background:linear-gradient(135deg,#f5d58d,#b77f2d,#f0cc82)!important;-webkit-background-clip:text!important;color:transparent!important;text-shadow:0 0 18px rgba(204,155,64,.16)}.back,a{color:#d5b97d!important}.sub{color:#b9ad98!important}.box a{color:#d7b972!important}
 @media(max-width:700px){aside{border-right:0!important;border-bottom:1px solid rgba(194,149,70,.25)!important}.metrics{gap:12px!important}}
-</style></style></head><body>
+</style></head><body>
 <div class="shell"><aside>
 <div class="brand">BALKAN<span>AGENT</span><div class="tag">ADMIN CONTROL CENTER</div></div>
 <nav>
@@ -33,8 +33,7 @@ input,select{background:rgba(9,12,15,.86)!important;color:#f7f0e1!important;bord
 <a href="login.html">← Login</a><a href="#" id="logoutAdmin">Logout</a>
 </nav></aside>
 <main>
-<div class="notice">Admin preview radi lokalno. Aktivacije, brisanje i paketi rade u browseru; pravi zajednički podaci dolaze sa backendom.</div>
-<div class="top"><div><h1 id="title">Pregled</h1><small style="color:#8ea0b5">ceo@balkanagent.com</small></div><div class="tools"><input id="search" class="search" placeholder="Pretraga"><button id="export" class="btn">Izvezi CSV</button></div></div>
+<div class="top"><div><h1 id="title">Pregled</h1><small style="color:#8ea0b5">info@balkanagent.com</small></div><div class="tools"><input id="search" class="search" placeholder="Pretraga"><button id="export" class="btn">Izvezi CSV</button></div></div>
 
 <section id="overview" class="section active">
 <div class="metrics"><div class="metric"><small>PRIJAVE</small><b id="mApps">0</b></div><div class="metric"><small>MUŠTERIJE</small><b id="mCust">0</b></div><div class="metric"><small>AKTIVNE</small><b id="mActive">0</b></div><div class="metric"><small>NEAKTIVNE</small><b id="mInactive">0</b></div><div class="metric"><small>PRO PLAN</small><b id="mPro">0</b></div></div>
@@ -48,7 +47,7 @@ input,select{background:rgba(9,12,15,.86)!important;color:#f7f0e1!important;bord
 <section id="inactive" class="section"><div class="panel"><h2>Neaktivne mušterije</h2><div style="overflow:auto"><table><tbody id="inactiveRows"></tbody></table></div></div></section>
 <section id="sales" class="section"><div class="metrics"><div class="metric"><small>NEW</small><b id="sNew">0</b></div><div class="metric"><small>CONTACTED</small><b id="sContacted">0</b></div><div class="metric"><small>DEMO</small><b id="sDemo">0</b></div><div class="metric"><small>CUSTOMER</small><b id="sCustomer">0</b></div></div></section>
 <section id="integrations" class="section"><div class="panel"><h2>Integracije</h2><div id="integrationList"></div></div></section>
-<section id="settings" class="section"><div class="panel"><h2>Podešavanja</h2><p>Admin email: <b>ceo@balkanagent.com</b></p><p>Kontakt email: <b>info@balkanagent.com</b></p></div></section>
+<section id="settings" class="section"><div class="panel"><h2>Podešavanja</h2><p><strong>Email za obavijesti vlasniku:</strong> <b>info@balkanagent.com</b><br><small>Na ovu adresu stižu obavijesti o novim registracijama i statusu aktivacije.</small></p><p><strong>Email za kupce i račune:</strong> <b>info@balkanagent.com</b><br><small>Ova adresa je javni kontakt i sender adresa za invoice tok nakon Resend verifikacije.</small></p></div></section>
 <section id="pricingSettings" class="section"><div class="panel"><h2>Cijene i popusti</h2><p style="color:#96a7bd">Godišnji paket koristi popust na godišnji zbir. Maksimalni popust je ograničen na 50% radi zaštite cjenika.</p><div style="display:grid;gap:12px;max-width:520px"><label style="display:flex;gap:10px;align-items:center"><input id="annualEnabled" type="checkbox" style="width:auto;margin:0"> Ponudi godišnje plaćanje</label><label>Popust za godišnje plaćanje (%)<input id="annualDiscount" type="number" min="0" max="50" step="1" value="25"></label><button class="btn primary" id="savePricing">Sačuvaj cijene i popust</button><div id="pricingStatus" style="color:#72e6aa"></div></div><hr style="border-color:#172842;margin:18px 0"><div id="pricingPreview" style="color:#c8d2df"></div></div></section><section id="reservations" class="section"><div class="panel"><h2>Rezervacijski zahtjevi</h2><div style="overflow:auto"><table><thead><tr><th>Datum</th><th>Ime</th><th>Usluga</th><th>Kontakt</th><th>Status</th></tr></thead><tbody id="reservationRows"></tbody></table></div></div></section>
 </main></div>
 
@@ -68,7 +67,7 @@ function ensureFromLeads(){
   });
 }
 ensureFromLeads();
-function actions(c){return `<button class="btn" data-detail="${c.id}">Detalji</button> <button class="btn ${c.active?'danger':'success'}" data-toggle="${c.id}">${c.active?'Deaktiviraj':'Aktiviraj'}</button> <button class="btn" data-invoice="${c.id}">Račun</button> <button class="btn" data-resend="${c.id}">Pošalji račun</button> <select class="status planSelect" data-planid="${c.id}"><option ${c.plan==='Starter'?'selected':''}>Starter</option><option ${c.plan==='Business'?'selected':''}>Business</option><option ${c.plan==='Pro'?'selected':''}>Pro</option><option ${c.plan==='Enterprise'?'selected':''}>Enterprise</option><option ${c.plan==='Premium'?'selected':''}>Premium</option></select> <select class="status billingCycleSelect" data-cycleid="${c.id}"><option value="monthly" ${c.billing_cycle==='annual'?'':'selected'}>Monthly</option><option value="annual" ${c.billing_cycle==='annual'?'selected':''}>Annual</option></select> <button class="btn danger" data-delete="${c.id}">Obriši</button>`}
+function actions(c){return `<button class="btn" data-detail="${c.id}">Detalji</button> <button class="btn ${c.active?'danger':'success'}" data-toggle="${c.id}">${c.active?'Deaktiviraj':'Aktiviraj'}</button> <button class="btn" data-invoice="${c.id}">Račun</button> <button class="btn" data-resend="${c.id}">Pošalji račun</button> <select class="status planSelect" data-planid="${c.id}"><option ${c.plan==='Starter'?'selected':''}>Starter</option><option ${c.plan==='Business'?'selected':''}>Business</option><option ${c.plan==='Pro'?'selected':''}>Pro</option><option ${c.plan==='Premium'?'selected':''}>Premium</option></select> <select class="status billingCycleSelect" data-cycleid="${c.id}"><option value="monthly" ${c.billing_cycle==='annual'?'':'selected'}>Mjesečno</option><option value="annual" ${c.billing_cycle==='annual'?'selected':''}>Godišnje</option></select> <button class="btn danger" data-delete="${c.id}">Obriši</button>`}
 function customerRow(c){return `<tr>
 <td>${esc(c.name)}</td>
 <td>${esc(c.company)}</td>
@@ -206,27 +205,35 @@ save();
       document.querySelectorAll('.planSelect').forEach(sel=>sel.onchange=async()=>{
         const c=customers.find(x=>String(x.id)===sel.dataset.planid);if(!c)return;
         const j=await api('/api/admin/customers/'+c.id,{method:'PATCH',body:JSON.stringify({plan:sel.value})});
-        Object.assign(c,j.customer);render();
+        Object.assign(c,j.customer,{billing_cycle:j.customer.billing_cycle||c.billing_cycle||'monthly'});render();
       });
       document.querySelectorAll('.billingCycleSelect').forEach(sel=>sel.onchange=async()=>{
         const c=customers.find(x=>String(x.id)===sel.dataset.cycleid);if(!c)return;
-        const j=await api('/api/admin/customers/'+c.id,{method:'PATCH',body:JSON.stringify({billing_cycle:sel.value})});
-        Object.assign(c,j.customer);render();
+        const nextCycle=sel.value; sel.disabled=true;
+        try {
+          const j=await api('/api/admin/customers/'+c.id,{method:'PATCH',body:JSON.stringify({billing_cycle:nextCycle})});
+          Object.assign(c,j.customer,{billing_cycle:j.customer.billing_cycle||nextCycle});
+          render();
+        } catch (e) {
+          sel.value=c.billing_cycle||'monthly';
+          alert('Promjena ciklusa nije sačuvana: '+e.message);
+          sel.disabled=false;
+        }
       });
     };
     if(typeof render==='function') render();
     const pricing=await api('/api/admin/pricing');
     document.getElementById('annualEnabled').checked=!!pricing.pricing.annual_enabled;
     document.getElementById('annualDiscount').value=pricing.pricing.annual_discount_percent;
-    const showPreview=(serverPricing)=>{const d=Math.max(0,Math.min(50,Number(document.getElementById('annualDiscount').value||25)));const plans=serverPricing?.plans||{};const amount=(name,fallback)=>{const cents=Number(plans[name]?.monthly_cents??fallback);return '€'+(cents/100*12*(1-d/100)).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})};const activation=(name,fallback)=>'€'+(Number(plans[name]?.activation_cents??fallback)/100).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});document.getElementById('pricingPreview').textContent='Godišnji primjeri: Starter '+amount('Starter',8900)+' · Business '+amount('Business',19900)+' · Pro '+amount('Pro',39900)+' · Premium '+amount('Premium',69900)+' | Aktivacija: Starter '+activation('Starter',14900)+' · Business '+activation('Business',34900)+' · Pro '+activation('Pro',69900)+' · Enterprise od '+activation('Enterprise',149000)+' · Premium '+activation('Premium',99000)};
-    document.getElementById('annualDiscount').oninput=()=>showPreview(pricing.pricing);document.querySelectorAll('.billingCycleSelect option[value="annual"]').forEach(x=>x.textContent='Annual - '+pricing.pricing.annual_discount_percent+'%');showPreview(pricing.pricing);
-    document.getElementById('savePricing').onclick=async()=>{const status=document.getElementById('pricingStatus');status.textContent='Čuvam…';try{const j=await api('/api/admin/pricing',{method:'PATCH',body:JSON.stringify({annual_enabled:document.getElementById('annualEnabled').checked,annual_discount_percent:Number(document.getElementById('annualDiscount').value)})});document.getElementById('annualDiscount').value=j.pricing.annual_discount_percent;document.querySelectorAll('.billingCycleSelect option[value="annual"]').forEach(x=>x.textContent='Annual - '+j.pricing.annual_discount_percent+'%');status.textContent='✓ Cijene i popust su sačuvani.';showPreview(j.pricing)}catch(e){status.textContent='Greška: '+e.message}};
-    const reservationData=await api('/api/admin/reservations'); const reservationRows=document.getElementById('reservationRows'); (reservationData.reservations||[]).forEach(item=>{const row=document.createElement('tr');row.innerHTML='<td>'+String(item.reservation_date||'')+' '+String(item.reservation_time||'')+'</td><td>'+String(item.name||'')+'</td><td>'+String(item.service||'')+'</td><td>'+String(item.email||'')+'<br>'+String(item.phone||'')+'</td><td>'+String(item.status||'NEW')+'</td>';reservationRows.appendChild(row)});
+    const showPreview=(serverPricing)=>{const d=Math.max(0,Math.min(50,Number(document.getElementById('annualDiscount').value||25)));const plans=serverPricing?.plans||{};const amount=(name,fallback)=>{const cents=Number(plans[name]?.monthly_cents??fallback);return '€'+(cents/100*12*(1-d/100)).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})};const activation=(name,fallback)=>'€'+(Number(plans[name]?.activation_cents??fallback)/100).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});document.getElementById('pricingPreview').textContent='Godišnji primjeri: Starter '+amount('Starter',8900)+' · Business '+amount('Business',19900)+' · Pro '+amount('Pro',39900)+' · Premium '+amount('Premium',69900)+' | Aktivacija: Starter '+activation('Starter',14900)+' · Business '+activation('Business',34900)+' · Pro '+activation('Pro',69900)+' · Premium '+activation('Premium',99000)};
+    document.getElementById('annualDiscount').oninput=()=>showPreview(pricing.pricing);document.querySelectorAll('.billingCycleSelect option[value="annual"]').forEach(x=>x.textContent='Godišnje - '+pricing.pricing.annual_discount_percent+'%');showPreview(pricing.pricing);
+    document.getElementById('savePricing').onclick=async()=>{const status=document.getElementById('pricingStatus');status.textContent='Čuvam…';try{const j=await api('/api/admin/pricing',{method:'PATCH',body:JSON.stringify({annual_enabled:document.getElementById('annualEnabled').checked,annual_discount_percent:Number(document.getElementById('annualDiscount').value)})});document.getElementById('annualDiscount').value=j.pricing.annual_discount_percent;document.querySelectorAll('.billingCycleSelect option[value="annual"]').forEach(x=>x.textContent='Godišnje - '+j.pricing.annual_discount_percent+'%');status.textContent='✓ Cijene i popust su sačuvani.';showPreview(j.pricing)}catch(e){status.textContent='Greška: '+e.message}};
+    try { const reservationData=await api('/api/admin/reservations'); const reservationRows=document.getElementById('reservationRows'); (reservationData.reservations||[]).forEach(item=>{const row=document.createElement('tr');row.innerHTML='<td>'+String(item.reservation_date||'')+' '+String(item.reservation_time||'')+'</td><td>'+String(item.name||'')+'</td><td>'+String(item.service||'')+'</td><td>'+String(item.email||'')+'<br>'+String(item.phone||'')+'</td><td>'+String(item.status||'NEW')+'</td>';reservationRows.appendChild(row)}); } catch (reservationError) { console.warn('[admin-reservations]',reservationError); const reservationRows=document.getElementById('reservationRows'); if(reservationRows) reservationRows.innerHTML='<tr><td colspan="5" class="empty">Rezervacije trenutno nisu dostupne.</td></tr>'; }
   }catch(e){
     console.error(e);
     if(e.status===401||e.status===403){location.href='login.html';return;}
-    const notice=document.querySelector('.notice');
-    if(notice){notice.textContent='Admin panel je otvoren, ali neki podaci trenutno nisu dostupni. Provjeri D1 binding, schema.sql i server postavke; pokušaj osvježiti stranicu nakon ispravke.';notice.style.borderColor='#6c2934';notice.style.color='#ffb2bd';}
+    const status=document.getElementById('pricingStatus');
+    if(status) status.textContent='Backend podaci trenutno nisu učitani; lokalni prikaz ostaje dostupan. Provjeri D1 binding samo ako akcije ne čuvaju promjene.';
   }
 })();
 </script>

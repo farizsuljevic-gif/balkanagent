@@ -1,6 +1,6 @@
 # Balkan Agent — kompletno uputstvo za objavu i aktivaciju
 
-Ovaj vodič je namijenjen za **stvarni source paket Balkan Agent**. Ne odnosi se na Growth & Monetization Review projekat. Uvijek uploaduj kompletan sadržaj foldera `balkanagent-source-package`, uključujući `functions/`, `schema.sql`, sve HTML stranice, `robots.txt`, `sitemap.xml`, BA assete i novu video prezentaciju.
+Ovaj vodič je namijenjen za **stvarni source paket Balkan Agent**. Ne odnosi se na Growth & Monetization Review projekat. Uvijek uploaduj kompletan sadržaj foldera `balkanagent-source-package`, uključujući `functions/`, `schema.sql`, sve HTML stranice, `robots.txt`, `sitemap.xml` i BA logo/map assete.
 
 > **Važna poreska napomena:** račun je tehnički podešen sa tekstom „VAT / PDV: Not charged“ prema tvom zahtjevu. To nije pravna potvrda da VAT/PDV nije primjenjiv. Prije prvog računa potvrdi status sa knjigovođom ili poreskim savjetnikom.
 
@@ -14,7 +14,7 @@ Ovaj vodič je namijenjen za **stvarni source paket Balkan Agent**. Ne odnosi se
 | Backend | `functions/[[path]].js` | Auth, D1, bot, reservations, invoice, email i webhook endpointi |
 | Baza | `schema.sql` | users, invoices, pricing, reservations i potrebna polja |
 | SEO | `robots.txt`, `sitemap.xml` | Crawl pravila i javni URL-ovi |
-| Brand | BA PNG/MP4 asseti | Logo, mapa i originalna premium prezentacija |
+| Brand | BA PNG asseti | BA logo i mapa |
 
 ## 2. Cloudflare Pages projekat
 
@@ -73,13 +73,12 @@ Otvori **Pages project → Settings → Variables and Secrets → Production**. 
 | `INVOICE_COMPANY_ADDRESS` | unesi samo potvrđenu pravnu adresu iz starog računa |
 | `INVOICE_TAX_ID` | ostavi prazno dok ne potvrdiš stvarni poreski broj |
 | `INVOICE_BANK_NAME` | unesi tačan naziv banke ako želiš da bude na računu |
-| `INVOICE_ENTERPRISE_PRICE_CENTS` | `0` ili potvrđena mjesečna cijena iz ponude |
 
 Na računu je podešeno da nema obračunatog VAT/PDV-a. Nemoj upisivati poreski broj ili pravni status koji nije potvrđen.
 
 ### Jednokratna aktivacija
 
-Aktivaciona naknada se naplaćuje jednom pri prvoj aktivaciji i ne umanjuje se godišnjim popustom. Početni cjenik je: Starter `89 EUR/mjesečno + 149 EUR aktivacija`, Business `199 EUR/mjesečno + 349 EUR aktivacija`, Pro `399 EUR/mjesečno + 699 EUR aktivacija` i Premium `699 EUR/mjesečno + 990 EUR aktivacija`. Enterprise ostaje po dogovoru sa aktivacijom od `1.490 EUR`. Premium je prikazan kao posljednji paket sa najširim stvarnim obimom: do 20 AI agenata, svi podržani kanali i prioritetna podrška. Prvi invoice prikazuje aktivaciju zajedno sa izabranom mjesečnom ili godišnjom pretplatom; kod godišnjeg paketa 25% popusta važi samo za pretplatu. Premium godišnja pretplata iznosi `6.291 EUR`, a aktivacija ostaje `990 EUR`. Ove cijene su početni cjenik i vlasnik ih treba potvrditi prije objave u skladu sa svojim troškovima i poreskim statusom.
+Aktivaciona naknada se naplaćuje jednom pri prvoj aktivaciji i ne umanjuje se godišnjim popustom. Početni cjenik ima četiri javna paketa: Starter `89 EUR/mjesečno + 149 EUR aktivacija`, Business `199 EUR/mjesečno + 349 EUR aktivacija`, Pro `399 EUR/mjesečno + 699 EUR aktivacija` i Premium `699 EUR/mjesečno + 990 EUR aktivacija`. Premium je prikazan kao posljednji paket sa najširim stvarnim obimom: do 20 AI agenata, svi podržani kanali i prioritetna podrška. Prvi invoice prikazuje aktivaciju zajedno sa izabranom mjesečnom ili godišnjom pretplatom; kod godišnjeg paketa 25% popusta važi samo za pretplatu. Premium godišnja pretplata iznosi `6.291 EUR`, a aktivacija ostaje `990 EUR`. Ove cijene su početni cjenik i vlasnik ih treba potvrditi prije objave u skladu sa svojim troškovima i poreskim statusom.
 
 ## 5. Email slanje invoice računa
 
@@ -200,7 +199,7 @@ Google navodi da sitemap treba koristiti apsolutne URL-ove, da sitemap submissio
 
 Testiraj u privatnom/incognito prozoru i na telefonu. Redoslijed je:
 
-1. Homepage se učitava sa BA logom, mapom i novom video prezentacijom.
+1. Homepage se učitava sa BA logom, mapom i cjenovnikom; video prezentacija je namjerno uklonjena.
 2. Promjena jezika ne ostavlja prazne etikete niti miješane ključne elemente.
 3. Chat vraća različite relevantne odgovore na najmanje sedam pitanja.
 4. Registracija stvara `PENDING` korisnika.
