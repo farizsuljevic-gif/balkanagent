@@ -1,1 +1,34 @@
-BALKAN AGENT — v39 PRODUCTION PUBLISH\n\nPUBLIC PAGE\n- Existing BA premium layout, approved Balkan map and Made in Montenegro branding are preserved.\n- 11-language selector remains available.\n- Build Your AI Agent configurator and Solutions by Industry sections are included.\n- Contact form and configurator use the first-party POST /api/leads endpoint.\n\nBACKEND / CLOUDFLARE\n1. Deploy the complete repository including the functions/ directory.\n2. Bind a D1 database with binding name DB.\n3. Run schema.sql against production D1; it creates users, invoices and leads without removing existing rows.\n4. Configure secrets/variables: ADMIN_PASSWORD, SESSION_SECRET, RESEND_API_KEY, INVOICE_FROM_EMAIL, OWNER_EMAIL and the invoice company/payment variables from README-BACKEND-SETUP.txt.\n5. Open /login.html, activate an account from Admin, then test the customer portal and invoice PDF download.\n6. Submit one contact-form lead and one configurator lead; verify both in Admin → Leads CRM and verify the owner notification when Resend is configured.\n\nSECURITY\n- Never place ADMIN_PASSWORD, SESSION_SECRET, RESEND_API_KEY or provider OAuth tokens in public HTML or localStorage.\n- External AI credentials are optional. Without them, the safe FAQ fallback remains available.\n- WhatsApp, Instagram, Facebook, Viber and Telegram production connections require official provider credentials and secure backend OAuth.\n\nLEGAL\n- privacy.html and terms.html are included as substantive working pages. Review them with a qualified legal adviser for the exact entity, jurisdiction, retention periods and final contractual details before broad commercial launch.\n\nThe ZIP contains source only; no production secrets are included.\n
+BALKAN AGENT — REFERENCE 1:1 FUNCTIONAL BUILD
+
+REFERENCE
+REFERENCE-APPROVED.png is the exact visual supplied for this build.
+
+PUBLIC PAGE
+- Same composition as the approved reference:
+  header, language selector, login, left hero copy, 5 service cards,
+  center Balkan map, right AI system panel, presentation/services buttons,
+  4-stat bar, 9 integration cards, Balkan trust row, bottom tagline and chatbot.
+- The center map asset is cropped directly from the approved visual so the map is not redrawn.
+
+FUNCTIONS
+- All header navigation works.
+- All 11 agreed language options work.
+- CG / BiH / HR / SRB use only the Crnogorski language option.
+- Login opens login.html.
+- Service cards open information dialogs.
+- Presentation button scrolls to the video.
+- Explore services scrolls to integrations.
+- Pricing buttons select a plan and move to contact.
+- Contact form submits to info@balkanagent.com through FormSubmit.
+- AI chatbot can be tested immediately.
+- Chatbot quick actions work.
+- Chat minimize/close works.
+- Every visible integration card opens a Connect configuration dialog.
+- Connection configuration is saved/removed locally in the browser.
+- Admin and Customer panels from the last functional V2 package are preserved.
+
+LIVE THIRD-PARTY CONNECTIONS
+WhatsApp / Instagram / Facebook / Viber / Telegram production connections require official provider OAuth/API credentials and a secure backend. Private production tokens must not be stored in public static HTML. The Connect UI is ready for those credentials once backend OAuth is connected.
+
+CLOUDFLARE
+This ZIP is static Pages-safe: no _worker.js, package.json, wrangler.toml or _routes.json.

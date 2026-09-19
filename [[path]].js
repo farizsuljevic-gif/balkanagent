@@ -98,6 +98,7 @@ function safeUser(row) {
     iban: row.iban || "",
     bank_name: row.bank_name || "",
     payment_status: row.payment_status || "UNPAID",
+    billing_cycle: row.billing_cycle || "monthly",
     created_at: row.created_at
   };
 }
@@ -122,37 +123,18 @@ async function parseBody(request) {
 
 // ---------- INVOICES ----------
 const PLAN_PRICES = {Starter:4900, Business:7900, Pro:19900};
+const PLAN_ACTIVATION_FEES = {Starter:14900, Business:34900, Pro:69900};
+const BILLING_CYCLES = ["monthly","annual"];
 
 async function ensureLeadSchema(env) {
   await env.DB.prepare(`CREATE TABLE IF NOT EXISTS leads (
-    id INTEGER PRIMARY KEY AUTOINCREMENT, full_name TEXT NOT NULL, company TEXT DEFAULT '',
-    email TEXT NOT NULL, phone TEXT DEFAULT '', message TEXT DEFAULT '', selected_plan TEXT DEFAULT '',
-    source TEXT DEFAULT 'website', status TEXT NOT NULL DEFAULT 'new', notes TEXT DEFAULT '',
-    created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, company TEXT DEFAULT '', email TEXT NOT NULL, phone TEXT DEFAULT '', plan TEXT DEFAULT '', message TEXT DEFAULT '', status TEXT NOT NULL DEFAULT 'new', created_at TEXT NOT NULL DEFAULT (datetime('now'))
   )`).run();
-  await env.DB.prepare(`CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status)`).run();
-  await env.DB.prepare(`CREATE INDEX IF NOT EXISTS idx_leads_created ON leads(created_at)`).run();
+  await env.DB.prepare('CREATE INDEX IF NOT EXISTS idx_leads_created ON leads(created_at)').run();
 }
 
-function safeLead(row) {
-  return { id: row.id, full_name: row.full_name, company: row.company || '', email: row.email,
-    phone: row.phone || '', message: row.message || '', selected_plan: row.selected_plan || '',
-    source: row.source || 'website', status: row.status || 'new', notes: row.notes || '',
-    created_at: row.created_at, updated_at: row.updated_at };
-}
-
-async function notifyLeadOwner(env, lead) {
-  if (!env.RESEND_API_KEY) return {sent:false, reason:'RESEND_API_KEY is not configured'};
-  const from = env.INVOICE_FROM_EMAIL || 'Balkan Agent <info@balkanagent.com>';
-  const safe = v => String(v || '').replace(/[<>]/g, '');
-  const r = await fetch('https://api.resend.com/emails', { method:'POST',
-    headers:{authorization:`Bearer ${env.RESEND_API_KEY}`, 'content-type':'application/json'},
-    body: JSON.stringify({from, to:[env.OWNER_EMAIL || 'info@balkanagent.com'],
-      subject:`New Balkan Agent lead: ${safe(lead.full_name)}`,
-      html:`<div style="font-family:Arial;color:#0a1733"><h2>New website inquiry</h2><p><b>Name:</b> ${safe(lead.full_name)}<br><b>Company:</b> ${safe(lead.company)}<br><b>Email:</b> ${safe(lead.email)}<br><b>Phone:</b> ${safe(lead.phone)}<br><b>Plan:</b> ${safe(lead.selected_plan)}</p><p>${safe(lead.message)}</p></div>`}) });
-  const j = await r.json().catch(() => ({}));
-  if (!r.ok) return {sent:false, reason:j.message || `Email provider error ${r.status}`};
-  return {sent:true, provider_id:j.id || ''};
+async function ensureBillingSchema(env) {
+  try { await env.DB.prepare("ALTER TABLE users ADD COLUMN billing_cycle TEXT NOT NULL DEFAULT 'monthly'").run(); } catch(e) {}
 }
 
 async function ensureInvoiceSchema(env) {
@@ -174,8 +156,11 @@ async function ensureInvoiceSchema(env) {
   await env.DB.prepare(`CREATE INDEX IF NOT EXISTS idx_invoices_customer ON invoices(customer_id)`).run();
 }
 
-function planAmountCents(plan, env) {
-  if (PLAN_PRICES[plan] !== undefined) return PLAN_PRICES[plan];
+function planAmountCents(plan, env, cycle="monthly") {
+  if (PLAN_PRICES[plan] !== undefined) {
+    const monthly=PLAN_PRICES[plan];
+    return cycle === "annual" ? Math.round(monthly*12*0.75) : monthly;
+  }
   const custom = Number(env.INVOICE_ENTERPRISE_PRICE_CENTS || 0);
   return Number.isFinite(custom) && custom > 0 ? Math.round(custom) : 0;
 }
@@ -242,7 +227,7 @@ function bytesToBase64(bytes){
 
 async function sendInvoiceEmail(env, invoice, customer) {
   if (!env.RESEND_API_KEY) throw new Error('RESEND_API_KEY is not configured');
-  const from = env.INVOICE_FROM_EMAIL || 'Balkan Agent <invoices@balkanagent.com>';
+  const from = env.INVOICE_FROM_EMAIL || 'Balkan Agent <info@balkanagent.com>';
   const pdf = makeInvoicePdf(invoice, customer, env);
   const total = money(invoice.amount_cents, invoice.currency);
   const html = `
@@ -266,16 +251,19 @@ async function sendInvoiceEmail(env, invoice, customer) {
   return j.id || '';
 }
 
-async function createActivationInvoice(env, customer) {
+async function createBillingInvoice(env, customer, options={}) {
+  await ensureBillingSchema(env);
   await ensureInvoiceSchema(env);
-  const amount=planAmountCents(customer.plan,env);
+  const cycle=BILLING_CYCLES.includes(customer.billing_cycle)?customer.billing_cycle:"monthly";
+  const service=planAmountCents(customer.plan,env,cycle);
+  const activation=options.activation ? (PLAN_ACTIVATION_FEES[customer.plan]||0) : 0;
+  const amount=service+activation;
+  const cycleLabel=cycle==='annual'?'annual (25% discount)':'monthly';
+  const description=activation ? `Balkan Agent ${customer.plan} activation + ${cycleLabel} service` : `Balkan Agent ${customer.plan} plan - ${cycleLabel} service`;
   const tmp='TMP-'+crypto.randomUUID();
-  const description = customer.plan==='Enterprise' ? 'Balkan Agent Enterprise - agreed monthly service' : `Balkan Agent ${customer.plan} plan - monthly service`;
-  const result=await env.DB.prepare(`INSERT INTO invoices(customer_id,invoice_number,plan,description,amount_cents,currency,status,issue_date,due_date)
-    VALUES(?,?,?,?,?,'EUR','ISSUED',date('now'),?)`).bind(customer.id,tmp,customer.plan,description,amount,dueDate(Number(env.INVOICE_DUE_DAYS||7))).run();
+  const result=await env.DB.prepare(`INSERT INTO invoices(customer_id,invoice_number,plan,description,amount_cents,currency,status,issue_date,due_date) VALUES(?,?,?,?,?,'EUR','ISSUED',date('now'),?)`).bind(customer.id,tmp,customer.plan,description,amount,dueDate(Number(env.INVOICE_DUE_DAYS||7))).run();
   const id=Number(result.meta && result.meta.last_row_id);
-  const year=new Date().getUTCFullYear();
-  const number=`BA-${year}-${String(id).padStart(6,'0')}`;
+  const number=`BA-${new Date().getUTCFullYear()}-${String(id).padStart(6,'0')}`;
   await env.DB.prepare('UPDATE invoices SET invoice_number=? WHERE id=?').bind(number,id).run();
   let invoice=await env.DB.prepare('SELECT * FROM invoices WHERE id=?').bind(id).first();
   try {
@@ -283,10 +271,9 @@ async function createActivationInvoice(env, customer) {
     await env.DB.prepare("UPDATE invoices SET email_sent_at=datetime('now'), email_provider_id=? WHERE id=?").bind(providerId,id).run();
     invoice=await env.DB.prepare('SELECT * FROM invoices WHERE id=?').bind(id).first();
     return {invoice,email_sent:true};
-  } catch(e) {
-    return {invoice,email_sent:false,email_error:e.message};
-  }
+  } catch(e) { return {invoice,email_sent:false,email_error:e.message}; }
 }
+async function createActivationInvoice(env, customer) { return createBillingInvoice(env,customer,{activation:true}); }
 
 export async function onRequest(context) {
   const {request, env} = context;
@@ -297,26 +284,20 @@ export async function onRequest(context) {
   if (!env.DB) return bad("D1 binding DB is not configured",500);
   if (!env.SESSION_SECRET) return bad("SESSION_SECRET is not configured",500);
   if (!env.ADMIN_PASSWORD) return bad("ADMIN_PASSWORD is not configured",500);
+  await ensureBillingSchema(env);
 
-  // PUBLIC LEADS
   if (path === "leads" && method === "POST") {
     await ensureLeadSchema(env);
-    const body = await parseBody(request);
-    const full_name = String(body.full_name || body.name || '').trim();
-    const company = String(body.company || '').trim();
-    const email = String(body.email || '').trim().toLowerCase();
-    const phone = String(body.phone || '').trim();
-    const message = String(body.message || '').trim();
-    const selected_plan = String(body.selected_plan || body.plan || '').trim();
-    const source = String(body.source || 'website').trim().slice(0,80);
-    if (!full_name || !email) return bad('Name and email are required.');
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return bad('Invalid email.');
-    if (message.length > 4000) return bad('Message is too long.');
-    const result = await env.DB.prepare(`INSERT INTO leads(full_name,company,email,phone,message,selected_plan,source,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,'new',datetime('now'),datetime('now'))`).bind(full_name,company,email,phone,message,selected_plan,source).run();
-    const id = Number(result.meta && result.meta.last_row_id);
-    const lead = await env.DB.prepare('SELECT * FROM leads WHERE id=?').bind(id).first();
-    const notification = await notifyLeadOwner(env, lead).catch(e => ({sent:false, reason:e.message}));
-    return json({ok:true, lead:safeLead(lead), notification:{sent:!!notification.sent}}, 201);
+    const b=await parseBody(request);
+    const name=String(b.name||b.full_name||'').trim();
+    const email=String(b.email||'').trim().toLowerCase();
+    const company=String(b.company||'').trim();
+    const phone=String(b.phone||'').trim();
+    const plan=String(b.plan||b.selected_plan||'').trim();
+    const message=String(b.message||'').trim();
+    if(!name || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return bad('Name and valid email are required.');
+    await env.DB.prepare('INSERT INTO leads(name,company,email,phone,plan,message,status) VALUES(?,?,?,?,?,?,'new')').bind(name,company,email,phone,plan,message).run();
+    return json({ok:true,message:'Lead saved.'},201);
   }
 
   // REGISTER CUSTOMER
@@ -414,32 +395,11 @@ export async function onRequest(context) {
     return json({ok:true,user:safeUser(user)});
   }
 
-  // ADMIN LEADS
   if (path === "admin/leads" && method === "GET") {
-    const r = await requireAdmin(request,env); if (r.error) return r.error;
+    const r=await requireAdmin(request,env); if(r.error)return r.error;
     await ensureLeadSchema(env);
-    const rows = await env.DB.prepare('SELECT * FROM leads ORDER BY id DESC').all();
-    return json({ok:true, leads:(rows.results || []).map(safeLead)});
-  }
-  const leadMatch = path.match(/^admin\/leads\/(\d+)$/);
-  if (leadMatch && method === "PATCH") {
-    const r = await requireAdmin(request,env); if (r.error) return r.error;
-    await ensureLeadSchema(env);
-    const body = await parseBody(request);
-    const allowed = ['new','contacted','qualified','demo','won','lost'];
-    const status = String(body.status || 'new');
-    if (!allowed.includes(status)) return bad('Invalid lead status.');
-    const notes = String(body.notes || '').slice(0,4000);
-    await env.DB.prepare("UPDATE leads SET status=?, notes=?, updated_at=datetime('now') WHERE id=?").bind(status,notes,Number(leadMatch[1])).run();
-    const lead = await env.DB.prepare('SELECT * FROM leads WHERE id=?').bind(Number(leadMatch[1])).first();
-    if (!lead) return bad('Lead not found',404);
-    return json({ok:true,lead:safeLead(lead)});
-  }
-  if (leadMatch && method === "DELETE") {
-    const r = await requireAdmin(request,env); if (r.error) return r.error;
-    await ensureLeadSchema(env);
-    await env.DB.prepare('DELETE FROM leads WHERE id=?').bind(Number(leadMatch[1])).run();
-    return json({ok:true});
+    const rows=await env.DB.prepare('SELECT * FROM leads ORDER BY id DESC').all();
+    return json({ok:true,leads:rows.results||[]});
   }
 
   // ADMIN CUSTOMERS
@@ -456,6 +416,7 @@ export async function onRequest(context) {
     if (r.error) return r.error;
     const id=match[1];
     const b=await parseBody(request);
+    await ensureBillingSchema(env);
     const current=await env.DB.prepare("SELECT * FROM users WHERE id=? AND role='customer'").bind(id).first();
     if (!current) return bad("Customer not found",404);
 
@@ -465,15 +426,24 @@ export async function onRequest(context) {
     const iban = b.iban === undefined ? current.iban : String(b.iban||"");
     const bank = b.bank_name === undefined ? current.bank_name : String(b.bank_name||"");
     const paymentStatus = b.payment_status === undefined ? current.payment_status : String(b.payment_status);
+    const billingCycle = BILLING_CYCLES.includes(String(b.billing_cycle || current.billing_cycle || "monthly")) ? String(b.billing_cycle || current.billing_cycle || "monthly") : "monthly";
 
     await env.DB.prepare(`
-      UPDATE users SET active=?, plan=?, phone=?, iban=?, bank_name=?, payment_status=?, payment_method='Bank transfer / IBAN'
+      UPDATE users SET active=?, plan=?, billing_cycle=?, phone=?, iban=?, bank_name=?, payment_status=?, payment_method='Bank transfer / IBAN'
       WHERE id=? AND role='customer'
-    `).bind(active,plan,phone,iban,bank,paymentStatus,id).run();
+    `).bind(active,plan,billingCycle,phone,iban,bank,paymentStatus,id).run();
 
     const updated=await env.DB.prepare("SELECT * FROM users WHERE id=?").bind(id).first();
     let invoiceResult=null;
+    const oldCycle=current.billing_cycle || "monthly";
+    const planChanged=String(current.plan||"Starter")!==plan;
+    const cycleChanged=oldCycle!==billingCycle;
     if (!current.active && active) invoiceResult=await createActivationInvoice(env, updated);
+    else if (current.active && active && (planChanged || cycleChanged)) invoiceResult=await createBillingInvoice(env, updated,{activation:planChanged});
+    if (current.active && active && invoiceResult && !invoiceResult.email_sent) {
+      await env.DB.prepare(`UPDATE users SET active=?, plan=?, billing_cycle=?, phone=?, iban=?, bank_name=?, payment_status=?, payment_method='Bank transfer / IBAN' WHERE id=? AND role='customer'`).bind(current.active,current.plan,current.billing_cycle||'monthly',current.phone||'',current.iban||'',current.bank_name||'',current.payment_status||'UNPAID',id).run();
+      return json({ok:false,error:'Invoice email failed; previous package and billing cycle were restored.',customer:safeUser(current),invoice:invoiceResult},502);
+    }
     return json({ok:true,customer:safeUser(updated),invoice:invoiceResult});
   }
 

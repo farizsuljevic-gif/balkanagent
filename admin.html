@@ -10,7 +10,7 @@
 <div class="brand">BALKAN<span>AGENT</span><div class="tag">ADMIN CONTROL CENTER</div></div>
 <nav>
 <button class="active" data-tab="overview">Pregled</button>
-<button data-tab="applications">Prijave</button><button data-tab="leads">Leads CRM</button>
+<button data-tab="applications">Prijave</button>
 <button data-tab="customers">Mušterije</button>
 <button data-tab="active">Aktivne</button>
 <button data-tab="inactive">Neaktivne</button>
@@ -33,7 +33,6 @@
 <section id="customers" class="section"><div class="panel"><h2>Sve mušterije</h2><div style="overflow:auto"><table><thead><tr><th>Ime</th><th>Firma</th><th>Email</th><th>Telefon</th><th>Paket</th><th>Plaćanje</th><th>Status</th><th>Akcije</th></tr></thead><tbody id="customerRows"></tbody></table></div></div></section>
 <section id="active" class="section"><div class="panel"><h2>Aktivne mušterije</h2><div style="overflow:auto"><table><tbody id="activeRows"></tbody></table></div></div></section>
 <section id="inactive" class="section"><div class="panel"><h2>Neaktivne mušterije</h2><div style="overflow:auto"><table><tbody id="inactiveRows"></tbody></table></div></div></section>
-<section id="leads" class="section"><div class="panel"><h2>Leads CRM</h2><p style="color:#96a7bd">Server-side inquiries from the website and AI configurator.</p><div style="overflow:auto"><table><thead><tr><th>Datum</th><th>Name / Firma</th><th>Email</th><th>Plan</th><th>Nachricht</th><th>Status</th><th>Aktion</th></tr></thead><tbody id="leadRows"></tbody></table></div></div></section>
 <section id="sales" class="section"><div class="metrics"><div class="metric"><small>NEW</small><b id="sNew">0</b></div><div class="metric"><small>CONTACTED</small><b id="sContacted">0</b></div><div class="metric"><small>DEMO</small><b id="sDemo">0</b></div><div class="metric"><small>CUSTOMER</small><b id="sCustomer">0</b></div></div></section>
 <section id="integrations" class="section"><div class="panel"><h2>Integracije</h2><div id="integrationList"></div></div></section>
 <section id="settings" class="section"><div class="panel"><h2>Podešavanja</h2><p>Admin email: <b>ceo@balkanagent.com</b></p><p>Kontakt email: <b>info@balkanagent.com</b></p></div></section>
@@ -55,7 +54,7 @@ function ensureFromLeads(){
   });
 }
 ensureFromLeads();
-function actions(c){return `<button class="btn" data-detail="${c.id}">Detalji</button> <button class="btn ${c.active?'danger':'success'}" data-toggle="${c.id}">${c.active?'Deaktiviraj':'Aktiviraj'}</button> <button class="btn" data-invoice="${c.id}">Račun</button> <button class="btn" data-resend="${c.id}">Pošalji račun</button> <select class="status planSelect" data-planid="${c.id}"><option ${c.plan==='Starter'?'selected':''}>Starter</option><option ${c.plan==='Business'?'selected':''}>Business</option><option ${c.plan==='Pro'?'selected':''}>Pro</option><option ${c.plan==='Enterprise'?'selected':''}>Enterprise</option></select> <button class="btn danger" data-delete="${c.id}">Obriši</button>`}
+function actions(c){return `<button class="btn" data-detail="${c.id}">Detalji</button> <button class="btn ${c.active?'danger':'success'}" data-toggle="${c.id}">${c.active?'Deaktiviraj':'Aktiviraj'}</button> <button class="btn" data-invoice="${c.id}">Račun</button> <button class="btn" data-resend="${c.id}">Pošalji račun</button> <select class="status planSelect" data-planid="${c.id}"><option ${c.plan==='Starter'?'selected':''}>Starter</option><option ${c.plan==='Business'?'selected':''}>Business</option><option ${c.plan==='Pro'?'selected':''}>Pro</option><option ${c.plan==='Enterprise'?'selected':''}>Enterprise</option></select> <select class="status cycleSelect" data-cycleid="${c.id}"><option value="monthly" ${c.billing_cycle==='monthly'||!c.billing_cycle?'selected':''}>Monthly</option><option value="annual" ${c.billing_cycle==='annual'?'selected':''}>Annual −25%</option></select> <button class="btn danger" data-delete="${c.id}">Obriši</button>`}
 function customerRow(c){return `<tr>
 <td>${esc(c.name)}</td>
 <td>${esc(c.company)}</td>
@@ -151,6 +150,7 @@ save();
     const me=await api('/api/auth/me');
     if(me.role!=='admin'){location.href='login.html';return;}
     const result=await api('/api/admin/customers');
+    try { const leadResult=await api('/api/admin/leads'); if(typeof leads!=='undefined') leads=leadResult.leads||[]; } catch(e) { console.warn('Lead inbox unavailable',e); }
     window.backendCustomers=result.customers||[];
     if(typeof customers!=='undefined'){
       customers=window.backendCustomers.map(c=>({...c,active:!!c.active,bankName:c.bank_name,paymentStatus:c.payment_status,paymentMethod:c.payment_method}));
@@ -195,22 +195,16 @@ save();
         const j=await api('/api/admin/customers/'+c.id,{method:'PATCH',body:JSON.stringify({plan:sel.value})});
         Object.assign(c,j.customer);render();
       });
+      document.querySelectorAll('.cycleSelect').forEach(sel=>sel.onchange=async()=>{
+        const c=customers.find(x=>String(x.id)===sel.dataset.cycleid);if(!c)return;
+        try { const j=await api('/api/admin/customers/'+c.id,{method:'PATCH',body:JSON.stringify({billing_cycle:sel.value})}); Object.assign(c,j.customer); if(j.invoice) alert(j.invoice.email_sent?'Novi račun je poslat kupcu.':'Novi račun je kreiran, ali email nije poslat.'); render(); } catch(e){ alert(e.message); render(); }
+      });
     };
     if(typeof render==='function') render();
   }catch(e){
     console.error(e);
     location.href='login.html';
   }
-})();
-</script>
-<script>
-(async function(){
-  async function leadApi(path,options={}){const r=await fetch(path,{...options,headers:{'content-type':'application/json',...(options.headers||{})}});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Request failed');return j;}
-  function leadEsc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-  function renderBackendLeads(leads){const body=document.getElementById('leadRows');if(!body)return;body.innerHTML=leads.map(l=>`<tr><td>${leadEsc(l.created_at)}</td><td><b>${leadEsc(l.full_name)}</b><br><small>${leadEsc(l.company)}</small></td><td><a href="mailto:${leadEsc(l.email)}">${leadEsc(l.email)}</a><br>${leadEsc(l.phone)}</td><td>${leadEsc(l.selected_plan||'—')}</td><td style="max-width:300px;white-space:normal">${leadEsc(l.message||'—')}</td><td><select class="status leadStatus" data-lead-id="${l.id}"><option value="new" ${l.status==='new'?'selected':''}>new</option><option value="contacted" ${l.status==='contacted'?'selected':''}>contacted</option><option value="qualified" ${l.status==='qualified'?'selected':''}>qualified</option><option value="demo" ${l.status==='demo'?'selected':''}>demo</option><option value="won" ${l.status==='won'?'selected':''}>won</option><option value="lost" ${l.status==='lost'?'selected':''}>lost</option></select></td><td><button class="btn danger leadDelete" data-lead-id="${l.id}">Obriši</button></td></tr>`).join('')||'<tr><td colspan="7" class="empty">Nema server-side leadova.</td></tr>';document.querySelectorAll('.leadStatus').forEach(el=>el.onchange=async()=>{try{await leadApi('/api/admin/leads/'+el.dataset.leadId,{method:'PATCH',body:JSON.stringify({status:el.value})})}catch(e){alert(e.message)}});document.querySelectorAll('.leadDelete').forEach(el=>el.onclick=async()=>{if(!confirm('Obrisati lead?'))return;await leadApi('/api/admin/leads/'+el.dataset.leadId,{method:'DELETE'});loadLeads()})}
-  async function loadLeads(){try{const j=await leadApi('/api/admin/leads');renderBackendLeads(j.leads||[])}catch(e){console.warn('Lead inbox unavailable',e.message)}}
-  await loadLeads();
-  const leadTab=document.querySelector('[data-tab="leads"]');if(leadTab)leadTab.addEventListener('click',loadLeads);
 })();
 </script>
 </body></html>
