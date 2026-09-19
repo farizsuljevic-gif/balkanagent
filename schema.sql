@@ -14,7 +14,6 @@ CREATE TABLE IF NOT EXISTS users (
   iban TEXT DEFAULT '',
   bank_name TEXT DEFAULT '',
   payment_status TEXT NOT NULL DEFAULT 'UNPAID',
-  billing_cycle TEXT NOT NULL DEFAULT 'monthly',
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -28,7 +27,6 @@ CREATE TABLE IF NOT EXISTS invoices (
   plan TEXT NOT NULL,
   description TEXT NOT NULL,
   amount_cents INTEGER NOT NULL DEFAULT 0,
-  discount_percent INTEGER NOT NULL DEFAULT 0,
   currency TEXT NOT NULL DEFAULT 'EUR',
   status TEXT NOT NULL DEFAULT 'ISSUED',
   issue_date TEXT NOT NULL DEFAULT (date('now')),
@@ -39,35 +37,20 @@ CREATE TABLE IF NOT EXISTS invoices (
 );
 CREATE INDEX IF NOT EXISTS idx_invoices_customer ON invoices(customer_id);
 
-CREATE TABLE IF NOT EXISTS pricing_config (
-  id INTEGER PRIMARY KEY CHECK (id = 1),
-  annual_enabled INTEGER NOT NULL DEFAULT 1,
-  annual_discount_percent INTEGER NOT NULL DEFAULT 25,
-  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-INSERT OR IGNORE INTO pricing_config (id, annual_enabled, annual_discount_percent) VALUES (1, 1, 25);
 
-CREATE TABLE IF NOT EXISTS pricing_plans (
-  plan TEXT PRIMARY KEY,
-  monthly_cents INTEGER NOT NULL,
-  activation_cents INTEGER NOT NULL DEFAULT 0,
-  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-INSERT OR IGNORE INTO pricing_plans (plan, monthly_cents, activation_cents) VALUES
-  ('Starter', 8900, 14900), ('Business', 19900, 34900), ('Pro', 39900, 69900), ('Premium', 69900, 99000);
-
-CREATE TABLE IF NOT EXISTS reservations (
+CREATE TABLE IF NOT EXISTS leads (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
+  full_name TEXT NOT NULL,
+  company TEXT DEFAULT '',
   email TEXT NOT NULL,
   phone TEXT DEFAULT '',
-  service TEXT NOT NULL,
-  reservation_date TEXT NOT NULL,
-  reservation_time TEXT DEFAULT '',
-  guests INTEGER NOT NULL DEFAULT 1,
+  message TEXT DEFAULT '',
+  selected_plan TEXT DEFAULT '',
+  source TEXT DEFAULT 'website',
+  status TEXT NOT NULL DEFAULT 'new',
   notes TEXT DEFAULT '',
-  status TEXT NOT NULL DEFAULT 'NEW',
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
-CREATE INDEX IF NOT EXISTS idx_reservations_date ON reservations(reservation_date);
-CREATE INDEX IF NOT EXISTS idx_reservations_status ON reservations(status);
+CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status);
+CREATE INDEX IF NOT EXISTS idx_leads_created ON leads(created_at);

@@ -5,35 +5,23 @@
 :root{--bg:#030814;--side:#06101f;--panel:#091426;--panel2:#0c1a31;--line:#1d304d;--text:#f7f9fd;--muted:#96a7bd;--violet:#7544ff;--gold:#d8a94c;--green:#30dc85;--red:#ff6478}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 70% 0,#17204b,#030814 70%);color:var(--text);font:14px/1.5 system-ui}a{color:inherit;text-decoration:none}button,input,select{font:inherit}.shell{display:grid;grid-template-columns:255px 1fr;min-height:100vh}aside{background:#06101f;border-right:1px solid #172842;padding:22px;position:sticky;top:0;height:100vh}.brand{font-weight:900;font-size:20px;margin-bottom:25px}.brand span{color:#6e90ff}.tag{font-size:9px;color:var(--gold)}nav button,nav a{width:100%;display:block;text-align:left;padding:11px 12px;margin:5px 0;background:transparent;border:0;border-radius:9px;color:#9dacbf;cursor:pointer}nav .active{background:#21174d;color:#fff;border-left:3px solid var(--violet)}main{padding:25px 28px}.top{display:flex;justify-content:space-between;gap:14px;align-items:center;margin-bottom:18px}.top h1{margin:0}.tools{display:flex;gap:8px;flex-wrap:wrap}.btn{border:1px solid #2a4064;background:#0a1627;color:#fff;border-radius:9px;padding:9px 12px;cursor:pointer}.primary{background:#6f42ee}.danger{border-color:#6c2934;color:#ff9aa7;background:#241017}.success{border-color:#1e6747;color:#72e6aa;background:#0d261b}.notice{border:1px solid #453a1d;background:#171407;color:#d8c78e;border-radius:10px;padding:11px 13px;margin-bottom:14px}.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}.metric,.panel{background:#091426;border:1px solid #1d304d;border-radius:13px}.metric{padding:15px}.metric small{color:#8496ad}.metric b{font-size:27px;display:block;margin-top:5px}.panel{padding:16px}.section{display:none}.section.active{display:block}table{width:100%;border-collapse:collapse;min-width:900px}th,td{padding:10px;border-bottom:1px solid #172842;text-align:left;font-size:12px}th{color:#71839b}.search{width:250px;background:#07101e;border:1px solid #263b5d;color:#fff;border-radius:8px;padding:9px 10px}.status{padding:6px 8px;border-radius:8px;background:#0c1a31;color:#fff;border:1px solid #344d70}.activeBadge{color:#56e69d}.inactiveBadge{color:#d8a94c}.empty{text-align:center;color:#71839a;padding:32px}.detail{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.detail div{background:#0c1a31;padding:10px;border-radius:8px}.modal{display:none;position:fixed;inset:0;background:#000b;z-index:30;align-items:center;justify-content:center}.modal.show{display:flex}.modalCard{width:min(560px,calc(100% - 30px));background:#081321;border:1px solid #294d73;border-radius:14px;padding:20px}
 @media(max-width:1000px){.shell{grid-template-columns:1fr}aside{height:auto;position:relative}nav{display:flex;overflow:auto}nav button,nav a{white-space:nowrap;width:auto}.metrics{grid-template-columns:repeat(2,1fr)}}@media(max-width:600px){main{padding:16px}.metrics{grid-template-columns:1fr}.top{flex-direction:column;align-items:flex-start}}
-
-<style id="ba-brand-system-v10">
-:root{--bg:#07090d!important;--panel:#0e1319!important;--line:#4a3920!important;--text:#f6f2e8!important;--muted:#b2ac9e!important;--gold:#d8ad5e!important;--violet:#b99046!important;--blue:#d3a858!important;--green:#d0ad62!important}
-html,body{background:radial-gradient(900px 500px at 70% -10%,rgba(121,88,35,.22),transparent 62%),#07090d!important;color:#f6f2e8!important}
-body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif!important}
-.panel,.metric,.box,.loginBox,.modalCard{background:linear-gradient(155deg,rgba(20,23,25,.97),rgba(10,12,14,.98))!important;border-color:rgba(194,149,70,.34)!important;box-shadow:0 20px 50px rgba(0,0,0,.32),inset 0 1px rgba(255,244,207,.05)!important}
-.brand,.bn{color:#f5efe2!important;letter-spacing:2px}.brand span,.bn span{color:#d8ad5e!important}.tag{color:#c4a36b!important;letter-spacing:1.6px!important}
-nav button,nav a{color:#c4bcae!important;border-radius:10px!important;transition:background .18s ease,color .18s ease,border-color .18s ease}nav button:hover,nav a:hover{background:rgba(165,119,40,.16)!important;color:#fff!important}nav .active{background:linear-gradient(135deg,rgba(134,94,27,.30),rgba(49,38,20,.40))!important;color:#fff!important;border-left-color:#d8ad5e!important}
-.btn{background:rgba(31,26,18,.84)!important;border-color:rgba(194,149,70,.45)!important;color:#f8efda!important;border-radius:999px!important;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}.btn:hover{transform:translateY(-2px);border-color:#dfb86b!important;box-shadow:0 12px 28px rgba(0,0,0,.26)}.btn.primary{background:linear-gradient(135deg,#a77a2f,#d2aa5d)!important;color:#1a1105!important;border-color:#e0ba70!important}.btn.success{border-color:#9c7938!important;color:#e9c982!important;background:rgba(63,46,19,.65)!important}.btn.danger{border-color:#7d4437!important;background:rgba(51,24,19,.60)!important}
-input,select{background:rgba(9,12,15,.86)!important;color:#f7f0e1!important;border-color:rgba(194,149,70,.33)!important;border-radius:10px!important}input:focus,select:focus{outline:2px solid rgba(218,175,92,.60)!important;outline-offset:2px}
-.notice{background:rgba(62,45,18,.32)!important;border-color:rgba(212,168,87,.43)!important;color:#e5c77f!important}.metric small,small{color:#baa98d!important}.metric b{color:#f5ead2!important}.activeBadge,.ok{color:#d8bd79!important}.inactiveBadge,.err{color:#df8b78!important}h1,h2,h3{color:#f6f1e6!important}th{color:#c0aa80!important}td{border-bottom-color:rgba(184,139,62,.18)!important}.detail div{background:rgba(51,38,18,.32)!important}.status{background:rgba(47,35,18,.62)!important;border-color:rgba(195,149,70,.42)!important}.modal{background:rgba(0,0,0,.78)!important}
-.loginBox .header{border-bottom-color:rgba(194,149,70,.28)!important}.ba{background:linear-gradient(135deg,#f5d58d,#b77f2d,#f0cc82)!important;-webkit-background-clip:text!important;color:transparent!important;text-shadow:0 0 18px rgba(204,155,64,.16)}.back,a{color:#d5b97d!important}.sub{color:#b9ad98!important}.box a{color:#d7b972!important}
-@media(max-width:700px){aside{border-right:0!important;border-bottom:1px solid rgba(194,149,70,.25)!important}.metrics{gap:12px!important}}
 </style></head><body>
 <div class="shell"><aside>
 <div class="brand">BALKAN<span>AGENT</span><div class="tag">ADMIN CONTROL CENTER</div></div>
 <nav>
 <button class="active" data-tab="overview">Pregled</button>
-<button data-tab="applications">Prijave</button>
+<button data-tab="applications">Prijave</button><button data-tab="leads">Leads CRM</button>
 <button data-tab="customers">Mušterije</button>
 <button data-tab="active">Aktivne</button>
 <button data-tab="inactive">Neaktivne</button>
 <button data-tab="sales">Prodajni proces</button>
 <button data-tab="integrations">Integracije</button>
-<button data-tab="settings">Podešavanja</button><button data-tab="pricingSettings">Cijene i popusti</button><button data-tab="reservations">Rezervacije</button>
+<button data-tab="settings">Podešavanja</button>
 <a href="login.html">← Login</a><a href="#" id="logoutAdmin">Logout</a>
 </nav></aside>
 <main>
-<div class="top"><div><h1 id="title">Pregled</h1><small style="color:#8ea0b5">info@balkanagent.com</small></div><div class="tools"><input id="search" class="search" placeholder="Pretraga"><button id="export" class="btn">Izvezi CSV</button></div></div>
+<div class="notice">Admin preview radi lokalno. Aktivacije, brisanje i paketi rade u browseru; pravi zajednički podaci dolaze sa backendom.</div>
+<div class="top"><div><h1 id="title">Pregled</h1><small style="color:#8ea0b5">ceo@balkanagent.com</small></div><div class="tools"><input id="search" class="search" placeholder="Pretraga"><button id="export" class="btn">Izvezi CSV</button></div></div>
 
 <section id="overview" class="section active">
 <div class="metrics"><div class="metric"><small>PRIJAVE</small><b id="mApps">0</b></div><div class="metric"><small>MUŠTERIJE</small><b id="mCust">0</b></div><div class="metric"><small>AKTIVNE</small><b id="mActive">0</b></div><div class="metric"><small>NEAKTIVNE</small><b id="mInactive">0</b></div><div class="metric"><small>PRO PLAN</small><b id="mPro">0</b></div></div>
@@ -45,10 +33,10 @@ input,select{background:rgba(9,12,15,.86)!important;color:#f7f0e1!important;bord
 <section id="customers" class="section"><div class="panel"><h2>Sve mušterije</h2><div style="overflow:auto"><table><thead><tr><th>Ime</th><th>Firma</th><th>Email</th><th>Telefon</th><th>Paket</th><th>Plaćanje</th><th>Status</th><th>Akcije</th></tr></thead><tbody id="customerRows"></tbody></table></div></div></section>
 <section id="active" class="section"><div class="panel"><h2>Aktivne mušterije</h2><div style="overflow:auto"><table><tbody id="activeRows"></tbody></table></div></div></section>
 <section id="inactive" class="section"><div class="panel"><h2>Neaktivne mušterije</h2><div style="overflow:auto"><table><tbody id="inactiveRows"></tbody></table></div></div></section>
+<section id="leads" class="section"><div class="panel"><h2>Leads CRM</h2><p style="color:#96a7bd">Server-side inquiries from the website and AI configurator.</p><div style="overflow:auto"><table><thead><tr><th>Datum</th><th>Name / Firma</th><th>Email</th><th>Plan</th><th>Nachricht</th><th>Status</th><th>Aktion</th></tr></thead><tbody id="leadRows"></tbody></table></div></div></section>
 <section id="sales" class="section"><div class="metrics"><div class="metric"><small>NEW</small><b id="sNew">0</b></div><div class="metric"><small>CONTACTED</small><b id="sContacted">0</b></div><div class="metric"><small>DEMO</small><b id="sDemo">0</b></div><div class="metric"><small>CUSTOMER</small><b id="sCustomer">0</b></div></div></section>
 <section id="integrations" class="section"><div class="panel"><h2>Integracije</h2><div id="integrationList"></div></div></section>
-<section id="settings" class="section"><div class="panel"><h2>Podešavanja</h2><p><strong>Email za obavijesti vlasniku:</strong> <b>info@balkanagent.com</b><br><small>Na ovu adresu stižu obavijesti o novim registracijama i statusu aktivacije.</small></p><p><strong>Email za kupce i račune:</strong> <b>info@balkanagent.com</b><br><small>Ova adresa je javni kontakt i sender adresa za invoice tok nakon Resend verifikacije.</small></p></div></section>
-<section id="pricingSettings" class="section"><div class="panel"><h2>Cijene i popusti</h2><p style="color:#96a7bd">Godišnji paket koristi popust na godišnji zbir. Maksimalni popust je ograničen na 50% radi zaštite cjenika.</p><div style="display:grid;gap:12px;max-width:520px"><label style="display:flex;gap:10px;align-items:center"><input id="annualEnabled" type="checkbox" style="width:auto;margin:0"> Ponudi godišnje plaćanje</label><label>Popust za godišnje plaćanje (%)<input id="annualDiscount" type="number" min="0" max="50" step="1" value="25"></label><button class="btn primary" id="savePricing">Sačuvaj cijene i popust</button><div id="pricingStatus" style="color:#72e6aa"></div></div><hr style="border-color:#172842;margin:18px 0"><div id="pricingPreview" style="color:#c8d2df"></div></div></section><section id="reservations" class="section"><div class="panel"><h2>Rezervacijski zahtjevi</h2><div style="overflow:auto"><table><thead><tr><th>Datum</th><th>Ime</th><th>Usluga</th><th>Kontakt</th><th>Status</th></tr></thead><tbody id="reservationRows"></tbody></table></div></div></section>
+<section id="settings" class="section"><div class="panel"><h2>Podešavanja</h2><p>Admin email: <b>ceo@balkanagent.com</b></p><p>Kontakt email: <b>info@balkanagent.com</b></p></div></section>
 </main></div>
 
 <div class="modal" id="detailModal"><div class="modalCard"><h2>Detalji mušterije</h2><div id="detailBody"></div><div style="text-align:right;margin-top:15px"><button class="btn" id="closeDetail">Zatvori</button></div></div></div>
@@ -67,7 +55,7 @@ function ensureFromLeads(){
   });
 }
 ensureFromLeads();
-function actions(c){return `<button class="btn" data-detail="${c.id}">Detalji</button> <button class="btn ${c.active?'danger':'success'}" data-toggle="${c.id}">${c.active?'Deaktiviraj':'Aktiviraj'}</button> <button class="btn" data-invoice="${c.id}">Račun</button> <button class="btn" data-resend="${c.id}">Pošalji račun</button> <select class="status planSelect" data-planid="${c.id}"><option ${c.plan==='Starter'?'selected':''}>Starter</option><option ${c.plan==='Business'?'selected':''}>Business</option><option ${c.plan==='Pro'?'selected':''}>Pro</option><option ${c.plan==='Premium'?'selected':''}>Premium</option></select> <select class="status billingCycleSelect" data-cycleid="${c.id}"><option value="monthly" ${c.billing_cycle==='annual'?'':'selected'}>Mjesečno</option><option value="annual" ${c.billing_cycle==='annual'?'selected':''}>Godišnje</option></select> <button class="btn danger" data-delete="${c.id}">Obriši</button>`}
+function actions(c){return `<button class="btn" data-detail="${c.id}">Detalji</button> <button class="btn ${c.active?'danger':'success'}" data-toggle="${c.id}">${c.active?'Deaktiviraj':'Aktiviraj'}</button> <button class="btn" data-invoice="${c.id}">Račun</button> <button class="btn" data-resend="${c.id}">Pošalji račun</button> <select class="status planSelect" data-planid="${c.id}"><option ${c.plan==='Starter'?'selected':''}>Starter</option><option ${c.plan==='Business'?'selected':''}>Business</option><option ${c.plan==='Pro'?'selected':''}>Pro</option><option ${c.plan==='Enterprise'?'selected':''}>Enterprise</option></select> <button class="btn danger" data-delete="${c.id}">Obriši</button>`}
 function customerRow(c){return `<tr>
 <td>${esc(c.name)}</td>
 <td>${esc(c.company)}</td>
@@ -154,9 +142,9 @@ save();
 <script>
 (async function(){
   async function api(path,options={}){
-    const r=await fetch(path,{...options,credentials:'include',headers:{'content-type':'application/json',...(options.headers||{})}});
+    const r=await fetch(path,{...options,headers:{'content-type':'application/json',...(options.headers||{})}});
     const j=await r.json().catch(()=>({}));
-    if(!r.ok){const error=new Error(j.error||'Request failed');error.status=r.status;throw error;}
+    if(!r.ok) throw new Error(j.error||'Request failed');
     return j;
   }
   try{
@@ -165,7 +153,7 @@ save();
     const result=await api('/api/admin/customers');
     window.backendCustomers=result.customers||[];
     if(typeof customers!=='undefined'){
-      customers=window.backendCustomers.map(c=>({...c,active:!!c.active,bankName:c.bank_name,paymentStatus:c.payment_status,paymentMethod:c.payment_method,billing_cycle:c.billing_cycle||'monthly'}));
+      customers=window.backendCustomers.map(c=>({...c,active:!!c.active,bankName:c.bank_name,paymentStatus:c.payment_status,paymentMethod:c.payment_method}));
       if(typeof render==='function') render();
     }
 
@@ -205,36 +193,24 @@ save();
       document.querySelectorAll('.planSelect').forEach(sel=>sel.onchange=async()=>{
         const c=customers.find(x=>String(x.id)===sel.dataset.planid);if(!c)return;
         const j=await api('/api/admin/customers/'+c.id,{method:'PATCH',body:JSON.stringify({plan:sel.value})});
-        Object.assign(c,j.customer,{billing_cycle:j.customer.billing_cycle||c.billing_cycle||'monthly'});render();
-      });
-      document.querySelectorAll('.billingCycleSelect').forEach(sel=>sel.onchange=async()=>{
-        const c=customers.find(x=>String(x.id)===sel.dataset.cycleid);if(!c)return;
-        const nextCycle=sel.value; sel.disabled=true;
-        try {
-          const j=await api('/api/admin/customers/'+c.id,{method:'PATCH',body:JSON.stringify({billing_cycle:nextCycle})});
-          Object.assign(c,j.customer,{billing_cycle:j.customer.billing_cycle||nextCycle});
-          render();
-        } catch (e) {
-          sel.value=c.billing_cycle||'monthly';
-          alert('Promjena ciklusa nije sačuvana: '+e.message);
-          sel.disabled=false;
-        }
+        Object.assign(c,j.customer);render();
       });
     };
     if(typeof render==='function') render();
-    const pricing=await api('/api/admin/pricing');
-    document.getElementById('annualEnabled').checked=!!pricing.pricing.annual_enabled;
-    document.getElementById('annualDiscount').value=pricing.pricing.annual_discount_percent;
-    const showPreview=(serverPricing)=>{const d=Math.max(0,Math.min(50,Number(document.getElementById('annualDiscount').value||25)));const plans=serverPricing?.plans||{};const amount=(name,fallback)=>{const cents=Number(plans[name]?.monthly_cents??fallback);return '€'+(cents/100*12*(1-d/100)).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})};const activation=(name,fallback)=>'€'+(Number(plans[name]?.activation_cents??fallback)/100).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2});document.getElementById('pricingPreview').textContent='Godišnji primjeri: Starter '+amount('Starter',8900)+' · Business '+amount('Business',19900)+' · Pro '+amount('Pro',39900)+' · Premium '+amount('Premium',69900)+' | Aktivacija: Starter '+activation('Starter',14900)+' · Business '+activation('Business',34900)+' · Pro '+activation('Pro',69900)+' · Premium '+activation('Premium',99000)};
-    document.getElementById('annualDiscount').oninput=()=>showPreview(pricing.pricing);document.querySelectorAll('.billingCycleSelect option[value="annual"]').forEach(x=>x.textContent='Godišnje - '+pricing.pricing.annual_discount_percent+'%');showPreview(pricing.pricing);
-    document.getElementById('savePricing').onclick=async()=>{const status=document.getElementById('pricingStatus');status.textContent='Čuvam…';try{const j=await api('/api/admin/pricing',{method:'PATCH',body:JSON.stringify({annual_enabled:document.getElementById('annualEnabled').checked,annual_discount_percent:Number(document.getElementById('annualDiscount').value)})});document.getElementById('annualDiscount').value=j.pricing.annual_discount_percent;document.querySelectorAll('.billingCycleSelect option[value="annual"]').forEach(x=>x.textContent='Godišnje - '+j.pricing.annual_discount_percent+'%');status.textContent='✓ Cijene i popust su sačuvani.';showPreview(j.pricing)}catch(e){status.textContent='Greška: '+e.message}};
-    try { const reservationData=await api('/api/admin/reservations'); const reservationRows=document.getElementById('reservationRows'); (reservationData.reservations||[]).forEach(item=>{const row=document.createElement('tr');row.innerHTML='<td>'+String(item.reservation_date||'')+' '+String(item.reservation_time||'')+'</td><td>'+String(item.name||'')+'</td><td>'+String(item.service||'')+'</td><td>'+String(item.email||'')+'<br>'+String(item.phone||'')+'</td><td>'+String(item.status||'NEW')+'</td>';reservationRows.appendChild(row)}); } catch (reservationError) { console.warn('[admin-reservations]',reservationError); const reservationRows=document.getElementById('reservationRows'); if(reservationRows) reservationRows.innerHTML='<tr><td colspan="5" class="empty">Rezervacije trenutno nisu dostupne.</td></tr>'; }
   }catch(e){
     console.error(e);
-    if(e.status===401||e.status===403){location.href='login.html';return;}
-    const status=document.getElementById('pricingStatus');
-    if(status) status.textContent='Backend podaci trenutno nisu učitani; lokalni prikaz ostaje dostupan. Provjeri D1 binding samo ako akcije ne čuvaju promjene.';
+    location.href='login.html';
   }
+})();
+</script>
+<script>
+(async function(){
+  async function leadApi(path,options={}){const r=await fetch(path,{...options,headers:{'content-type':'application/json',...(options.headers||{})}});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Request failed');return j;}
+  function leadEsc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+  function renderBackendLeads(leads){const body=document.getElementById('leadRows');if(!body)return;body.innerHTML=leads.map(l=>`<tr><td>${leadEsc(l.created_at)}</td><td><b>${leadEsc(l.full_name)}</b><br><small>${leadEsc(l.company)}</small></td><td><a href="mailto:${leadEsc(l.email)}">${leadEsc(l.email)}</a><br>${leadEsc(l.phone)}</td><td>${leadEsc(l.selected_plan||'—')}</td><td style="max-width:300px;white-space:normal">${leadEsc(l.message||'—')}</td><td><select class="status leadStatus" data-lead-id="${l.id}"><option value="new" ${l.status==='new'?'selected':''}>new</option><option value="contacted" ${l.status==='contacted'?'selected':''}>contacted</option><option value="qualified" ${l.status==='qualified'?'selected':''}>qualified</option><option value="demo" ${l.status==='demo'?'selected':''}>demo</option><option value="won" ${l.status==='won'?'selected':''}>won</option><option value="lost" ${l.status==='lost'?'selected':''}>lost</option></select></td><td><button class="btn danger leadDelete" data-lead-id="${l.id}">Obriši</button></td></tr>`).join('')||'<tr><td colspan="7" class="empty">Nema server-side leadova.</td></tr>';document.querySelectorAll('.leadStatus').forEach(el=>el.onchange=async()=>{try{await leadApi('/api/admin/leads/'+el.dataset.leadId,{method:'PATCH',body:JSON.stringify({status:el.value})})}catch(e){alert(e.message)}});document.querySelectorAll('.leadDelete').forEach(el=>el.onclick=async()=>{if(!confirm('Obrisati lead?'))return;await leadApi('/api/admin/leads/'+el.dataset.leadId,{method:'DELETE'});loadLeads()})}
+  async function loadLeads(){try{const j=await leadApi('/api/admin/leads');renderBackendLeads(j.leads||[])}catch(e){console.warn('Lead inbox unavailable',e.message)}}
+  await loadLeads();
+  const leadTab=document.querySelector('[data-tab="leads"]');if(leadTab)leadTab.addEventListener('click',loadLeads);
 })();
 </script>
 </body></html>
