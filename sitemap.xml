@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-<url><loc>https://balkanagent.com/</loc><priority>1.0</priority><changefreq>weekly</changefreq></url>
-<url><loc>https://balkanagent.com/ai-chatbot-balkan.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
-<url><loc>https://balkanagent.com/ai-automatizacija-turizam.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
-<url><loc>https://balkanagent.com/ai-automatizacija-medicina.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
-<url><loc>https://balkanagent.com/ai-automatizacija-ecommerce.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
-<url><loc>https://balkanagent.com/ai-automatizacija-crna-gora.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
-<url><loc>https://balkanagent.com/privacy.html</loc><priority>0.3</priority></url><url><loc>https://balkanagent.com/terms.html</loc><priority>0.3</priority></url>
+  <url><loc>https://balkanagent.com/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://balkanagent.com/privacy.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://balkanagent.com/terms.html</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
 </urlset>

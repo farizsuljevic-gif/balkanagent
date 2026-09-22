@@ -16,7 +16,7 @@
 <button data-tab="inactive">Neaktivne</button>
 <button data-tab="sales">Prodajni proces</button>
 <button data-tab="integrations">Integracije</button>
-<button data-tab="settings">Podešavanja</button>
+<button data-tab="bots" data-t="agents">AI botovi</button><button data-tab="settings">Podešavanja</button>
 <a href="login.html">← Login</a><a href="#" id="logoutAdmin">Logout</a>
 </nav></aside>
 <main>
@@ -35,6 +35,7 @@
 <section id="inactive" class="section"><div class="panel"><h2>Neaktivne mušterije</h2><div style="overflow:auto"><table><tbody id="inactiveRows"></tbody></table></div></div></section>
 <section id="sales" class="section"><div class="metrics"><div class="metric"><small>NEW</small><b id="sNew">0</b></div><div class="metric"><small>CONTACTED</small><b id="sContacted">0</b></div><div class="metric"><small>DEMO</small><b id="sDemo">0</b></div><div class="metric"><small>CUSTOMER</small><b id="sCustomer">0</b></div></div></section>
 <section id="integrations" class="section"><div class="panel"><h2>Integracije</h2><div id="integrationList"></div></div></section>
+<section id="bots" class="section"><div class="panel"><h2>AI botovi</h2><p style="color:#8ea0b5">Programiraj pozdrav, pravila ponašanja i odgovore koji se koriste u javnom chatu. Podešavanja se čuvaju u D1 bazi.</p><div id="botEditorGrid" class="grid"></div><div id="botEditorMsg" class="good" style="margin-top:10px"></div></div></section>
 <section id="settings" class="section"><div class="panel"><h2>Podešavanja</h2><p>Admin email: <b>ceo@balkanagent.com</b></p><p>Kontakt email: <b>info@balkanagent.com</b></p></div></section>
 </main></div>
 
@@ -205,6 +206,15 @@ save();
     console.error(e);
     location.href='login.html';
   }
+})();
+</script>
+<script>
+(function(){
+ async function botApi(path,options={}){const r=await fetch(path,{...options,headers:{'content-type':'application/json',...(options.headers||{})}});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Bot request failed');return j}
+ const grid=document.getElementById('botEditorGrid');if(!grid)return;
+ const fields=[['greeting','Pozdrav'],['instructions','Instrukcije / pravila ponašanja'],['reply_question','Odgovor: pitanje'],['reply_reservation','Odgovor: rezervacije'],['reply_service','Odgovor: usluge'],['reply_integrations','Odgovor: integracije'],['reply_plans','Odgovor: paketi'],['reply_partner','Odgovor: partnerstvo'],['reply_help','Odgovor: podrška']];
+ function make(bot){const card=document.createElement('div');card.className='item';card.style='grid-column:1/-1;padding:18px';const title=document.createElement('h3');title.textContent=bot.name;card.append(title);const enabled=document.createElement('label');enabled.style='display:block;margin:10px 0';const check=document.createElement('input');check.type='checkbox';check.checked=!!bot.enabled;enabled.append(check,document.createTextNode(' Aktiviran'));card.append(enabled);const controls={};fields.forEach(([key,label])=>{const l=document.createElement('label');l.textContent=label;const ta=document.createElement('textarea');ta.rows=2;ta.style='width:100%;margin:4px 0 10px';ta.value=bot[key]||'';l.appendChild(ta);card.appendChild(l);controls[key]=ta});const save=document.createElement('button');save.className='btn primary';save.textContent='Sačuvaj bot podešavanja';save.onclick=async()=>{save.disabled=true;try{const body={enabled:check.checked};fields.forEach(([k])=>body[k]=controls[k].value);await botApi('/api/admin/bots/'+bot.bot_key,{method:'PATCH',body:JSON.stringify(body)});document.getElementById('botEditorMsg').textContent='✓ Bot podešavanja sačuvana';setTimeout(()=>document.getElementById('botEditorMsg').textContent='',1800)}catch(e){alert(e.message)}finally{save.disabled=false}};card.appendChild(save);grid.appendChild(card)}
+ botApi('/api/admin/bots').then(j=>(j.bots||[]).forEach(make)).catch(e=>{grid.textContent='Bot podešavanja trenutno nisu dostupna: '+e.message});
 })();
 </script>
 </body></html>

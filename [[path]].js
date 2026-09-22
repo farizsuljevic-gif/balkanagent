@@ -126,6 +126,12 @@ const PLAN_PRICES = {Starter:4900, Business:7900, Pro:19900};
 const PLAN_ACTIVATION_FEES = {Starter:14900, Business:34900, Pro:69900};
 const BILLING_CYCLES = ["monthly","annual"];
 
+async function ensureBotSchema(env) {
+  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS bot_configs (bot_key TEXT PRIMARY KEY, name TEXT NOT NULL, enabled INTEGER NOT NULL DEFAULT 1, greeting TEXT NOT NULL DEFAULT '', instructions TEXT NOT NULL DEFAULT '', reply_question TEXT NOT NULL DEFAULT '', reply_reservation TEXT NOT NULL DEFAULT '', reply_service TEXT NOT NULL DEFAULT '', reply_integrations TEXT NOT NULL DEFAULT '', reply_plans TEXT NOT NULL DEFAULT '', reply_partner TEXT NOT NULL DEFAULT '', reply_help TEXT NOT NULL DEFAULT '', updated_at TEXT NOT NULL DEFAULT (datetime('now')) )`).run();
+  const defaults=[['receptionist','AI Receptionist','👋 Zdravo! Ja sam vaš AI asistent. Kako vam mogu pomoći danas?','Odgovaraj jasno, ljubazno i u okviru Balkan Agent usluga.'],['sales','AI Sales','Dobrodošli. Kako možemo pomoći vašem biznisu?','Kvalifikuj upite i uputi zainteresovane klijente na kontakt formu.'],['support','AI Support','Zdravo, podrška Balkan Agent-a je ovdje.','Rješavaj uobičajena pitanja i ponudi kontakt čovjeka kada je potrebno.']];
+  for(const d of defaults) await env.DB.prepare('INSERT OR IGNORE INTO bot_configs(bot_key,name,greeting,instructions) VALUES(?,?,?,?)').bind(...d).run();
+}
+
 async function ensureLeadSchema(env) {
   await env.DB.prepare(`CREATE TABLE IF NOT EXISTS leads (
     id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, company TEXT DEFAULT '', email TEXT NOT NULL, phone TEXT DEFAULT '', plan TEXT DEFAULT '', message TEXT DEFAULT '', status TEXT NOT NULL DEFAULT 'new', created_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -286,6 +292,12 @@ export async function onRequest(context) {
   if (!env.ADMIN_PASSWORD) return bad("ADMIN_PASSWORD is not configured",500);
   await ensureBillingSchema(env);
 
+  if (path === "bot-config" && method === "GET") {
+    await ensureBotSchema(env);
+    const r=await env.DB.prepare('SELECT bot_key,name,enabled,greeting,reply_question,reply_reservation,reply_service,reply_integrations,reply_plans,reply_partner,reply_help FROM bot_configs ORDER BY bot_key').all();
+    return json({ok:true,bots:r.results||[]});
+  }
+
   if (path === "leads" && method === "POST") {
     await ensureLeadSchema(env);
     const b=await parseBody(request);
@@ -393,6 +405,21 @@ export async function onRequest(context) {
     `).bind(name,company,phone,iban,bank,r.session.sub).run();
     const user=await env.DB.prepare("SELECT * FROM users WHERE id=?").bind(r.session.sub).first();
     return json({ok:true,user:safeUser(user)});
+  }
+
+  if (path === "admin/bots" && method === "GET") {
+    const r=await requireAdmin(request,env); if(r.error)return r.error; await ensureBotSchema(env);
+    const rows=await env.DB.prepare('SELECT * FROM bot_configs ORDER BY bot_key').all(); return json({ok:true,bots:rows.results||[]});
+  }
+  const botMatch=path.match(/^admin\/bots\/([a-z0-9_-]+)$/);
+  if (botMatch && method === "PATCH") {
+    const r=await requireAdmin(request,env); if(r.error)return r.error; await ensureBotSchema(env);
+    const b=await parseBody(request); const key=botMatch[1];
+    const fields=['name','enabled','greeting','instructions','reply_question','reply_reservation','reply_service','reply_integrations','reply_plans','reply_partner','reply_help'];
+    const sets=[]; const vals=[]; for(const f of fields){if(b[f]!==undefined){sets.push(`${f}=?`); vals.push(f==='enabled'?(b[f]?1:0):String(b[f]||''));}}
+    if(!sets.length)return bad('No bot settings supplied'); sets.push("updated_at=datetime('now')"); vals.push(key);
+    await env.DB.prepare(`UPDATE bot_configs SET ${sets.join(',')} WHERE bot_key=?`).bind(...vals).run();
+    return json({ok:true,bot:await env.DB.prepare('SELECT * FROM bot_configs WHERE bot_key=?').bind(key).first()});
   }
 
   if (path === "admin/leads" && method === "GET") {

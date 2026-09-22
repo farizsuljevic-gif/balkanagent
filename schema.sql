@@ -40,3 +40,5 @@ CREATE INDEX IF NOT EXISTS idx_invoices_customer ON invoices(customer_id);
 
 CREATE TABLE IF NOT EXISTS leads (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, company TEXT DEFAULT '', email TEXT NOT NULL, phone TEXT DEFAULT '', plan TEXT DEFAULT '', message TEXT DEFAULT '', status TEXT NOT NULL DEFAULT 'new', created_at TEXT NOT NULL DEFAULT (datetime('now')));
 CREATE INDEX IF NOT EXISTS idx_leads_created ON leads(created_at);
+
+CREATE TABLE IF NOT EXISTS bot_configs (bot_key TEXT PRIMARY KEY, name TEXT NOT NULL, enabled INTEGER NOT NULL DEFAULT 1, greeting TEXT NOT NULL DEFAULT '', instructions TEXT NOT NULL DEFAULT '', reply_question TEXT NOT NULL DEFAULT '', reply_reservation TEXT NOT NULL DEFAULT '', reply_service TEXT NOT NULL DEFAULT '', reply_integrations TEXT NOT NULL DEFAULT '', reply_plans TEXT NOT NULL DEFAULT '', reply_partner TEXT NOT NULL DEFAULT '', reply_help TEXT NOT NULL DEFAULT '', updated_at TEXT NOT NULL DEFAULT (datetime('now')));
