@@ -1,0 +1,50 @@
+BALKAN AGENT — ENGLISH-ONLY PAYMENT STAGING GUIDE
+17 October 2026
+
+STATUS: PAYMENTS DISABLED / NOT LIVE.
+No payment provider, account or withdrawal method has been connected or tested.
+The English /pay.html page, payment scripts and checkout styling are preserved.
+The site must never collect or store card details itself.
+
+STAGING COMPONENTS
+- /pay.html — English project-payment page
+- /assets/payment-config.js — currently approved: false, provider: "disabled"
+- /assets/payments.js and /assets/payment-style.css
+- Whop payment page-specific security rules in /_headers
+- Hidden payment access in homepage, activated only when config is approved
+
+OPTION A — WHOP
+1. Create and verify an account; confirm the provider allows these services.
+2. Configure an eligible payout account and complete all required checks.
+3. Create a legitimate checkout for a documented project with clear terms.
+4. Obtain the genuine Whop checkout Plan ID and set in payment-config.js:
+       approved: true,
+       provider: "whop",
+       whopPlanId: "plan_YOUR_REAL_ID"
+5. Test preview checkout and verify payouts, refunds, policies and iframe
+   compatibility before any public launch.
+
+OPTION B — CONTRA
+1. Confirm you are eligible to use a hosted payment link for your work.
+2. Create a genuine one-time project payment link.
+3. Set in payment-config.js:
+       approved: true,
+       provider: "contra",
+       contraPaymentUrl: "https://contra.com/YOUR_REAL_PAYMENT_LINK"
+4. Buyers will be redirected to Contra's own hosted checkout.
+
+IMPORTANT
+- Whop / Contra approval, payout and eligibility cannot be assumed.
+- The payer's bank or provider may apply 3-D Secure, account reviews,
+  transaction limits, payout holds or other verification requirements.
+- Comply with relevant business registration, invoice, tax and consumer laws.
+- Do not misstate business registration, reviews or verified customer counts.
+- Check the provider's current policies and technical documentation.
+- Verify CSP integrations on the deployed /pay.html before enabling payments.
+- Keep approved: false until the provider, business details, permitted
+  service category and checkout have been verified and tested.
+
+PROVIDER LINKS
+https://docs.whop.com/third-party-integrations/embedded-checkouts/framer-checkout
+https://whop.com/prohibited-products-and-services/
+https://help.contra.com/en/articles/13655628-payment-links

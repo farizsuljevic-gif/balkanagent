@@ -1,0 +1,14 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Permissions-Policy: geolocation=(), camera=(), microphone=(), payment=()
+  Cross-Origin-Resource-Policy: same-origin
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
+
+/assets/*
+  Cache-Control: public, max-age=86400
+
+/pay.html
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://js.whop.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.whop.com; font-src 'self'; connect-src 'self' https://whop.com https://*.whop.com; frame-src https://whop.com https://*.whop.com; base-uri 'self'; object-src 'none'; form-action 'self' https://whop.com https://*.whop.com; frame-ancestors 'none'; upgrade-insecure-requests
+  Permissions-Policy: geolocation=(), camera=(), microphone=(), payment=(self "https://checkout.whop.com")
