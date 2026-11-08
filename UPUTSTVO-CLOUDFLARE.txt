@@ -1,0 +1,22 @@
+BALKAN AGENT ELITE · CLOUDFLARE PAGES · ZERO FOLDERS
+
+Ovaj ZIP sadrzi sve fajlove direktno u korijenu, bez foldera.
+- index.html je naslovnica.
+- svaka SEO stranica je zaseban HTML fajl, npr. investiciona-zemljista.html ili en-building-permits-montenegro.html.
+- CSS, JavaScript i sve fotografije su u istom korijenu; nista ne trazi dodatne foldere.
+- _redirects cuva stare URL-ove (npr. /investiciona-zemljista/ -> /investiciona-zemljista).
+- sitemap.xml sadrzi sve nove URL adrese.
+
+U CLOUDFLARE PAGES:
+1. Workers & Pages -> izaberi Pages projekat sa Direct Upload.
+2. Create deployment / Upload assets, ubaci ovaj ZIP bez raspakivanja u dodatni folder.
+3. Ako je domen balkanagent.com vec povezan, deployment ce zamijeniti staru verziju na tom projektu.
+4. Provjeri /, /investiciona-zemljista, /izgradnja-po-zelji, /en, /de i /ru.
+5. Posalji https://balkanagent.com/sitemap.xml u Google Search Console.
+
+Napomene:
+- Za sada nema aktivnih oglasa ili pretrage.
+- Kontakt koristi mailto, tj. korisnikov e-mail program, dok ne povezes serverski obrazac.
+- Svi CGI/CG, EN, DE, RU tekstovi i fotovizualizacije su zadrzani iz prethodne ELITE verzije.
+- Fotografije su ilustrativne, ne prikazuju potvrdjene realne oglase.
+- Ako tvoj Cloudflare projekat koristi Git integraciju, potreban je deploy kroz taj repozitorijum; Drag & Drop je namijenjen Direct Upload projektima.

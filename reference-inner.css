@@ -1,0 +1,12 @@
+/* Shared design language for property pages: deep ink, champagne gold and editorial serif. */
+:root{--gold:#e3bb76!important;--bg:#07111a!important;--ink:#0b1117!important}
+body:not(.reference-home){background:#07111a}
+.site-header{background:rgba(5,11,17,.96)!important;border-bottom:1px solid #a47e457a!important}
+.brand-copy b{font-family:Georgia,serif!important;font-size:27px!important;font-weight:400!important;letter-spacing:.09em!important;color:#e9c27d!important}
+.brand-copy small{font-size:8px!important;letter-spacing:.23em!important;color:#e2bd7b!important}
+.desktop-nav a{font-size:13px!important;color:#f3ebe0!important}
+.desktop-nav a:hover,.desktop-nav a[aria-current]{color:#e7bc6b!important}
+.header-contact{border-color:#ae8d58!important;color:#e9bf7a!important}
+.lang-switch{background:#0b1119!important;border-radius:8px;padding:5px 8px!important}
+.lang-switch a{font-size:12px!important}
+@media(max-width:767px){.brand-copy b{font-size:19px!important}.site-header{background:#09121b!important}}
