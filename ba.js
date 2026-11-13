@@ -1,0 +1,5 @@
+document.addEventListener('DOMContentLoaded',()=>{
+const toggle=document.querySelector('.hamburger');const menu=document.querySelector('.mobile-nav');
+if(toggle&&menu){toggle.addEventListener('click',()=>{let open=menu.classList.toggle('open');toggle.setAttribute('aria-expanded',String(open));toggle.setAttribute('aria-label',open?'Close menu':'Open menu')});}
+const f=document.querySelector('#contact-form');if(f){f.addEventListener('submit',e=>{e.preventDefault();if(!f.reportValidity())return;const d=new FormData(f);const title='Balkan Agent — '+d.get('topic');const msg='Name: '+d.get('name')+'\nEmail: '+d.get('email')+'\nInterest: '+d.get('topic')+'\n\n'+d.get('message');window.location.href='mailto:info@balkanagent.com?subject='+encodeURIComponent(title)+'&body='+encodeURIComponent(msg);});}
+});
